@@ -5,10 +5,11 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
+MACOSX_DEPLOYMENT_TARGET = 10.15
 PRODUCT_NAME = autoquill_ai
 
 // The application's bundle identifier
 PRODUCT_BUNDLE_IDENTIFIER = com.example.autoquillAi
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright 2025 com.example. All rights reserved.
