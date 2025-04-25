@@ -13,6 +13,7 @@ abstract class RecordingDataSource {
 
 class RecordingDataSourceImpl implements RecordingDataSource {
   final AudioRecorder recorder;
+  String? _currentRecordingPath;
 
   RecordingDataSourceImpl({required this.recorder});
 
@@ -34,19 +35,20 @@ class RecordingDataSourceImpl implements RecordingDataSource {
     if (!await recorder.hasPermission()) {
       throw Exception('Microphone permission not granted');
     }
-    final path = await _getRecordingPath();
+    _currentRecordingPath = await _getRecordingPath();
     final config = RecordConfig(
       encoder: AudioEncoder.aacLc,
       bitRate: 128000,
       sampleRate: 44100,
     );
-    await recorder.start(config, path: path);
+    await recorder.start(config, path: _currentRecordingPath!);
   }
 
   @override
   Future<String> stopRecording() async {
     final path = await recorder.stop();
     if (path == null) throw Exception('Failed to stop recording');
+    _currentRecordingPath = null;
     return path;
   }
 
@@ -68,15 +70,14 @@ class RecordingDataSourceImpl implements RecordingDataSource {
 
   @override
   Future<void> cancelRecording() async {
-    if (await isRecording) {
+    if (await isRecording && _currentRecordingPath != null) {
       await recorder.stop();
-      // Get the path of the current recording
-      final path = await _getRecordingPath();
-      // Delete the file if it exists
-      final file = File(path);
+      // Delete the current recording file
+      final file = File(_currentRecordingPath!);
       if (await file.exists()) {
         await file.delete();
       }
+      _currentRecordingPath = null;
     }
   }
 }

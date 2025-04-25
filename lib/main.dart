@@ -5,6 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'core/di/injection_container.dart' as di;
 import 'features/recording/presentation/bloc/recording_bloc.dart';
+import 'features/transcription/domain/repositories/transcription_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,15 +32,22 @@ class MainApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
-      home: MultiBlocProvider(
+      home: MultiRepositoryProvider(
         providers: [
-          BlocProvider(
-            create: (_) => RecordingBloc(
-              repository: di.sl(),
-            ),
+          RepositoryProvider<TranscriptionRepository>(
+            create: (_) => di.sl<TranscriptionRepository>(),
           ),
         ],
-        child: TranscriptionPage(),
+        child: MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (_) => RecordingBloc(
+                repository: di.sl(),
+              ),
+            ),
+          ],
+          child: const TranscriptionPage(),
+        ),
       ),
     );
   }
