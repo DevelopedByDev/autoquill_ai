@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../recording/presentation/bloc/recording_bloc.dart';
 import '../../domain/repositories/transcription_repository.dart';
+import '../../../../core/storage/app_storage.dart';
+import '../../../../settings.dart';
 
 class TranscriptionPage extends StatefulWidget {
   const TranscriptionPage({super.key});
@@ -15,10 +17,38 @@ class _TranscriptionPageState extends State<TranscriptionPage> {
   String? transcriptionText;
 
   @override
+  void initState() {
+    super.initState();
+    _initializeApiKey();
+  }
+
+  void _initializeApiKey() {
+    final savedApiKey = AppStorage.getApiKey();
+    if (savedApiKey != null) {
+      groqAPIKeyController.text = savedApiKey;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Audio Transcription'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => SettingsPage(
+                    groqAPIKeyController: groqAPIKeyController,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: BlocConsumer<RecordingBloc, RecordingState>(
         listener: (context, state) {
@@ -31,18 +61,7 @@ class _TranscriptionPageState extends State<TranscriptionPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
-                    controller: groqAPIKeyController,
-                    decoration: const InputDecoration(
-                      labelText: 'Groq API Key',
-                      hintText: 'Something like gsk_0DLKkuapGSFY8...',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
+
                 if (!state.isRecording) ...[  // Show record button when not recording
                   FloatingActionButton(
                     onPressed: () {

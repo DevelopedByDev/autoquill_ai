@@ -19,6 +19,7 @@ dependencies:
   record: ^5.0.4
   audioplayers: ^6.4.0
   http: ^1.3.0
+  hotkey_manager: ^0.1.8
 
 dev_dependencies:
   flutter_test:

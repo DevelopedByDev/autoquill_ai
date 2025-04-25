@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'core/di/injection_container.dart' as di;
+import 'core/storage/app_storage.dart';
 import 'features/recording/presentation/bloc/recording_bloc.dart';
 import 'features/transcription/domain/repositories/transcription_repository.dart';
 
@@ -13,6 +14,7 @@ void main() async {
   // Initialize Hive
   final appDir = await getApplicationDocumentsDirectory();
   await Hive.initFlutter(appDir.path);
+  await AppStorage.init();
   
   // Initialize dependency injection
   await di.init();
