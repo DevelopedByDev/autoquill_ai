@@ -18,6 +18,7 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   HotKey? _transcriptionHotKey;
   bool _isRecordingHotkey = false;
+  bool _isApiKeyVisible = false;
 
   @override
   void initState() {
@@ -71,6 +72,10 @@ class _SettingsPageState extends State<SettingsPage> {
         _transcriptionHotKey = result;
         _isRecordingHotkey = false;
       });
+    } else {
+      setState(() {
+        _isRecordingHotkey = false;
+      });
     }
   }
 
@@ -82,7 +87,7 @@ class _SettingsPageState extends State<SettingsPage> {
     await hotKeyManager.register(
       hotKey,
       keyDownHandler: (hotKey) {
-        print("Hotkey pressed");
+        print("${hotKey.modifiers?.map((m) => m.toString().split('.').last).join('+') ?? ''}+${hotKey.keyCode.toString().split('.').last}");
       },
     );
   }
@@ -109,10 +114,21 @@ class _SettingsPageState extends State<SettingsPage> {
                 Expanded(
                   child: TextField(
                     controller: widget.groqAPIKeyController,
-                    decoration: const InputDecoration(
+                    obscureText: !_isApiKeyVisible,
+                    decoration: InputDecoration(
                       labelText: 'Groq API Key',
                       hintText: 'Something like gsk_0DLKkuapGSFY8...',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isApiKeyVisible ? Icons.visibility_off : Icons.visibility,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isApiKeyVisible = !_isApiKeyVisible;
+                          });
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -154,80 +170,56 @@ class _RecordHotkeyDialog extends StatefulWidget {
 }
 
 class _RecordHotkeyDialogState extends State<_RecordHotkeyDialog> {
-  Set<LogicalKeyboardKey> _pressedKeys = {};
+  HotKey? _hotKey;
 
   @override
   Widget build(BuildContext context) {
-    return RawKeyboardListener(
-      focusNode: FocusNode()..requestFocus(),
-      onKey: (RawKeyEvent event) {
-        if (event is RawKeyDownEvent) {
-          setState(() {
-            _pressedKeys.add(event.logicalKey);
-          });
-
-          if (_pressedKeys.length >= 2) {
-            final modifiers = _pressedKeys
-                .where((key) => key != _pressedKeys.last)
-                .map((key) {
-              if (key == LogicalKeyboardKey.altLeft ||
-                  key == LogicalKeyboardKey.altRight) {
-                return KeyModifier.alt;
-              } else if (key == LogicalKeyboardKey.controlLeft ||
-                  key == LogicalKeyboardKey.controlRight) {
-                return KeyModifier.control;
-              } else if (key == LogicalKeyboardKey.shiftLeft ||
-                  key == LogicalKeyboardKey.shiftRight) {
-                return KeyModifier.shift;
-              }
-              return KeyModifier.meta;
-            }).toList();
-
-            // Map common keys to their KeyCode values
-            final keyMap = {
-              LogicalKeyboardKey.keyA: KeyCode.keyA,
-              LogicalKeyboardKey.keyB: KeyCode.keyB,
-              // Add more mappings as needed
-            };
-
-            final keyCode = keyMap[_pressedKeys.last] ?? KeyCode.space;
-            
-            final hotKey = HotKey(
-              keyCode,
-              modifiers: modifiers,
-              scope: HotKeyScope.system,
-            );
-
-            Navigator.of(context).pop(hotKey);
-          }
-        } else if (event is RawKeyUpEvent) {
-          setState(() {
-            _pressedKeys.remove(event.logicalKey);
-          });
-        }
-      },
-      child: AlertDialog(
-        title: const Text('Record Hotkey'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Press a key combination (e.g., Alt+A)'),
-            const SizedBox(height: 16),
-            Text(
-              _pressedKeys.isEmpty
-                  ? 'Waiting for input...'
-                  : _pressedKeys.map((key) => key.keyLabel).join(' + '),
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+    return AlertDialog(
+      title: const Text('Record Hotkey'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Press a key combination\n(e.g., Ctrl + Shift + Alt + A)',
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            height: 60,
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(4),
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: HotKeyRecorder(
+              onHotKeyRecorded: (hotKey) {
+                setState(() {
+                  _hotKey = hotKey;
+                });
+              },
+            ),
           ),
         ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            setState(() {
+              _hotKey = null;
+            });
+          },
+          child: const Text('Restart'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: _hotKey != null ? () => Navigator.of(context).pop(_hotKey) : null,
+          child: const Text('Save'),
+        ),
+      ],
     );
   }
 }
