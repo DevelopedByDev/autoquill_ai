@@ -3,6 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 class AppStorage {
   static const String _settingsBoxName = 'settings';
   static const String _apiKeyKey = 'groq_api_key';
+  static const String _hotkeyKey = 'transcription_hotkey';
 
   static late Box _settingsBox;
 
@@ -16,5 +17,18 @@ class AppStorage {
 
   static String? getApiKey() {
     return _settingsBox.get(_apiKeyKey) as String?;
+  }
+
+  static Future<void> saveHotkey(Map<String, dynamic> hotkeyData) async {
+    await _settingsBox.put(_hotkeyKey, hotkeyData);
+  }
+
+  static Map<String, dynamic>? getHotkey() {
+    final data = _settingsBox.get(_hotkeyKey);
+    return data != null ? Map<String, dynamic>.from(data) : null;
+  }
+
+  static Future<void> deleteHotkey() async {
+    await _settingsBox.delete(_hotkeyKey);
   }
 }

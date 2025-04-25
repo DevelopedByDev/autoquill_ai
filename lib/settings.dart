@@ -28,7 +28,22 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _loadSavedHotkey() async {
-    // TODO: Load saved hotkey from local storage
+    final savedHotkey = AppStorage.getHotkey();
+    if (savedHotkey != null) {
+      final keyCode = savedHotkey['keyCode'] as int;
+      final modifiers = (savedHotkey['modifiers'] as List<dynamic>)
+          .map((m) => KeyModifier.values[m as int])
+          .toList();
+
+      setState(() {
+        _transcriptionHotKey = HotKey(
+          KeyCode.values[keyCode],
+          modifiers: modifiers,
+        );
+      });
+
+      await _registerHotkey(_transcriptionHotKey!);
+    }
   }
 
   void _loadSavedApiKey() {
@@ -68,6 +83,13 @@ class _SettingsPageState extends State<SettingsPage> {
 
     if (result != null) {
       await _registerHotkey(result);
+      
+      // Save hotkey to storage
+      await AppStorage.saveHotkey({
+        'keyCode': result.keyCode.index,
+        'modifiers': result.modifiers?.map((m) => m.index).toList() ?? [],
+      });
+
       setState(() {
         _transcriptionHotKey = result;
         _isRecordingHotkey = false;
@@ -80,15 +102,87 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _registerHotkey(HotKey hotKey) async {
-    if (_transcriptionHotKey != null) {
-      await hotKeyManager.unregister(_transcriptionHotKey!);
-    }
+    try {
+      if (_transcriptionHotKey != null) {
+        try {
+          await hotKeyManager.unregister(_transcriptionHotKey!);
+        } catch (e) {
+          // Previous hotkey might not be registered, that's ok
+          print('Warning: Could not unregister previous hotkey: $e');
+        }
+      }
 
-    await hotKeyManager.register(
-      hotKey,
-      keyDownHandler: (hotKey) {
-        print("${hotKey.modifiers?.map((m) => m.toString().split('.').last).join('+') ?? ''}+${hotKey.keyCode.toString().split('.').last}");
-      },
+      // Make sure the hotkey isn't already registered before trying to register it
+      try {
+        await hotKeyManager.unregister(hotKey);
+      } catch (e) {
+        // Hotkey wasn't registered, that's ok
+        print('Info: Hotkey was not previously registered: $e');
+      }
+
+      await hotKeyManager.register(
+        hotKey,
+        keyDownHandler: (hotKey) {
+          print("${hotKey.modifiers?.map((m) => m.toString().split('.').last).join('+')}+${hotKey.keyCode.toString().split('.').last}");
+        },
+      );
+    } catch (e) {
+      print('Error registering hotkey: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> _showManageHotkeysDialog() async {
+    final savedHotkey = AppStorage.getHotkey();
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Manage Hotkeys'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (savedHotkey != null) ...[              
+              ListTile(
+                title: Text(_getHotkeyDisplayName(HotKey(
+                  KeyCode.values[savedHotkey['keyCode'] as int],
+                  modifiers: (savedHotkey['modifiers'] as List<dynamic>)
+                      .map((m) => KeyModifier.values[m as int])
+                      .toList(),
+                )) ?? ''),
+                subtitle: const Text('Transcription hotkey'),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () async {
+                    try {
+                      // Try to unregister from system
+                      await hotKeyManager.unregister(_transcriptionHotKey!);
+                    } catch (e) {
+                      print('Warning: Could not unregister hotkey: $e');
+                      // Continue with deletion even if unregister fails
+                    }
+
+                    // Clear from storage and state
+                    await AppStorage.deleteHotkey();
+                    setState(() {
+                      _transcriptionHotKey = null;
+                    });
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+            ] else
+              const Text('No hotkeys saved'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -155,6 +249,15 @@ class _SettingsPageState extends State<SettingsPage> {
                     ? const CircularProgressIndicator()
                     : const Icon(Icons.keyboard),
                 onTap: _isRecordingHotkey ? null : _startRecordingHotkey,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Card(
+              child: ListTile(
+                title: const Text('Manage Hotkeys'),
+                subtitle: const Text('View and delete saved hotkeys'),
+                trailing: const Icon(Icons.keyboard_alt_outlined),
+                onTap: _showManageHotkeysDialog,
               ),
             ),
           ],
