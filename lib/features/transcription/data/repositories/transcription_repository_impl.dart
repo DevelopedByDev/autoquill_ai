@@ -23,8 +23,7 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
       ..files.add(await http.MultipartFile.fromPath('file', audioPath))
       ..fields['model'] = 'whisper-large-v3-turbo'
       ..fields['temperature'] = '0'
-      ..fields['response_format'] = 'verbose_json'
-      ..fields['language'] = 'en';
+      ..fields['response_format'] = 'verbose_json';
 
     final response = await request.send();
     final responseString = await response.stream.bytesToString();
