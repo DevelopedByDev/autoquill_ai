@@ -1,4 +1,5 @@
 import 'package:autoquill_ai/features/transcription/presentation/pages/transcription_page.dart';
+import 'package:autoquill_ai/features/transcription/presentation/bloc/transcription_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -46,6 +47,11 @@ class MainApp extends StatelessWidget {
               create: (_) => RecordingBloc(
                 repository: di.sl(),
               ),
+            ),
+            BlocProvider(
+              create: (context) => TranscriptionBloc(
+                repository: context.read(),
+              )..add(InitializeTranscription()),
             ),
           ],
           child: const TranscriptionPage(),

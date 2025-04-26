@@ -1,159 +1,137 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../recording/presentation/bloc/recording_bloc.dart';
-import '../../domain/repositories/transcription_repository.dart';
-import '../../../../core/storage/app_storage.dart';
+import '../bloc/transcription_bloc.dart';
 import '../../../../settings.dart';
 
-class TranscriptionPage extends StatefulWidget {
+class TranscriptionPage extends StatelessWidget {
   const TranscriptionPage({super.key});
 
   @override
-  State<TranscriptionPage> createState() => _TranscriptionPageState();
-}
-
-class _TranscriptionPageState extends State<TranscriptionPage> {
-  final TextEditingController groqAPIKeyController = TextEditingController();
-  String? transcriptionText;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeApiKey();
-  }
-
-  void _initializeApiKey() {
-    final savedApiKey = AppStorage.getApiKey();
-    if (savedApiKey != null) {
-      groqAPIKeyController.text = savedApiKey;
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Audio Transcription'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            tooltip: 'Settings',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => SettingsPage(
-                    groqAPIKeyController: groqAPIKeyController,
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: BlocConsumer<RecordingBloc, RecordingState>(
+    return BlocProvider(
+      create: (context) => TranscriptionBloc(
+        repository: context.read(),
+      )..add(InitializeTranscription()),
+      child: BlocConsumer<TranscriptionBloc, TranscriptionState>(
         listener: (context, state) {
-          if (state is RecordingComplete) {
-            _handleTranscription(state.recordedFilePath!);
+          if (state.error != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.error!)),
+            );
           }
         },
-        builder: (context, state) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-
-                if (!state.isRecording) ...[  // Show record button when not recording
-                  FloatingActionButton(
-                    onPressed: () {
-                      context.read<RecordingBloc>().add(StartRecording());
-                    },
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    child: const Icon(Icons.mic),
-                  ),
-                ] else ...[  // Show recording controls when recording
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      FloatingActionButton(
-                        onPressed: () {
-                          if (state.isPaused) {
-                            context.read<RecordingBloc>().add(ResumeRecording());
-                          } else {
-                            context.read<RecordingBloc>().add(PauseRecording());
-                          }
-                        },
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
-                        child: Icon(
-                          state.isPaused ? Icons.play_arrow : Icons.pause,
+        builder: (context, transcriptionState) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Audio Transcription'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.settings),
+                  tooltip: 'Settings',
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => SettingsPage(
+                          groqAPIKeyController: TextEditingController(text: transcriptionState.apiKey),
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      FloatingActionButton(
-                        onPressed: () {
-                          context.read<RecordingBloc>().add(StopRecording());
-                        },
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        child: const Icon(Icons.stop),
-                      ),
-                      const SizedBox(width: 16),
-                      FloatingActionButton(
-                        onPressed: () {
-                          context.read<RecordingBloc>().add(StopRecording());
-                          context.read<RecordingBloc>().add(StartRecording());
-                        },
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        child: const Icon(Icons.refresh),
-                      ),
-                      const SizedBox(width: 16),
-                      FloatingActionButton(
-                        onPressed: () {
-                          context.read<RecordingBloc>().add(CancelRecording());
-                        },
-                        backgroundColor: Colors.grey,
-                        foregroundColor: Colors.white,
-                        child: const Icon(Icons.close),
-                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+            body: BlocConsumer<RecordingBloc, RecordingState>(
+              listener: (context, state) {
+                if (state is RecordingComplete && state.recordedFilePath != null) {
+                  context.read<TranscriptionBloc>().add(
+                    StartTranscription(state.recordedFilePath!),
+                  );
+                }
+              },
+              builder: (context, recordingState) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (!recordingState.isRecording) ...[  // Show record button when not recording
+                        FloatingActionButton(
+                          onPressed: () {
+                            context.read<RecordingBloc>().add(StartRecording());
+                          },
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          child: const Icon(Icons.mic),
+                        ),
+                      ] else ...[  // Show recording controls when recording
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            FloatingActionButton(
+                              onPressed: () {
+                                if (recordingState.isPaused) {
+                                  context.read<RecordingBloc>().add(ResumeRecording());
+                                } else {
+                                  context.read<RecordingBloc>().add(PauseRecording());
+                                }
+                              },
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                              child: Icon(
+                                recordingState.isPaused ? Icons.play_arrow : Icons.pause,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            FloatingActionButton(
+                              onPressed: () {
+                                context.read<RecordingBloc>().add(StopRecording());
+                              },
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              child: const Icon(Icons.stop),
+                            ),
+                            const SizedBox(width: 16),
+                            FloatingActionButton(
+                              onPressed: () {
+                                context.read<RecordingBloc>().add(StopRecording());
+                                context.read<RecordingBloc>().add(StartRecording());
+                              },
+                              backgroundColor: Colors.green,
+                              foregroundColor: Colors.white,
+                              child: const Icon(Icons.refresh),
+                            ),
+                            const SizedBox(width: 16),
+                            FloatingActionButton(
+                              onPressed: () {
+                                context.read<RecordingBloc>().add(CancelRecording());
+                                context.read<TranscriptionBloc>().add(ClearTranscription());
+                              },
+                              backgroundColor: Colors.grey,
+                              foregroundColor: Colors.white,
+                              child: const Icon(Icons.close),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (transcriptionState.isLoading) ...[  
+                        const SizedBox(height: 20),
+                        const CircularProgressIndicator(),
+                      ] else if (transcriptionState.transcriptionText != null) ...[  
+                        const SizedBox(height: 20),
+                        const Text('Transcription:', style: TextStyle(fontWeight: FontWeight.bold)),
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text(transcriptionState.transcriptionText!),
+                        ),
+                      ]
                     ],
                   ),
-                ],
-                if (transcriptionText != null) ...[  
-                  const SizedBox(height: 20),
-                  const Text('Transcription:', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(transcriptionText!),
-                  ),
-                ]
-              ],
+                );
+              },
             ),
           );
         },
       ),
     );
-  }
-
-  void _handleTranscription(String audioPath) async {
-    if (groqAPIKeyController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your Groq API key')),
-      );
-      return;
-    }
-
-    try {
-      final repository = context.read<TranscriptionRepository>();
-      final response = await repository.transcribeAudio(audioPath, groqAPIKeyController.text);
-      setState(() {
-        transcriptionText = response.text;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Transcription failed: $e')),
-      );
-    }
   }
 }
