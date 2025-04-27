@@ -5,7 +5,7 @@ import 'features/settings/bloc/settings_bloc.dart';
 import 'features/settings/bloc/settings_event.dart';
 import 'features/settings/bloc/settings_state.dart';
 
-class SettingsPage extends StatefulWidget {
+class SettingsPage extends StatelessWidget {
   final TextEditingController groqAPIKeyController;
 
   const SettingsPage({
@@ -13,62 +13,64 @@ class SettingsPage extends StatefulWidget {
     required this.groqAPIKeyController,
   });
 
-  @override
-  State<SettingsPage> createState() => _SettingsPageState();
-}
+  void _showHotkeyDialog(BuildContext context, String mode) {
+    context.read<SettingsBloc>().add(StartHotkeyRecording(mode));
 
-class _SettingsPageState extends State<SettingsPage> {
-  HotKey? _hotKey;
-
-  Future<void> _showHotkeyDialog(BuildContext context, String mode) {
-    HotKey? recordedHotkey;
-
-    return showDialog(
+    showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Configure $mode Hotkey'),
-        content: SizedBox(
-          height: 120,
-          child: Column(
-            children: [
-              Text('Press the desired hotkey combination for $mode.\nThe keys you press will appear in the box below:'),
-              const SizedBox(height: 16),
-              Container(
-                width: 200,
-                height: 60,
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Theme.of(context).primaryColor,
-                  ),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    if (recordedHotkey != null)
-                    Text(recordedHotkey.toString()),
-                    HotKeyRecorder(
-                      onHotKeyRecorded: (hotKey) {
-                        recordedHotkey = hotKey;
-                        setState(() {});
-                      },
+      builder: (context) => BlocBuilder<SettingsBloc, SettingsState>(
+        builder: (context, state) => AlertDialog(
+          title: Text('Configure $mode Hotkey'),
+          content: SizedBox(
+            height: 120,
+            child: Column(
+              children: [
+                Text('Press the desired hotkey combination for $mode.\nThe keys you press will appear in the box below:'),
+                const SizedBox(height: 16),
+                Container(
+                  width: 200,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Theme.of(context).primaryColor,
                     ),
-                  ],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      if (state.recordedHotkey != null)
+                        Text(state.recordedHotkey.toString()),
+                      HotKeyRecorder(
+                        onHotKeyRecorded: (hotKey) {
+                          context.read<SettingsBloc>().add(UpdateRecordedHotkey(hotKey));
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                context.read<SettingsBloc>().add(CancelHotkeyRecording());
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (state.recordedHotkey != null) {
+                  context.read<SettingsBloc>().add(SaveHotkey(state.recordedHotkey!));
+                }
+                Navigator.of(context).pop();
+              },
+              child: const Text('Save'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Save'),
-          ),
-        ],
       ),
     );
   }
@@ -95,103 +97,96 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // API Key Section
                   const Text(
-                    'API Key',
+                    'API Key Settings',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 8),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: widget.groqAPIKeyController,
-                                  decoration: const InputDecoration(
-                                    hintText: 'Enter your Groq API key',
-                                    border: OutlineInputBorder(),
-                                  ),
-                                  obscureText: !state.isApiKeyVisible,
-                                ),
-                              ),
-                              IconButton(
-                                icon: Icon(
-                                  state.isApiKeyVisible
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                ),
-                                onPressed: () => context
-                                    .read<SettingsBloc>()
-                                    .add(ToggleApiKeyVisibility()),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () {
-                                  widget.groqAPIKeyController.clear();
-                                  context.read<SettingsBloc>().add(DeleteApiKey());
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.save),
-                                onPressed: () => context
-                                    .read<SettingsBloc>()
-                                    .add(SaveApiKey(widget.groqAPIKeyController.text)),
-                              ),
-                            ],
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: groqAPIKeyController,
+                          obscureText: !state.isApiKeyVisible,
+                          decoration: const InputDecoration(
+                            labelText: 'Groq API Key',
+                            border: OutlineInputBorder(),
                           ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Your API key is stored securely on your device.',
-                            style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              state.isApiKeyVisible
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                            ),
+                            onPressed: () {
+                              context
+                                  .read<SettingsBloc>()
+                                  .add(ToggleApiKeyVisibility());
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              groqAPIKeyController.clear();
+                              context.read<SettingsBloc>().add(DeleteApiKey());
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.save),
+                            onPressed: () {
+                              context.read<SettingsBloc>().add(
+                                    SaveApiKey(
+                                      groqAPIKeyController.text,
+                                    ),
+                                  );
+                            },
                           ),
                         ],
                       ),
-                    ),
+                    ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32),
                   const Text(
                     'Hotkey Settings',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 8),
-                  Card(
-                    child: ListView(
-                      shrinkWrap: true,
-                      children: [
-                        ListTile(
-                          title: const Text('Transcription Mode'),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Text('No hotkey configured'),
-                              IconButton(
-                                icon: const Icon(Icons.edit),
-                                onPressed: () => _showHotkeyDialog(context, 'Transcription Mode'),
-                              ),
-                            ],
-                          ),
+                  const SizedBox(height: 16),
+                  ListView(
+                    shrinkWrap: true,
+                    children: [
+                      ListTile(
+                        title: const Text('Transcription Mode'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(state.transcriptionHotkey?.toString() ?? 'No hotkey configured'),
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () => _showHotkeyDialog(context, 'Transcription Mode'),
+                            ),
+                          ],
                         ),
-                        const Divider(height: 1),
-                        ListTile(
-                          title: const Text('Assistant Mode'),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Text('No hotkey configured'),
-                              IconButton(
-                                icon: const Icon(Icons.edit),
-                                onPressed: () => _showHotkeyDialog(context, 'Assistant Mode'),
-                              ),
-                            ],
-                          ),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        title: const Text('Assistant Mode'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(state.assistantHotkey?.toString() ?? 'No hotkey configured'),
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () => _showHotkeyDialog(context, 'Assistant Mode'),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ],
               ),
