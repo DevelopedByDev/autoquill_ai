@@ -36,7 +36,12 @@ class TranscriptionPage extends StatelessWidget {
                           groqAPIKeyController: TextEditingController(text: transcriptionState.apiKey),
                         ),
                       ),
-                    );
+                    ).then((_) {
+                      // Refresh API key after settings page is closed
+                      context.read<TranscriptionBloc>().add(
+                            InitializeTranscription(),
+                          );
+                    });
                   },
                 ),
               ],

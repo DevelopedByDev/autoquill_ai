@@ -27,11 +27,11 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Configure $mode Hotkey'),
-        content: Container(
+        content: SizedBox(
           height: 120,
           child: Column(
             children: [
-              Text('Press the desired hotkey combination for $mode'),
+              Text('Press the desired hotkey combination for $mode.\nThe keys you press will appear in the box below:'),
               const SizedBox(height: 16),
               Container(
                 width: 200,
@@ -133,9 +133,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 icon: const Icon(Icons.delete),
                                 onPressed: () {
                                   widget.groqAPIKeyController.clear();
-                                  context.read<SettingsBloc>().add(
-                                        DeleteApiKey(),
-                                      );
+                                  context.read<SettingsBloc>().add(DeleteApiKey());
                                 },
                               ),
                               IconButton(

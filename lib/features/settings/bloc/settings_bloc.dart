@@ -36,7 +36,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     try {
       await AppStorage.deleteApiKey();
       emit(state.copyWith(
-        apiKey: '',
+        apiKey: null,
         error: null,
       ));
     } catch (e) {

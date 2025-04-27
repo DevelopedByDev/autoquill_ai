@@ -16,7 +16,9 @@ class AppStorage {
   }
 
   static Future<String?> getApiKey() async {
-    return _settingsBox.get(_apiKeyKey) as String?;
+    if (!_settingsBox.containsKey(_apiKeyKey)) return null;
+    final value = _settingsBox.get(_apiKeyKey) as String?;
+    return value?.isEmpty == true ? null : value;
   }
 
   static Future<void> deleteApiKey() async {
