@@ -70,8 +70,12 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
   }
 
   Future<void> _onStartTranscription(StartTranscription event, Emitter<TranscriptionState> emit) async {
-    if (state.apiKey == null || state.apiKey!.isEmpty) {
-      emit(state.copyWith(error: 'Please enter your Groq API key'));
+    final apiKey = await AppStorage.getApiKey();
+    if (apiKey == null || apiKey.isEmpty) {
+      emit(state.copyWith(
+        error: 'No API key found. Please add your Groq API key in Settings.',
+        apiKey: null,
+      ));
       return;
     }
 
