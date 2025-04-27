@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/storage/app_storage.dart';
 import '../../../recording/presentation/bloc/recording_bloc.dart';
 import '../bloc/transcription_bloc.dart';
 import '../../../../settings.dart';
@@ -30,17 +31,19 @@ class TranscriptionPage extends StatelessWidget {
                   icon: const Icon(Icons.settings),
                   tooltip: 'Settings',
                   onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => SettingsPage(
-                          groqAPIKeyController: TextEditingController(text: transcriptionState.apiKey),
+                    AppStorage.getApiKey().then((apiKey) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => SettingsPage(
+                            groqAPIKeyController: TextEditingController(text: apiKey ?? ''),
+                          ),
                         ),
-                      ),
-                    ).then((_) {
-                      // Refresh API key after settings page is closed
-                      context.read<TranscriptionBloc>().add(
-                            InitializeTranscription(),
-                          );
+                      ).then((_) {
+                        // Refresh API key after settings page is closed
+                        context.read<TranscriptionBloc>().add(
+                              InitializeTranscription(),
+                            );
+                      });
                     });
                   },
                 ),
