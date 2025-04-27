@@ -33,10 +33,8 @@ class SettingsPage extends StatelessWidget {
                   width: 200,
                   height: 60,
                   decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    borderRadius: BorderRadius.circular(4),
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Stack(
                     alignment: Alignment.center,
