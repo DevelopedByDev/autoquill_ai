@@ -1,16 +1,77 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hotkey_manager/hotkey_manager.dart';
 import 'features/settings/bloc/settings_bloc.dart';
 import 'features/settings/bloc/settings_event.dart';
 import 'features/settings/bloc/settings_state.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   final TextEditingController groqAPIKeyController;
 
   const SettingsPage({
     super.key,
     required this.groqAPIKeyController,
   });
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  HotKey? _hotKey;
+
+  Future<void> _showHotkeyDialog(BuildContext context, String mode) {
+    HotKey? recordedHotkey;
+
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Configure $mode Hotkey'),
+        content: Container(
+          height: 120,
+          child: Column(
+            children: [
+              Text('Press the desired hotkey combination for $mode'),
+              const SizedBox(height: 16),
+              Container(
+                width: 200,
+                height: 60,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Theme.of(context).primaryColor,
+                  ),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    if (recordedHotkey != null)
+                    Text(recordedHotkey.toString()),
+                    HotKeyRecorder(
+                      onHotKeyRecorded: (hotKey) {
+                        recordedHotkey = hotKey;
+                        setState(() {});
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +111,7 @@ class SettingsPage extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: TextField(
-                                  controller: groqAPIKeyController,
+                                  controller: widget.groqAPIKeyController,
                                   decoration: const InputDecoration(
                                     hintText: 'Enter your Groq API key',
                                     border: OutlineInputBorder(),
@@ -71,15 +132,17 @@ class SettingsPage extends StatelessWidget {
                               IconButton(
                                 icon: const Icon(Icons.delete),
                                 onPressed: () {
-                                  context.read<SettingsBloc>().add(DeleteApiKey());
-                                  groqAPIKeyController.clear();
+                                  widget.groqAPIKeyController.clear();
+                                  context.read<SettingsBloc>().add(
+                                        DeleteApiKey(),
+                                      );
                                 },
                               ),
                               IconButton(
                                 icon: const Icon(Icons.save),
                                 onPressed: () => context
                                     .read<SettingsBloc>()
-                                    .add(SaveApiKey(groqAPIKeyController.text)),
+                                    .add(SaveApiKey(widget.groqAPIKeyController.text)),
                               ),
                             ],
                           ),
@@ -90,6 +153,46 @@ class SettingsPage extends StatelessWidget {
                           ),
                         ],
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Hotkey Settings',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Card(
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: [
+                        ListTile(
+                          title: const Text('Transcription Mode'),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text('No hotkey configured'),
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () => _showHotkeyDialog(context, 'Transcription Mode'),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Divider(height: 1),
+                        ListTile(
+                          title: const Text('Assistant Mode'),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text('No hotkey configured'),
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () => _showHotkeyDialog(context, 'Assistant Mode'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

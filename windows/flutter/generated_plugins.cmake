@@ -4,7 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_windows
-  hotkey_manager
+  hotkey_manager_windows
   record_windows
 )
 
