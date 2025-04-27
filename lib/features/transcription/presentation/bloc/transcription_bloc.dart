@@ -65,7 +65,7 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
   }
 
   Future<void> _onInitializeTranscription(InitializeTranscription event, Emitter<TranscriptionState> emit) async {
-    final savedApiKey = AppStorage.getApiKey();
+    final savedApiKey = await AppStorage.getApiKey();
     emit(state.copyWith(apiKey: savedApiKey));
   }
 

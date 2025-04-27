@@ -27,7 +27,7 @@ class RecordingDataSourceImpl implements RecordingDataSource {
       await recordingsDir.create(recursive: true);
     }
     
-    return '${recordingsDir.path}/recording_${DateTime.now().millisecondsSinceEpoch}.m4a';
+    return '${recordingsDir.path}/last_recording.m4a';
   }
 
   @override

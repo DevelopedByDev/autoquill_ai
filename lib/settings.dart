@@ -56,9 +56,6 @@ class SettingsPage extends StatelessWidget {
                                     border: OutlineInputBorder(),
                                   ),
                                   obscureText: !state.isApiKeyVisible,
-                                  onChanged: (value) => context
-                                      .read<SettingsBloc>()
-                                      .add(SaveApiKey(value)),
                                 ),
                               ),
                               IconButton(
@@ -70,6 +67,19 @@ class SettingsPage extends StatelessWidget {
                                 onPressed: () => context
                                     .read<SettingsBloc>()
                                     .add(ToggleApiKeyVisibility()),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () {
+                                  context.read<SettingsBloc>().add(DeleteApiKey());
+                                  groqAPIKeyController.clear();
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.save),
+                                onPressed: () => context
+                                    .read<SettingsBloc>()
+                                    .add(SaveApiKey(groqAPIKeyController.text)),
                               ),
                             ],
                           ),

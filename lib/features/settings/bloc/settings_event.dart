@@ -18,4 +18,6 @@ class SaveApiKey extends SettingsEvent {
   List<Object> get props => [apiKey];
 }
 
+class DeleteApiKey extends SettingsEvent {}
+
 class ToggleApiKeyVisibility extends SettingsEvent {}
