@@ -1,64 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
+import 'bloc/record_hotkey_bloc.dart';
 
-class RecordHotkeyDialog extends StatefulWidget {
+class RecordHotkeyDialog extends StatelessWidget {
   const RecordHotkeyDialog({super.key});
 
   @override
-  State<RecordHotkeyDialog> createState() => _RecordHotkeyDialogState();
-}
-
-class _RecordHotkeyDialogState extends State<RecordHotkeyDialog> {
-  HotKey? _hotKey;
-
-  @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Record Hotkey'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            'Press a key combination\n(e.g., Ctrl + Shift + Alt + A)',
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            height: 60,
-            margin: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(4),
+    return BlocProvider(
+      create: (context) => RecordHotkeyBloc()..add(StartRecording()),
+      child: BlocBuilder<RecordHotkeyBloc, RecordHotkeyState>(
+        builder: (context, state) {
+          return AlertDialog(
+            title: const Text('Record Hotkey'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Press a key combination\n(e.g., Ctrl + Shift + Alt + A)',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  height: 60,
+                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Theme.of(context).dividerColor),
+                  ),
+                  child: HotKeyRecorder(
+                    onHotKeyRecorded: (hotKey) {
+                      context.read<RecordHotkeyBloc>().add(UpdateHotkey(hotKey));
+                    },
+                  ),
+                ),
+              ],
             ),
-            child: HotKeyRecorder(
-              onHotKeyRecorded: (hotKey) {
-                setState(() {
-                  _hotKey = hotKey;
-                });
-              },
-            ),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () {
+                  context.read<RecordHotkeyBloc>().add(StopRecording());
+                  Navigator.pop(context);
+                },
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  context.read<RecordHotkeyBloc>().add(StopRecording());
+                  Navigator.pop(context, state.hotKey);
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        },
       ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            setState(() {
-              _hotKey = null;
-            });
-          },
-          child: const Text('Restart'),
-        ),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _hotKey != null ? () => Navigator.of(context).pop(_hotKey) : null,
-          child: const Text('Save'),
-        ),
-      ],
     );
   }
 }
