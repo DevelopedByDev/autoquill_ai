@@ -18,7 +18,9 @@ class SettingsPage extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (context) => BlocBuilder<SettingsBloc, SettingsState>(
+      builder: (dialogContext) => BlocProvider.value(
+        value: context.read<SettingsBloc>(),
+        child: BlocBuilder<SettingsBloc, SettingsState>(
         builder: (context, state) => AlertDialog(
           title: Text('Configure $mode Hotkey'),
           content: SizedBox(
@@ -40,11 +42,30 @@ class SettingsPage extends StatelessWidget {
                     alignment: Alignment.center,
                     children: [
                       if (state.recordedHotkey != null)
-                        Text(state.recordedHotkey.toString()),
-                      HotKeyRecorder(
-                        onHotKeyRecorded: (hotKey) {
-                          context.read<SettingsBloc>().add(UpdateRecordedHotkey(hotKey));
-                        },
+                        Text(
+                          '${state.recordedHotkey!.modifiers?.map((m) => m.toString()).join('+')}${state.recordedHotkey!.modifiers?.isEmpty ?? true ? '' : '+'}${state.recordedHotkey!.key}',
+                        ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        width: 300,
+                        height: 60,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            HotKeyRecorder(
+                              onHotKeyRecorded: (hotKey) {
+                                context.read<SettingsBloc>().add(UpdateRecordedHotkey(hotKey));
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -71,7 +92,7 @@ class SettingsPage extends StatelessWidget {
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 
@@ -164,7 +185,11 @@ class SettingsPage extends StatelessWidget {
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(state.transcriptionHotkey?.toString() ?? 'No hotkey configured'),
+                            Text(
+                              state.transcriptionHotkey != null
+                                  ? '${state.transcriptionHotkey!.modifiers?.map((m) => m.toString()).join('+')}${state.transcriptionHotkey!.modifiers?.isEmpty ?? true ? '' : '+'}${state.transcriptionHotkey!.key}'
+                                  : 'No hotkey configured',
+                            ),
                             IconButton(
                               icon: const Icon(Icons.edit),
                               onPressed: () => _showHotkeyDialog(context, 'Transcription Mode'),
@@ -178,7 +203,11 @@ class SettingsPage extends StatelessWidget {
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(state.assistantHotkey?.toString() ?? 'No hotkey configured'),
+                            Text(
+                              state.assistantHotkey != null
+                                  ? '${state.assistantHotkey!.modifiers?.map((m) => m.toString()).join('+')}${state.assistantHotkey!.modifiers?.isEmpty ?? true ? '' : '+'}${state.assistantHotkey!.key}'
+                                  : 'No hotkey configured',
+                            ),
                             IconButton(
                               icon: const Icon(Icons.edit),
                               onPressed: () => _showHotkeyDialog(context, 'Assistant Mode'),
