@@ -73,22 +73,73 @@ class SettingsPage extends StatelessWidget {
                           IconButton(
                             icon: const Icon(Icons.save),
                             onPressed: () {
-                              context.read<SettingsBloc>().add(
-                                  SaveApiKey(groqAPIKeyController.text));
+                              context
+                                  .read<SettingsBloc>()
+                                  .add(SaveApiKey(groqAPIKeyController.text));
                             },
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete),
                             onPressed: () {
                               groqAPIKeyController.clear();
-                              context
-                                  .read<SettingsBloc>()
-                                  .add(DeleteApiKey());
+                              context.read<SettingsBloc>().add(DeleteApiKey());
                             },
                           ),
                         ],
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Hotkey Settings',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          const Text('Transcription mode'),
+                          const Spacer(),
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () {
+                              null;
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          const Text('Assistant mode'),
+                          const Spacer(),
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () {
+                              null;
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
