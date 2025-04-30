@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:autoquill_ai/core/storage/app_storage.dart';
 import 'package:autoquill_ai/record_hotkey_dialog.dart';
@@ -24,8 +25,68 @@ class SettingsPage extends StatefulWidget {
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class KeyboardKeyConverter {
+  const KeyboardKeyConverter();
 
+  KeyboardKey fromJson(Map<Object?, Object?> json) {
+    final map = Map<String, dynamic>.from(json);
+    int? keyId = map['keyId'];
+    int? usageCode = map['usageCode'];
+    if (keyId != null) {
+      final logicalKey = LogicalKeyboardKey.findKeyByKeyId(keyId);
+      if (logicalKey != null) return logicalKey;
+    }
+    if (usageCode != null) {
+      final physicalKey = PhysicalKeyboardKey.findKeyByCode(usageCode);
+      if (physicalKey != null) return physicalKey;
+    }
+    throw PlatformException(
+      code: 'invalid_keyboard_key',
+      message: 'Invalid keyboard key',
+    );
+  }
+
+  Map<String, dynamic> toJson(KeyboardKey object) {
+    int? keyId = object is LogicalKeyboardKey ? object.keyId : null;
+    int? usageCode = object is PhysicalKeyboardKey ? object.usbHidUsage : null;
+    return {
+      'keyId': keyId,
+      'usageCode': usageCode,
+    }..removeWhere((key, value) => value == null);
+  }
+}
+
+HotKey hotKeyConverter(dynamic data) {
+  final hotkeyData = Map<String, dynamic>.from(data as Map);
+  final identifier = hotkeyData['identifier'] as String?;
+  final keyMap = hotkeyData['key'];
+  if (keyMap == null) {
+    // If no key data, default to 'A' key
+    return HotKey(
+      identifier: identifier,
+      key: LogicalKeyboardKey.keyA,
+      scope: HotKeyScope.system,
+    );
+  }
+  final keyData = Map<Object?, Object?>.from(keyMap as Map);
+  final keyboardKey = const KeyboardKeyConverter().fromJson(keyData);
+  return HotKey(
+    identifier: identifier,
+    key: keyboardKey,
+    modifiers: (hotkeyData['modifiers'] as List<dynamic>?)
+        ?.map((m) => HotKeyModifier.values.firstWhere(
+              (mod) => mod.name == m,
+              orElse: () => HotKeyModifier.control,
+            ))
+        .toList() ?? <HotKeyModifier>[],
+    scope: HotKeyScope.values.firstWhere(
+      (s) => s.name == hotkeyData['scope'],
+      orElse: () => HotKeyScope.system,
+    ),
+  );
+}
+
+class _SettingsPageState extends State<SettingsPage> {
   @override
   void dispose() {
     super.dispose();
@@ -43,6 +104,7 @@ class _SettingsPageState extends State<SettingsPage> {
     String log = 'keyUp   ${hotKey.debugName} (${hotKey.scope})';
     BotToast.showText(text: log);
     if (kDebugMode) {
+      print(hotKey);
       print(log);
     }
   }
@@ -54,16 +116,15 @@ class _SettingsPageState extends State<SettingsPage> {
       keyUpHandler: _keyUpHandler,
     );
     final keyData = {
-      'keyCode': hotKey.key.toString(),
-      'modifiers': {
-        'alt': hotKey.modifiers?.contains(HotKeyModifier.alt) ?? false,
-        'control': hotKey.modifiers?.contains(HotKeyModifier.control) ?? false,
-        'shift': hotKey.modifiers?.contains(HotKeyModifier.shift) ?? false,
-        'meta': hotKey.modifiers?.contains(HotKeyModifier.meta) ?? false,
+      'identifier': hotKey.identifier,
+      'key': {
+        'keyId': hotKey.key is LogicalKeyboardKey ? (hotKey.key as LogicalKeyboardKey).keyId : null,
+        'usageCode': hotKey.key is PhysicalKeyboardKey ? (hotKey.key as PhysicalKeyboardKey).usbHidUsage : null,
       },
+      'modifiers': hotKey.modifiers?.map((m) => m.name).toList() ?? <String>[],
+      'scope': hotKey.scope.name,
     };
     await AppStorage.saveHotkey(setting, keyData);
-
   }
 
   Future<void> _handleClickRegisterNewHotKey(String setting) async {
@@ -72,7 +133,8 @@ class _SettingsPageState extends State<SettingsPage> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return RecordHotKeyDialog(
-          onHotKeyRecorded: (newHotKey) => _handleHotKeyRegister(newHotKey, setting),
+          onHotKeyRecorded: (newHotKey) =>
+              _handleHotKeyRegister(newHotKey, setting),
         );
       },
     );
@@ -145,16 +207,17 @@ class _SettingsPageState extends State<SettingsPage> {
                             IconButton(
                               icon: const Icon(Icons.save),
                               onPressed: () {
-                                context
-                                    .read<SettingsBloc>()
-                                    .add(SaveApiKey(widget.groqAPIKeyController.text));
+                                context.read<SettingsBloc>().add(SaveApiKey(
+                                    widget.groqAPIKeyController.text));
                               },
                             ),
                             IconButton(
                               icon: const Icon(Icons.delete),
                               onPressed: () {
                                 widget.groqAPIKeyController.clear();
-                                context.read<SettingsBloc>().add(DeleteApiKey());
+                                context
+                                    .read<SettingsBloc>()
+                                    .add(DeleteApiKey());
                               },
                             ),
                           ],
@@ -182,31 +245,26 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           const Text('Transcription mode'),
                           const Spacer(),
-                          Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: ValueListenableBuilder(
-                                valueListenable: Hive.box('settings').listenable(),
-                                builder: (context, box, _) {
-                                  final hotkeyData = box.get('transcription_hotkey');
-                                  if (hotkeyData == null) return const Text('None configured');
-                                  
-                                  final modifiers = hotkeyData['modifiers'] as Map;
-                                  final parts = <String>[];
-                                  
-                                  if (modifiers['control'] == true) parts.add('Ctrl');
-                                  if (modifiers['alt'] == true) parts.add('Alt');
-                                  if (modifiers['shift'] == true) parts.add('Shift');
-                                  if (modifiers['meta'] == true) parts.add('Cmd');
-                                  
-                                  parts.add(hotkeyData['keyCode'].toString().replaceAll('PhysicalKeyboardKey.', ''));
-                                  
-                                  return Text(parts.join(' + '));
-                                },
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: ValueListenableBuilder(
+                                  valueListenable: Hive.box('settings').listenable(),
+                                  builder: (context, box, _) {
+                                    final hotkeyData = box.get('transcription_hotkey');
+                                    if (hotkeyData == null) {
+                                      return const Text('None configured');
+                                    }
+                                    return HotKeyVirtualView(
+                                      hotKey: hotKeyConverter(hotkeyData),
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                           ),
@@ -214,8 +272,10 @@ class _SettingsPageState extends State<SettingsPage> {
                           IconButton(
                             icon: const Icon(Icons.edit),
                             onPressed: () {
-                              _handleClickRegisterNewHotKey('transcription_hotkey');
-                            }
+                              _handleClickRegisterNewHotKey(
+                                'transcription_hotkey',
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -233,31 +293,29 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           const Text('Assistant mode'),
                           const Spacer(),
-                          Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: ValueListenableBuilder(
-                                valueListenable: Hive.box('settings').listenable(),
-                                builder: (context, box, _) {
-                                  final hotkeyData = box.get('assistant_hotkey');
-                                  if (hotkeyData == null) return const Text('None configured');
-                                  
-                                  final modifiers = hotkeyData['modifiers'] as Map;
-                                  final parts = <String>[];
-                                  
-                                  if (modifiers['control'] == true) parts.add('Ctrl');
-                                  if (modifiers['alt'] == true) parts.add('Alt');
-                                  if (modifiers['shift'] == true) parts.add('Shift');
-                                  if (modifiers['meta'] == true) parts.add('Cmd');
-                                  
-                                  parts.add(hotkeyData['keyCode'].toString().replaceAll('PhysicalKeyboardKey.', ''));
-                                  
-                                  return Text(parts.join(' + '));
-                                },
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: ValueListenableBuilder(
+                                  valueListenable:
+                                      Hive.box('settings').listenable(),
+                                  builder: (context, box, _) {
+                                    final hotkeyData =
+                                        box.get('assistant_hotkey');
+                                    if (hotkeyData == null) {
+                                      return const Text('None configured');
+                                    }
+                                    return HotKeyVirtualView(
+                                      hotKey: hotKeyConverter(hotkeyData),
+                                    );
+                                  },
+                                ),
+
                               ),
                             ),
                           ),
@@ -266,7 +324,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             icon: const Icon(Icons.edit),
                             onPressed: () {
                               _handleClickRegisterNewHotKey('assistant_hotkey');
-                            }
+                            },
                           ),
                         ],
                       ),

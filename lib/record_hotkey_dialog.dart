@@ -1,6 +1,5 @@
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:flutter/material.dart';
-import 'package:bot_toast/bot_toast.dart';
 
 class RecordHotKeyDialog extends StatefulWidget {
   const RecordHotKeyDialog({
