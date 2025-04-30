@@ -3,9 +3,10 @@ import 'package:hive_flutter/hive_flutter.dart';
 class AppStorage {
   static const String _settingsBoxName = 'settings';
   static const String _apiKeyKey = 'groq_api_key';
-  static const String _hotkeyKey = 'transcription_hotkey';
 
-  static late Box _settingsBox;
+  static late Box<dynamic> _settingsBox;
+
+  static Box<dynamic> get settingsBox => _settingsBox;
 
   static Future<void> init() async {
     _settingsBox = await Hive.openBox(_settingsBoxName);
