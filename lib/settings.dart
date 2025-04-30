@@ -1,3 +1,4 @@
+import 'package:autoquill_ai/core/storage/app_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -43,51 +44,59 @@ class SettingsPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: groqAPIKeyController,
-                          obscureText: !state.isApiKeyVisible,
-                          decoration: const InputDecoration(
-                            labelText: 'Groq API Key',
-                            border: OutlineInputBorder(),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: TextField(
+                              controller: groqAPIKeyController,
+                              obscureText: !state.isApiKeyVisible,
+                              decoration: const InputDecoration(
+                                labelText: 'Groq API Key',
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: Icon(
-                              state.isApiKeyVisible
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
+                        const SizedBox(width: 8),
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                state.isApiKeyVisible
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                              onPressed: () {
+                                context
+                                    .read<SettingsBloc>()
+                                    .add(ToggleApiKeyVisibility());
+                              },
                             ),
-                            onPressed: () {
-                              context
-                                  .read<SettingsBloc>()
-                                  .add(ToggleApiKeyVisibility());
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.save),
-                            onPressed: () {
-                              context
-                                  .read<SettingsBloc>()
-                                  .add(SaveApiKey(groqAPIKeyController.text));
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () {
-                              groqAPIKeyController.clear();
-                              context.read<SettingsBloc>().add(DeleteApiKey());
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
+                            IconButton(
+                              icon: const Icon(Icons.save),
+                              onPressed: () {
+                                context
+                                    .read<SettingsBloc>()
+                                    .add(SaveApiKey(groqAPIKeyController.text));
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () {
+                                groqAPIKeyController.clear();
+                                context.read<SettingsBloc>().add(DeleteApiKey());
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -109,11 +118,22 @@ class SettingsPage extends StatelessWidget {
                         children: [
                           const Text('Transcription mode'),
                           const Spacer(),
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text('None configured'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
                           IconButton(
                             icon: const Icon(Icons.edit),
                             onPressed: () {
-                              null;
-                            },
+                              // _handleClickRegisterNewHotKey();
+                            }
                           ),
                         ],
                       ),
@@ -131,11 +151,22 @@ class SettingsPage extends StatelessWidget {
                         children: [
                           const Text('Assistant mode'),
                           const Spacer(),
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text('None configured'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
                           IconButton(
                             icon: const Icon(Icons.edit),
                             onPressed: () {
-                              null;
-                            },
+                              // _handleClickRegisterNewHotKey();
+                            }
                           ),
                         ],
                       ),

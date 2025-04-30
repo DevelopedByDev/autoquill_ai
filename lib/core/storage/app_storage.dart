@@ -25,16 +25,16 @@ class AppStorage {
     await _settingsBox.delete(_apiKeyKey);
   }
 
-  static Future<void> saveHotkey(Map<String, dynamic> hotkeyData) async {
-    await _settingsBox.put(_hotkeyKey, hotkeyData);
+  static Future<void> saveHotkey(String setting, Map<String, dynamic> hotkeyData) async {
+    await _settingsBox.put(setting, hotkeyData);
   }
 
-  static Map<String, dynamic>? getHotkey() {
-    final data = _settingsBox.get(_hotkeyKey);
+  static Map<String, dynamic>? getHotkey(String setting) {
+    final data = _settingsBox.get(setting);
     return data != null ? Map<String, dynamic>.from(data) : null;
   }
 
-  static Future<void> deleteHotkey() async {
-    await _settingsBox.delete(_hotkeyKey);
+  static Future<void> deleteHotkey(String setting) async {
+    await _settingsBox.delete(setting);
   }
 }
