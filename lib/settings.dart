@@ -139,6 +139,9 @@ class _SettingsPageState extends State<SettingsPage> {
       },
     );
   }
+  Future<void> _handleHotKeyUnregister(String setting) async {
+    await AppStorage.deleteHotkey(setting);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -277,6 +280,14 @@ class _SettingsPageState extends State<SettingsPage> {
                               );
                             },
                           ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              // TODO
+                              _handleHotKeyUnregister('transcription_hotkey');
+                            },
+                          ),
                         ],
                       ),
                     ),
@@ -324,6 +335,13 @@ class _SettingsPageState extends State<SettingsPage> {
                             icon: const Icon(Icons.edit),
                             onPressed: () {
                               _handleClickRegisterNewHotKey('assistant_hotkey');
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              _handleHotKeyUnregister('assistant_hotkey');
                             },
                           ),
                         ],
