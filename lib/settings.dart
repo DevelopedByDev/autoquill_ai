@@ -44,12 +44,12 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _loadStoredHotkeys() async {
-    final transcriptionHotkey =
-        Hive.box('settings').get('transcription_hotkey');
+    final transcriptionHotkey = Hive.box('settings').get('transcription_hotkey');
     final assistantHotkey = Hive.box('settings').get('assistant_hotkey');
 
     if (transcriptionHotkey != null) {
       try {
+        print(transcriptionHotkey);
         final hotkey = hotKeyConverter(transcriptionHotkey);
         await hotKeyManager.register(
           hotkey,
@@ -65,6 +65,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
     if (assistantHotkey != null) {
       try {
+        print(assistantHotkey);
         final hotkey = hotKeyConverter(assistantHotkey);
         await hotKeyManager.register(
           hotkey,
@@ -88,19 +89,11 @@ class _SettingsPageState extends State<SettingsPage> {
   void _keyDownHandler(HotKey hotKey) {
     String log = 'keyDown ${hotKey.debugName} (${hotKey.scope})';
     BotToast.showText(text: log);
-    if (kDebugMode) {
-      print(log);
-      print(Hive.box('settings').get('api_key'));
-    }
   }
 
   void _keyUpHandler(HotKey hotKey) {
     String log = 'keyUp   ${hotKey.debugName} (${hotKey.scope})';
     BotToast.showText(text: log);
-    if (kDebugMode) {
-      print(hotKey);
-      print(log);
-    }
   }
 
   Future<void> _handleHotKeyRegister(HotKey hotKey, String setting) async {
@@ -141,14 +134,8 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _handleHotKeyUnregister(String setting) async {
     final hotkeyData = Hive.box('settings').get(setting);
     if (hotkeyData != null) {
-      try {
-        final hotkey = hotKeyConverter(hotkeyData);
-        await hotKeyManager.unregister(hotkey);
-      } catch (e) {
-        if (kDebugMode) {
-          print('Error unregistering hotkey: $e');
-        }
-      }
+      final hotkey = hotKeyConverter(hotkeyData);
+      await hotKeyManager.unregister(hotkey);
     }
     await AppStorage.deleteHotkey(setting);
   }

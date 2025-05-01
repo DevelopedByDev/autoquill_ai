@@ -1,11 +1,6 @@
-import 'dart:ffi';
-
-import 'package:autoquill_ai/hotkey_converter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:hotkey_manager/hotkey_manager.dart';
 import '../../../recording/presentation/bloc/recording_bloc.dart';
 import '../bloc/transcription_bloc.dart';
 import '../../../../settings.dart';
@@ -63,32 +58,12 @@ class TranscriptionPage extends StatelessWidget {
                         // Show record button when not recording
                         BlocBuilder<TranscriptionBloc, TranscriptionState>(
                           builder: (context, state) {
-                            final hasApiKey = state.apiKey != null && state.apiKey!.isNotEmpty;
-                            // return FloatingActionButton(
-                            //   onPressed: hasApiKey
-                            //       ? () {
-                            //           context
-                            //               .read<RecordingBloc>()
-                            //               .add(StartRecording());
-                            //         }
-                            //       : null, // Button is disabled when no API key exists
-                            //   tooltip: hasApiKey
-                            //       ? 'Start Recording'
-                            //       : 'Enter API Key in settings page',
-                            //   backgroundColor:
-                            //       hasApiKey ? Colors.blue : Colors.grey,
-                            //   foregroundColor: hasApiKey
-                            //       ? Colors.white
-                            //       : Colors.grey.shade300,
-                            //   child: const Icon(Icons.mic),
-                            // );
-
                             return ValueListenableBuilder(
                                   valueListenable:
                                       Hive.box('settings').listenable(),
                                   builder: (context, box, _) {
                                     final apiKey = box.get('groq_api_key');
-                                    if (apiKey == null) {
+                                    if (apiKey == null || apiKey.isEmpty) {
                                       return FloatingActionButton(onPressed: null, tooltip: 'Enter API Key in settings page', backgroundColor: Colors.grey, foregroundColor: Colors.grey.shade300, child: const Icon(Icons.mic),);
                                     }
                                     return FloatingActionButton(onPressed: () {
