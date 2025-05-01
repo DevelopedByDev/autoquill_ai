@@ -198,39 +198,42 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: Icon(
-                                state.isApiKeyVisible
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  state.isApiKeyVisible
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
+                                onPressed: () {
+                                  context
+                                      .read<SettingsBloc>()
+                                      .add(ToggleApiKeyVisibility());
+                                },
                               ),
-                              onPressed: () {
-                                context
-                                    .read<SettingsBloc>()
-                                    .add(ToggleApiKeyVisibility());
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.save),
-                              onPressed: () {
-                                final apiKey = _apiKeyController.text;
-                                if (apiKey.isNotEmpty) {
-                                  context.read<SettingsBloc>().add(SaveApiKey(apiKey));
-                                }
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () {
-                                _apiKeyController.clear();
-                                context
-                                    .read<SettingsBloc>()
-                                    .add(DeleteApiKey());
-                              },
-                            ),
-                          ],
+                              IconButton(
+                                icon: const Icon(Icons.save),
+                                onPressed: () {
+                                  final apiKey = _apiKeyController.text;
+                                  if (apiKey.isNotEmpty) {
+                                    context.read<SettingsBloc>().add(SaveApiKey(apiKey));
+                                  }
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () {
+                                  _apiKeyController.clear();
+                                  context
+                                      .read<SettingsBloc>()
+                                      .add(DeleteApiKey());
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -255,47 +258,49 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           const Text('Transcription mode'),
                           const Spacer(),
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: ValueListenableBuilder(
-                                  valueListenable:
-                                      Hive.box('settings').listenable(),
-                                  builder: (context, box, _) {
-                                    final hotkeyData =
-                                        box.get('transcription_hotkey');
-                                    if (hotkeyData == null) {
-                                      return const Text('None configured');
-                                    }
-                                    return HotKeyVirtualView(
-                                      hotKey: hotKeyConverter(hotkeyData),
+                          Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: ValueListenableBuilder(
+                                      valueListenable:
+                                          Hive.box('settings').listenable(),
+                                      builder: (context, box, _) {
+                                        final hotkeyData =
+                                            box.get('transcription_hotkey');
+                                        if (hotkeyData == null) {
+                                          return const Text('None configured');
+                                        }
+                                        return HotKeyVirtualView(
+                                          hotKey: hotKeyConverter(hotkeyData),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () {
+                                    _handleClickRegisterNewHotKey(
+                                      'transcription_hotkey',
                                     );
                                   },
                                 ),
-                              ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: () {
+                                    _handleHotKeyUnregister('transcription_hotkey');
+                                  },
+                                ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: () {
-                              _handleClickRegisterNewHotKey(
-                                'transcription_hotkey',
-                              );
-                            },
-                          ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () {
-                              _handleHotKeyUnregister('transcription_hotkey');
-                            },
-                          ),
                         ],
                       ),
                     ),
@@ -312,49 +317,51 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           const Text('Assistant mode'),
                           const Spacer(),
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: ValueListenableBuilder(
-                                  valueListenable:
-                                      Hive.box('settings').listenable(),
-                                  builder: (context, box, _) {
-                                    final hotkeyData =
-                                        box.get('assistant_hotkey');
-                                    if (hotkeyData == null) {
-                                      return const Text('None configured');
-                                    }
-                                    return HotKeyVirtualView(
-                                      hotKey: hotKeyConverter(hotkeyData),
-                                    );
+                          Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: ValueListenableBuilder(
+                                      valueListenable:
+                                          Hive.box('settings').listenable(),
+                                      builder: (context, box, _) {
+                                        final hotkeyData =
+                                            box.get('assistant_hotkey');
+                                        if (hotkeyData == null) {
+                                          return const Text('None configured');
+                                        }
+                                        return HotKeyVirtualView(
+                                          hotKey: hotKeyConverter(hotkeyData),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () {
+                                    _handleClickRegisterNewHotKey('assistant_hotkey');
                                   },
                                 ),
-                              ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: () {
+                                    _handleHotKeyUnregister('assistant_hotkey');
+                                  },
+                                ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: () {
-                              _handleClickRegisterNewHotKey('assistant_hotkey');
-                            },
-                          ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () {
-                              _handleHotKeyUnregister('assistant_hotkey');
-                            },
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
