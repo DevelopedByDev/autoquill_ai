@@ -49,7 +49,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
     if (transcriptionHotkey != null) {
       try {
-        print(transcriptionHotkey);
         final hotkey = hotKeyConverter(transcriptionHotkey);
         await hotKeyManager.register(
           hotkey,
@@ -65,7 +64,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
     if (assistantHotkey != null) {
       try {
-        print(assistantHotkey);
         final hotkey = hotKeyConverter(assistantHotkey);
         await hotKeyManager.register(
           hotkey,
@@ -89,11 +87,13 @@ class _SettingsPageState extends State<SettingsPage> {
   void _keyDownHandler(HotKey hotKey) {
     String log = 'keyDown ${hotKey.debugName} (${hotKey.scope})';
     BotToast.showText(text: log);
+    print("keyDown ${hotKey.debugName} (${hotKey.scope})");
   }
 
   void _keyUpHandler(HotKey hotKey) {
     String log = 'keyUp   ${hotKey.debugName} (${hotKey.scope})';
     BotToast.showText(text: log);
+    print("keyUp ${hotKey.debugName} (${hotKey.scope})");
   }
 
   Future<void> _handleHotKeyRegister(HotKey hotKey, String setting) async {
