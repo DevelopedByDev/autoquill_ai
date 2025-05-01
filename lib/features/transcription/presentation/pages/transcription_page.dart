@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../../recording/presentation/bloc/recording_bloc.dart';
 import '../bloc/transcription_bloc.dart';
-import '../../../../settings.dart';
+import '../../../settings/presentation/pages/settings.dart';
 
 class TranscriptionPage extends StatelessWidget {
   const TranscriptionPage({super.key});

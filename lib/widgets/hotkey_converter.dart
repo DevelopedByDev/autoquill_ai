@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
-import 'package:autoquill_ai/keyboard_key_converter.dart';
+import 'package:autoquill_ai/widgets/keyboard_key_converter.dart';
 
 HotKey hotKeyConverter(dynamic data) {
   final hotkeyData = Map<String, dynamic>.from(data as Map);

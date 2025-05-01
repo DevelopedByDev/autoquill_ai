@@ -1,17 +1,17 @@
-import 'package:autoquill_ai/hotkey_converter.dart';
+import 'package:autoquill_ai/widgets/hotkey_converter.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:autoquill_ai/core/storage/app_storage.dart';
-import 'package:autoquill_ai/record_hotkey_dialog.dart';
+import 'package:autoquill_ai/widgets/record_hotkey_dialog.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 
-import 'features/settings/bloc/settings_bloc.dart';
-import 'features/settings/bloc/settings_event.dart';
-import 'features/settings/bloc/settings_state.dart';
+import '../bloc/settings_bloc.dart';
+import '../bloc/settings_event.dart';
+import '../bloc/settings_state.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({
@@ -24,6 +24,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   late TextEditingController _apiKeyController;
+  // ignore: unused_field
   String _apiKey = '';
 
   @override
