@@ -12,6 +12,7 @@ import 'core/di/injection_container.dart' as di;
 import 'core/storage/app_storage.dart';
 import 'features/recording/presentation/bloc/recording_bloc.dart';
 import 'features/transcription/domain/repositories/transcription_repository.dart';
+import 'hotkey_converter.dart'; //Import hotkey_converter
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,10 +22,68 @@ void main() async {
   await Hive.initFlutter(appDir.path);
   await AppStorage.init();
 
+  // Load API key and hotkeys
+  await _loadStoredData();
+
   // Initialize dependency injection
   await di.init();
 
   runApp(const MainApp());
+}
+
+Future<void> _loadStoredData() async {
+  // Load API Key
+  await AppStorage.getApiKey();
+
+  // Load Hotkeys
+  final transcriptionHotkey = Hive.box('settings').get('transcription_hotkey');
+  final assistantHotkey = Hive.box('settings').get('assistant_hotkey');
+
+  if (transcriptionHotkey != null) {
+    try {
+      final hotkey = hotKeyConverter(transcriptionHotkey);
+      await hotKeyManager.register(
+        hotkey,
+        keyDownHandler: (hotKey) {
+          String log = 'keyDown ${hotKey.debugName} (${hotKey.scope})';
+          BotToast.showText(text: log);
+          print("keyDown ${hotKey.debugName} (${hotKey.scope})");
+        },
+        keyUpHandler: (hotKey) {
+          String log = 'keyUp   ${hotKey.debugName} (${hotKey.scope})';
+          BotToast.showText(text: log);
+          print("keyUp ${hotKey.debugName} (${hotKey.scope})");
+        },
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading transcription hotkey: $e');
+      }
+    }
+  }
+
+  if (assistantHotkey != null) {
+    try {
+      final hotkey = hotKeyConverter(assistantHotkey);
+      await hotKeyManager.register(
+        hotkey,
+        keyDownHandler: (hotKey) {
+          String log = 'keyDown ${hotKey.debugName} (${hotKey.scope})';
+          BotToast.showText(text: log);
+          print("keyDown ${hotKey.debugName} (${hotKey.scope})");
+        },
+        keyUpHandler: (hotKey) {
+          String log = 'keyUp   ${hotKey.debugName} (${hotKey.scope})';
+          BotToast.showText(text: log);
+          print("keyUp ${hotKey.debugName} (${hotKey.scope})");
+        },
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading assistant hotkey: $e');
+      }
+    }
+  }
 }
 
 class ExampleIntent extends Intent {}
