@@ -12,7 +12,7 @@ import 'core/di/injection_container.dart' as di;
 import 'core/storage/app_storage.dart';
 import 'features/recording/presentation/bloc/recording_bloc.dart';
 import 'features/transcription/domain/repositories/transcription_repository.dart';
-import 'widgets/hotkey_converter.dart'; //Import hotkey_converter
+import 'widgets/hotkey_converter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
