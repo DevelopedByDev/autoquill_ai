@@ -1,5 +1,6 @@
 import 'package:autoquill_ai/features/transcription/presentation/pages/transcription_page.dart';
 import 'package:autoquill_ai/features/transcription/presentation/bloc/transcription_bloc.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,7 +32,9 @@ class ExampleIntent extends Intent {}
 class ExampleAction extends Action<ExampleIntent> {
   @override
   void invoke(covariant ExampleIntent intent) {
-    print('ExampleAction invoked');
+    if (kDebugMode) {
+      print('ExampleAction invoked');
+    }
   }
 }
 

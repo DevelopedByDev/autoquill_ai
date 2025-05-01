@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../../../../core/storage/app_storage.dart';
 import '../../domain/repositories/transcription_repository.dart';
 
@@ -12,6 +14,14 @@ abstract class TranscriptionEvent extends Equatable {
 }
 
 class InitializeTranscription extends TranscriptionEvent {}
+
+class UpdateApiKey extends TranscriptionEvent {
+  final String? apiKey;
+  const UpdateApiKey(this.apiKey);
+
+  @override
+  List<Object?> get props => [apiKey];
+}
 
 class StartTranscription extends TranscriptionEvent {
   final String audioPath;
@@ -57,11 +67,18 @@ class TranscriptionState extends Equatable {
 
 class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
   final TranscriptionRepository repository;
+  late final StreamSubscription<BoxEvent> _apiKeySubscription;
 
   TranscriptionBloc({required this.repository}) : super(const TranscriptionState()) {
+    // Listen to API key changes
+    _apiKeySubscription = Hive.box('settings').watch(key: 'groq_api_key').listen((event) async {
+      final apiKey = await AppStorage.getApiKey();
+      add(UpdateApiKey(apiKey));
+    });
     on<InitializeTranscription>(_onInitializeTranscription);
     on<StartTranscription>(_onStartTranscription);
     on<ClearTranscription>(_onClearTranscription);
+    on<UpdateApiKey>(_onUpdateApiKey);
   }
 
   Future<void> _onInitializeTranscription(InitializeTranscription event, Emitter<TranscriptionState> emit) async {
@@ -82,10 +99,11 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
     emit(state.copyWith(isLoading: true, error: null));
 
     try {
-      final response = await repository.transcribeAudio(event.audioPath, state.apiKey!);
+      final response = await repository.transcribeAudio(event.audioPath, apiKey);
       emit(state.copyWith(
         transcriptionText: response.text,
         isLoading: false,
+        apiKey: apiKey,
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -97,5 +115,17 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
 
   void _onClearTranscription(ClearTranscription event, Emitter<TranscriptionState> emit) {
     emit(state.copyWith(transcriptionText: null, error: null));
+  }
+
+  void _onUpdateApiKey(UpdateApiKey event, Emitter<TranscriptionState> emit) {
+    // If API key is empty or null, treat it as null to disable the recording button
+    final apiKey = event.apiKey?.isEmpty == true ? null : event.apiKey;
+    emit(state.copyWith(apiKey: apiKey));
+  }
+
+  @override
+  Future<void> close() {
+    _apiKeySubscription.cancel();
+    return super.close();
   }
 }

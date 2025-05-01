@@ -1,6 +1,11 @@
+import 'dart:ffi';
+
+import 'package:autoquill_ai/hotkey_converter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/storage/app_storage.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hotkey_manager/hotkey_manager.dart';
 import '../../../recording/presentation/bloc/recording_bloc.dart';
 import '../bloc/transcription_bloc.dart';
 import '../../../../settings.dart';
@@ -31,30 +36,22 @@ class TranscriptionPage extends StatelessWidget {
                   icon: const Icon(Icons.settings),
                   tooltip: 'Settings',
                   onPressed: () {
-                    AppStorage.getApiKey().then((apiKey) {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => SettingsPage(
-                            groqAPIKeyController: TextEditingController(text: apiKey ?? ''),
-                          ),
-                        ),
-                      ).then((_) {
-                        // Refresh API key after settings page is closed
-                        context.read<TranscriptionBloc>().add(
-                              InitializeTranscription(),
-                            );
-                      });
-                    });
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => SettingsPage(),
+                      ),
+                    );
                   },
                 ),
               ],
             ),
             body: BlocConsumer<RecordingBloc, RecordingState>(
               listener: (context, state) {
-                if (state is RecordingComplete && state.recordedFilePath != null) {
+                if (state is RecordingComplete &&
+                    state.recordedFilePath != null) {
                   context.read<TranscriptionBloc>().add(
-                    StartTranscription(state.recordedFilePath!),
-                  );
+                        StartTranscription(state.recordedFilePath!),
+                      );
                 }
               },
               builder: (context, recordingState) {
@@ -62,37 +59,76 @@ class TranscriptionPage extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      if (!recordingState.isRecording) ...[  // Show record button when not recording
-                        FloatingActionButton(
-                          onPressed: () {
-                            context.read<RecordingBloc>().add(StartRecording());
+                      if (!recordingState.isRecording) ...[
+                        // Show record button when not recording
+                        BlocBuilder<TranscriptionBloc, TranscriptionState>(
+                          builder: (context, state) {
+                            final hasApiKey = state.apiKey != null && state.apiKey!.isNotEmpty;
+                            // return FloatingActionButton(
+                            //   onPressed: hasApiKey
+                            //       ? () {
+                            //           context
+                            //               .read<RecordingBloc>()
+                            //               .add(StartRecording());
+                            //         }
+                            //       : null, // Button is disabled when no API key exists
+                            //   tooltip: hasApiKey
+                            //       ? 'Start Recording'
+                            //       : 'Enter API Key in settings page',
+                            //   backgroundColor:
+                            //       hasApiKey ? Colors.blue : Colors.grey,
+                            //   foregroundColor: hasApiKey
+                            //       ? Colors.white
+                            //       : Colors.grey.shade300,
+                            //   child: const Icon(Icons.mic),
+                            // );
+
+                            return ValueListenableBuilder(
+                                  valueListenable:
+                                      Hive.box('settings').listenable(),
+                                  builder: (context, box, _) {
+                                    final apiKey = box.get('groq_api_key');
+                                    if (apiKey == null) {
+                                      return FloatingActionButton(onPressed: null, tooltip: 'Enter API Key in settings page', backgroundColor: Colors.grey, foregroundColor: Colors.grey.shade300, child: const Icon(Icons.mic),);
+                                    }
+                                    return FloatingActionButton(onPressed: () {
+                                      context.read<RecordingBloc>().add(StartRecording());
+                                    }, tooltip: 'Start Recording', backgroundColor: Colors.blue, foregroundColor: Colors.white, child: const Icon(Icons.mic),);
+                                  },
+                            );
                           },
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                          child: const Icon(Icons.mic),
                         ),
-                      ] else ...[  // Show recording controls when recording
+                      ] else ...[
+                        // Show recording controls when recording
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             FloatingActionButton(
                               onPressed: () {
                                 if (recordingState.isPaused) {
-                                  context.read<RecordingBloc>().add(ResumeRecording());
+                                  context
+                                      .read<RecordingBloc>()
+                                      .add(ResumeRecording());
                                 } else {
-                                  context.read<RecordingBloc>().add(PauseRecording());
+                                  context
+                                      .read<RecordingBloc>()
+                                      .add(PauseRecording());
                                 }
                               },
                               backgroundColor: Colors.blue,
                               foregroundColor: Colors.white,
                               child: Icon(
-                                recordingState.isPaused ? Icons.play_arrow : Icons.pause,
+                                recordingState.isPaused
+                                    ? Icons.play_arrow
+                                    : Icons.pause,
                               ),
                             ),
                             const SizedBox(width: 16),
                             FloatingActionButton(
                               onPressed: () {
-                                context.read<RecordingBloc>().add(StopRecording());
+                                context
+                                    .read<RecordingBloc>()
+                                    .add(StopRecording());
                               },
                               backgroundColor: Colors.red,
                               foregroundColor: Colors.white,
@@ -101,8 +137,12 @@ class TranscriptionPage extends StatelessWidget {
                             const SizedBox(width: 16),
                             FloatingActionButton(
                               onPressed: () {
-                                context.read<RecordingBloc>().add(StopRecording());
-                                context.read<RecordingBloc>().add(StartRecording());
+                                context
+                                    .read<RecordingBloc>()
+                                    .add(StopRecording());
+                                context
+                                    .read<RecordingBloc>()
+                                    .add(StartRecording());
                               },
                               backgroundColor: Colors.green,
                               foregroundColor: Colors.white,
@@ -111,8 +151,12 @@ class TranscriptionPage extends StatelessWidget {
                             const SizedBox(width: 16),
                             FloatingActionButton(
                               onPressed: () {
-                                context.read<RecordingBloc>().add(CancelRecording());
-                                context.read<TranscriptionBloc>().add(ClearTranscription());
+                                context
+                                    .read<RecordingBloc>()
+                                    .add(CancelRecording());
+                                context
+                                    .read<TranscriptionBloc>()
+                                    .add(ClearTranscription());
                               },
                               backgroundColor: Colors.grey,
                               foregroundColor: Colors.white,
@@ -121,15 +165,28 @@ class TranscriptionPage extends StatelessWidget {
                           ],
                         ),
                       ],
-                      if (transcriptionState.isLoading) ...[  
+                      if (transcriptionState.isLoading) ...[
                         const SizedBox(height: 20),
                         const CircularProgressIndicator(),
-                      ] else if (transcriptionState.transcriptionText != null) ...[  
+                      ] else if (transcriptionState.transcriptionText !=
+                          null) ...[
                         const SizedBox(height: 20),
-                        const Text('Transcription:', style: TextStyle(fontWeight: FontWeight.bold)),
+                        const Text('Transcription:',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
                         Padding(
                           padding: const EdgeInsets.all(16.0),
-                          child: Text(transcriptionState.transcriptionText!),
+                          // child: Text(transcriptionState.transcriptionText!),
+                          child: ValueListenableBuilder(
+                                  valueListenable:
+                                      Hive.box('settings').listenable(),
+                                  builder: (context, box, _) {
+                                    final apiKey = box.get('groq_api_key');
+                                    if (apiKey != null) {
+                                      return Text(transcriptionState.transcriptionText!);
+                                    }
+                                    return Text('Enter API Key in settings page');
+                                  },
+                            ),
                         ),
                       ]
                     ],

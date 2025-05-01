@@ -37,8 +37,8 @@ class RecordingInitial extends RecordingState {
 }
 
 class RecordingInProgress extends RecordingState {
-  const RecordingInProgress({required bool isPaused}) 
-      : super(isRecording: true, isPaused: isPaused);
+  const RecordingInProgress({required super.isPaused}) 
+      : super(isRecording: true);
 }
 
 class RecordingComplete extends RecordingState {

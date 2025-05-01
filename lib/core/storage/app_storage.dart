@@ -2,7 +2,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 class AppStorage {
   static const String _settingsBoxName = 'settings';
-  static const String _apiKeyKey = 'groq_api_key';
+  static const String _groqKey = 'groq_api_key';
 
   static late Box<dynamic> _settingsBox;
 
@@ -13,17 +13,17 @@ class AppStorage {
   }
 
   static Future<void> saveApiKey(String apiKey) async {
-    await _settingsBox.put(_apiKeyKey, apiKey);
+    await _settingsBox.put(_groqKey, apiKey);
   }
 
   static Future<String?> getApiKey() async {
-    if (!_settingsBox.containsKey(_apiKeyKey)) return null;
-    final value = _settingsBox.get(_apiKeyKey) as String?;
+    if (!_settingsBox.containsKey(_groqKey)) return null;
+    final value = _settingsBox.get(_groqKey) as String?;
     return value?.isEmpty == true ? null : value;
   }
 
   static Future<void> deleteApiKey() async {
-    await _settingsBox.delete(_apiKeyKey);
+    await _settingsBox.delete(_groqKey);
   }
 
   static Future<void> saveHotkey(String setting, Map<String, dynamic> hotkeyData) async {
