@@ -5,9 +5,17 @@ import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:autoquill_ai/core/storage/app_storage.dart';
 import 'package:autoquill_ai/widgets/hotkey_converter.dart';
+import 'package:autoquill_ai/features/recording/presentation/bloc/recording_bloc.dart';
+import 'package:autoquill_ai/features/transcription/presentation/bloc/transcription_bloc.dart';
 
 /// A centralized class for handling keyboard hotkeys throughout the application
 class HotkeyHandler {
+  // References to the blocs for recording and transcription
+  static RecordingBloc? _recordingBloc;
+  static TranscriptionBloc? _transcriptionBloc;
+  
+  // Flag to track if recording is in progress via hotkey
+  static bool _isHotkeyRecordingActive = false;
   // Cache for converted hotkeys to avoid repeated conversions
   static final Map<String, HotKey> _hotkeyCache = {};
   
@@ -17,6 +25,12 @@ class HotkeyHandler {
   // Track active hotkeys to prevent duplicate events
   static final Set<String> _activeHotkeys = {};
   
+  /// Set the blocs for handling recording and transcription
+  static void setBlocs(RecordingBloc recordingBloc, TranscriptionBloc transcriptionBloc) {
+    _recordingBloc = recordingBloc;
+    _transcriptionBloc = transcriptionBloc;
+  }
+
   /// Handles keyDown events for any registered hotkey
   static void keyDownHandler(HotKey hotKey) {
     // Check if this hotkey is already being processed to avoid duplicates
@@ -32,6 +46,22 @@ class HotkeyHandler {
     
     // Mark this hotkey as active
     _activeHotkeys.add(hotkeyId);
+    
+    // Debug information about the hotkey
+    if (kDebugMode) {
+      print("Hotkey identifier: '${hotKey.identifier}'");
+      print("Blocs initialized: ${_recordingBloc != null && _transcriptionBloc != null}");
+    }
+    
+    // Handle transcription hotkey
+    if (hotKey.identifier == 'transcription_hotkey') {
+      if (kDebugMode) {
+        print("Transcription hotkey detected, handling...");
+      }
+      _handleTranscriptionHotkey();
+    } else if (kDebugMode) {
+      print("Not a transcription hotkey: '${hotKey.identifier}'");
+    }
     
     String log = 'keyDown ${hotKey.debugName} (${hotKey.scope})';
     BotToast.showText(text: log);
@@ -123,11 +153,27 @@ class HotkeyHandler {
       
       // Convert hotkeys and store in cache (fast operation)
       if (transcriptionHotkey != null) {
-        _hotkeyCache['transcription_hotkey'] = hotKeyConverter(transcriptionHotkey);
+        final hotkey = hotKeyConverter(transcriptionHotkey);
+        // Explicitly set the identifier
+        final updatedHotkey = HotKey(
+          key: hotkey.key,
+          modifiers: hotkey.modifiers,
+          scope: hotkey.scope,
+          identifier: 'transcription_hotkey',
+        );
+        _hotkeyCache['transcription_hotkey'] = updatedHotkey;
       }
       
       if (assistantHotkey != null) {
-        _hotkeyCache['assistant_hotkey'] = hotKeyConverter(assistantHotkey);
+        final hotkey = hotKeyConverter(assistantHotkey);
+        // Explicitly set the identifier
+        final updatedHotkey = HotKey(
+          key: hotkey.key,
+          modifiers: hotkey.modifiers,
+          scope: hotkey.scope,
+          identifier: 'assistant_hotkey',
+        );
+        _hotkeyCache['assistant_hotkey'] = updatedHotkey;
       }
       
       _hotkeysLoaded = true;
@@ -201,11 +247,37 @@ class HotkeyHandler {
     }
   }
   
-  /// Loads hotkeys in background after UI is rendered
-  static void lazyLoadHotkeys() {
-    // Delay registration slightly to allow UI to render first
-    Future.delayed(const Duration(milliseconds: 100), () async {
-      await loadAndRegisterStoredHotkeys();
-    });
+  /// Lazy loads hotkeys after UI is rendered
+  static Future<void> lazyLoadHotkeys() async {
+    // Delay to ensure UI is rendered
+    await Future.delayed(const Duration(milliseconds: 500));
+    await loadAndRegisterStoredHotkeys();
+  }
+  
+  /// Handles the transcription hotkey press
+  static void _handleTranscriptionHotkey() {
+    if (_recordingBloc == null || _transcriptionBloc == null) {
+      BotToast.showText(text: 'Recording system not initialized');
+      return;
+    }
+    
+    // Check if API key is available
+    final apiKey = Hive.box('settings').get('groq_api_key');
+    if (apiKey == null || apiKey.isEmpty) {
+      BotToast.showText(text: 'No API key found. Please add your Groq API key in Settings.');
+      return;
+    }
+    
+    if (!_isHotkeyRecordingActive) {
+      // Start recording
+      _recordingBloc!.add(StartRecording());
+      _isHotkeyRecordingActive = true;
+      BotToast.showText(text: 'Recording started');
+    } else {
+      // Stop recording and transcribe
+      _recordingBloc!.add(StopRecording());
+      _isHotkeyRecordingActive = false;
+      BotToast.showText(text: 'Recording stopped, transcribing...');
+    }
   }
 }

@@ -1,20 +1,38 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../../recording/presentation/bloc/recording_bloc.dart';
 import '../bloc/transcription_bloc.dart';
 import '../../../settings/presentation/pages/settings.dart';
+import '../../../../widgets/hotkey_handler.dart';
 
-class TranscriptionPage extends StatelessWidget {
+class TranscriptionPage extends StatefulWidget {
   const TranscriptionPage({super.key});
 
   @override
+  State<TranscriptionPage> createState() => _TranscriptionPageState();
+}
+
+class _TranscriptionPageState extends State<TranscriptionPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize the blocs in the HotkeyHandler after the first frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final recordingBloc = context.read<RecordingBloc>();
+      final transcriptionBloc = context.read<TranscriptionBloc>();
+      HotkeyHandler.setBlocs(recordingBloc, transcriptionBloc);
+      if (kDebugMode) {
+        print('HotkeyHandler initialized with blocs');
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => TranscriptionBloc(
-        repository: context.read(),
-      )..add(InitializeTranscription()),
-      child: BlocConsumer<TranscriptionBloc, TranscriptionState>(
+    // We don't need to create a new TranscriptionBloc here, as it's already provided in main.dart
+    return BlocConsumer<TranscriptionBloc, TranscriptionState>(
         listener: (context, state) {
           if (state.error != null) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -47,6 +65,10 @@ class TranscriptionPage extends StatelessWidget {
                   context.read<TranscriptionBloc>().add(
                         StartTranscription(state.recordedFilePath!),
                       );
+                  // Show toast notification when transcription starts
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Transcribing audio...')),
+                  );
                 }
               },
               builder: (context, recordingState) {
@@ -171,7 +193,6 @@ class TranscriptionPage extends StatelessWidget {
             ),
           );
         },
-      ),
     );
   }
 }
