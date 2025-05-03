@@ -47,3 +47,13 @@ class UpdateRecordedHotkey extends SettingsEvent {
   @override
   List<Object?> get props => [hotkey];
 }
+
+class DeleteHotkey extends SettingsEvent {
+  final String mode;
+  const DeleteHotkey(this.mode);
+
+  @override
+  List<Object?> get props => [mode];
+}
+
+class LoadStoredHotkeys extends SettingsEvent {}

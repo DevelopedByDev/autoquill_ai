@@ -1,9 +1,5 @@
 import 'package:autoquill_ai/widgets/hotkey_converter.dart';
-import 'package:flutter/services.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:autoquill_ai/core/storage/app_storage.dart';
 import 'package:autoquill_ai/widgets/record_hotkey_dialog.dart';
-import 'package:autoquill_ai/widgets/hotkey_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
@@ -12,68 +8,13 @@ import '../bloc/settings_bloc.dart';
 import '../bloc/settings_event.dart';
 import '../bloc/settings_state.dart';
 
-class SettingsPage extends StatefulWidget {
-  const SettingsPage({
+class SettingsPage extends StatelessWidget {
+  SettingsPage({
     super.key,
   });
 
-  @override
-  State<SettingsPage> createState() => _SettingsPageState();
-}
+  final TextEditingController _apiKeyController = TextEditingController();
 
-class _SettingsPageState extends State<SettingsPage> {
-  late TextEditingController _apiKeyController;
-  // ignore: unused_field
-  String _apiKey = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _apiKeyController = TextEditingController();
-    _loadStoredAPIkey();
-    _loadStoredHotkeys();
-  }
-
-  Future<void> _loadStoredAPIkey() async {
-    final apiKey = await AppStorage.getApiKey();
-    if (apiKey != null) {
-      setState(() {
-        _apiKey = apiKey;
-      });
-    }
-  }
-
-  Future<void> _loadStoredHotkeys() async {
-    // Use the centralized HotkeyHandler to load and register all stored hotkeys
-    await HotkeyHandler.loadAndRegisterStoredHotkeys();
-  }
-
-  @override
-  void dispose() {
-    _apiKeyController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _handleHotKeyRegister(HotKey hotKey, String setting) async {
-    await HotkeyHandler.registerHotKey(hotKey, setting);
-  }
-
-  Future<void> _handleClickRegisterNewHotKey(String setting) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return RecordHotKeyDialog(
-          onHotKeyRecorded: (newHotKey) =>
-              _handleHotKeyRegister(newHotKey, setting),
-        );
-      },
-    );
-  }
-
-  Future<void> _handleHotKeyUnregister(String setting) async {
-    await HotkeyHandler.unregisterHotKey(setting);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -203,12 +144,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                   ),
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
-                                    child: ValueListenableBuilder(
-                                      valueListenable:
-                                          Hive.box('settings').listenable(),
-                                      builder: (context, box, _) {
-                                        final hotkeyData =
-                                            box.get('transcription_hotkey');
+                                    child: BlocBuilder<SettingsBloc, SettingsState>(
+                                      builder: (context, state) {
+                                        final hotkeyData = state.storedHotkeys['transcription_hotkey'];
                                         if (hotkeyData == null) {
                                           return const Text('None configured');
                                         }
@@ -223,15 +161,15 @@ class _SettingsPageState extends State<SettingsPage> {
                                 IconButton(
                                   icon: const Icon(Icons.edit),
                                   onPressed: () {
-                                    _handleClickRegisterNewHotKey(
-                                      'transcription_hotkey',
-                                    );
+                                    _showRecordHotkeyDialog(context, 'transcription_hotkey');
                                   },
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.delete),
                                   onPressed: () {
-                                    _handleHotKeyUnregister('transcription_hotkey');
+                                    context.read<SettingsBloc>().add(
+                                          const DeleteHotkey('transcription_hotkey'),
+                                        );
                                   },
                                 ),
                               ],
@@ -262,12 +200,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                   ),
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
-                                    child: ValueListenableBuilder(
-                                      valueListenable:
-                                          Hive.box('settings').listenable(),
-                                      builder: (context, box, _) {
-                                        final hotkeyData =
-                                            box.get('assistant_hotkey');
+                                    child: BlocBuilder<SettingsBloc, SettingsState>(
+                                      builder: (context, state) {
+                                        final hotkeyData = state.storedHotkeys['assistant_hotkey'];
                                         if (hotkeyData == null) {
                                           return const Text('None configured');
                                         }
@@ -282,13 +217,15 @@ class _SettingsPageState extends State<SettingsPage> {
                                 IconButton(
                                   icon: const Icon(Icons.edit),
                                   onPressed: () {
-                                    _handleClickRegisterNewHotKey('assistant_hotkey');
+                                    _showRecordHotkeyDialog(context, 'assistant_hotkey');
                                   },
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.delete),
                                   onPressed: () {
-                                    _handleHotKeyUnregister('assistant_hotkey');
+                                    context.read<SettingsBloc>().add(
+                                          const DeleteHotkey('assistant_hotkey'),
+                                        );
                                   },
                                 ),
                               ],
@@ -303,6 +240,22 @@ class _SettingsPageState extends State<SettingsPage> {
           );
         },
       ),
+    );
+  }
+  
+  Future<void> _showRecordHotkeyDialog(BuildContext context, String mode) async {
+    context.read<SettingsBloc>().add(StartHotkeyRecording(mode));
+    
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return RecordHotKeyDialog(
+          onHotKeyRecorded: (newHotKey) {
+            context.read<SettingsBloc>().add(SaveHotkey(newHotKey));
+          },
+        );
+      },
     );
   }
 }
