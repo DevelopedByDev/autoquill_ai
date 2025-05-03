@@ -14,8 +14,25 @@ class HotkeyHandler {
   // Flag to track if hotkeys have been loaded
   static bool _hotkeysLoaded = false;
   
+  // Track active hotkeys to prevent duplicate events
+  static final Set<String> _activeHotkeys = {};
+  
   /// Handles keyDown events for any registered hotkey
   static void keyDownHandler(HotKey hotKey) {
+    // Check if this hotkey is already being processed to avoid duplicates
+    String hotkeyId = '${hotKey.hashCode}';
+    
+    // If this hotkey is already active, ignore this event
+    if (_activeHotkeys.contains(hotkeyId)) {
+      if (kDebugMode) {
+        print("Ignoring duplicate keyDown for ${hotKey.debugName}");
+      }
+      return;
+    }
+    
+    // Mark this hotkey as active
+    _activeHotkeys.add(hotkeyId);
+    
     String log = 'keyDown ${hotKey.debugName} (${hotKey.scope})';
     BotToast.showText(text: log);
     if (kDebugMode) {
@@ -25,6 +42,10 @@ class HotkeyHandler {
 
   /// Handles keyUp events for any registered hotkey
   static void keyUpHandler(HotKey hotKey) {
+    // Remove this hotkey from active set on key up
+    String hotkeyId = '${hotKey.hashCode}';
+    _activeHotkeys.remove(hotkeyId);
+    
     String log = 'keyUp   ${hotKey.debugName} (${hotKey.scope})';
     BotToast.showText(text: log);
     if (kDebugMode) {
@@ -147,23 +168,37 @@ class HotkeyHandler {
   static Future<void> loadAndRegisterStoredHotkeys() async {
     final stopwatch = Stopwatch()..start();
     
-    // First prepare the hotkeys (fast operation)
-    await prepareHotkeys();
-    
-    // Register hotkeys in parallel
-    final futures = <Future>[];
-    
-    for (final setting in _hotkeyCache.keys) {
-      futures.add(_registerHotkeyFromCache(setting));
+    try {
+      // First unregister all existing hotkeys to avoid conflicts
+      await hotKeyManager.unregisterAll();
+      
+      // Clear the active hotkeys set
+      _activeHotkeys.clear();
+      
+      // First prepare the hotkeys (fast operation)
+      await prepareHotkeys();
+      
+      // Register hotkeys in parallel
+      final futures = <Future>[];
+      
+      for (final setting in _hotkeyCache.keys) {
+        futures.add(_registerHotkeyFromCache(setting));
+      }
+      
+      // Wait for all registrations to complete
+      await Future.wait(futures);
+      
+      if (kDebugMode) {
+        print('Registered all hotkeys in ${stopwatch.elapsedMilliseconds}ms');
+        print('Active hotkeys: ${_hotkeyCache.keys.join(', ')}');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error registering hotkeys: $e');
+      }
+    } finally {
+      stopwatch.stop();
     }
-    
-    // Wait for all registrations to complete
-    await Future.wait(futures);
-    
-    if (kDebugMode) {
-      print('Registered all hotkeys in ${stopwatch.elapsedMilliseconds}ms');
-    }
-    stopwatch.stop();
   }
   
   /// Loads hotkeys in background after UI is rendered
