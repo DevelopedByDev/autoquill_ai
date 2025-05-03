@@ -3,8 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:autoquill_ai/core/storage/app_storage.dart';
 import 'package:autoquill_ai/widgets/record_hotkey_dialog.dart';
-import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/foundation.dart';
+import 'package:autoquill_ai/widgets/hotkey_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
@@ -45,38 +44,8 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _loadStoredHotkeys() async {
-    final transcriptionHotkey = Hive.box('settings').get('transcription_hotkey');
-    final assistantHotkey = Hive.box('settings').get('assistant_hotkey');
-
-    if (transcriptionHotkey != null) {
-      try {
-        final hotkey = hotKeyConverter(transcriptionHotkey);
-        await hotKeyManager.register(
-          hotkey,
-          keyDownHandler: _keyDownHandler,
-          keyUpHandler: _keyUpHandler,
-        );
-      } catch (e) {
-        if (kDebugMode) {
-          print('Error loading transcription hotkey: $e');
-        }
-      }
-    }
-
-    if (assistantHotkey != null) {
-      try {
-        final hotkey = hotKeyConverter(assistantHotkey);
-        await hotKeyManager.register(
-          hotkey,
-          keyDownHandler: _keyDownHandler,
-          keyUpHandler: _keyUpHandler,
-        );
-      } catch (e) {
-        if (kDebugMode) {
-          print('Error loading assistant hotkey: $e');
-        }
-      }
-    }
+    // Use the centralized HotkeyHandler to load and register all stored hotkeys
+    await HotkeyHandler.loadAndRegisterStoredHotkeys();
   }
 
   @override
@@ -85,38 +54,8 @@ class _SettingsPageState extends State<SettingsPage> {
     super.dispose();
   }
 
-  void _keyDownHandler(HotKey hotKey) {
-    String log = 'keyDown ${hotKey.debugName} (${hotKey.scope})';
-    BotToast.showText(text: log);
-    print("keyDown ${hotKey.debugName} (${hotKey.scope})");
-  }
-
-  void _keyUpHandler(HotKey hotKey) {
-    String log = 'keyUp   ${hotKey.debugName} (${hotKey.scope})';
-    BotToast.showText(text: log);
-    print("keyUp ${hotKey.debugName} (${hotKey.scope})");
-  }
-
   Future<void> _handleHotKeyRegister(HotKey hotKey, String setting) async {
-    await hotKeyManager.register(
-      hotKey,
-      keyDownHandler: _keyDownHandler,
-      keyUpHandler: _keyUpHandler,
-    );
-    final keyData = {
-      'identifier': hotKey.identifier,
-      'key': {
-        'keyId': hotKey.key is LogicalKeyboardKey
-            ? (hotKey.key as LogicalKeyboardKey).keyId
-            : null,
-        'usageCode': hotKey.key is PhysicalKeyboardKey
-            ? (hotKey.key as PhysicalKeyboardKey).usbHidUsage
-            : null,
-      },
-      'modifiers': hotKey.modifiers?.map((m) => m.name).toList() ?? <String>[],
-      'scope': hotKey.scope.name,
-    };
-    await AppStorage.saveHotkey(setting, keyData);
+    await HotkeyHandler.registerHotKey(hotKey, setting);
   }
 
   Future<void> _handleClickRegisterNewHotKey(String setting) async {
@@ -133,12 +72,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _handleHotKeyUnregister(String setting) async {
-    final hotkeyData = Hive.box('settings').get(setting);
-    if (hotkeyData != null) {
-      final hotkey = hotKeyConverter(hotkeyData);
-      await hotKeyManager.unregister(hotkey);
-    }
-    await AppStorage.deleteHotkey(setting);
+    await HotkeyHandler.unregisterHotKey(setting);
   }
 
   @override

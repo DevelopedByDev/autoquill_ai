@@ -8,82 +8,41 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:path_provider/path_provider.dart';
+
 import 'core/di/injection_container.dart' as di;
 import 'core/storage/app_storage.dart';
 import 'features/recording/presentation/bloc/recording_bloc.dart';
 import 'features/transcription/domain/repositories/transcription_repository.dart';
-import 'widgets/hotkey_converter.dart';
+import 'widgets/hotkey_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Hive
+  // Initialize Hive in Documents directory
   final appDir = await getApplicationDocumentsDirectory();
   await Hive.initFlutter(appDir.path);
+
+  // Initialize AppStorage wrapper for Hive
   await AppStorage.init();
 
-  // Load API key and hotkeys
+  // Load and register hotkeys ASAP before UI renders
   await _loadStoredData();
 
   // Initialize dependency injection
   await di.init();
 
   runApp(const MainApp());
+  
+  // Lazy load hotkeys after UI is rendered
+  HotkeyHandler.lazyLoadHotkeys();
 }
 
 Future<void> _loadStoredData() async {
-  // Load API Key
+  // Load stored API key (if needed by app logic)
   await AppStorage.getApiKey();
 
-  // Load Hotkeys
-  final transcriptionHotkey = Hive.box('settings').get('transcription_hotkey');
-  final assistantHotkey = Hive.box('settings').get('assistant_hotkey');
-
-  if (transcriptionHotkey != null) {
-    try {
-      final hotkey = hotKeyConverter(transcriptionHotkey);
-      await hotKeyManager.register(
-        hotkey,
-        keyDownHandler: (hotKey) {
-          String log = 'keyDown ${hotKey.debugName} (${hotKey.scope})';
-          BotToast.showText(text: log);
-          print("keyDown ${hotKey.debugName} (${hotKey.scope})");
-        },
-        keyUpHandler: (hotKey) {
-          String log = 'keyUp   ${hotKey.debugName} (${hotKey.scope})';
-          BotToast.showText(text: log);
-          print("keyUp ${hotKey.debugName} (${hotKey.scope})");
-        },
-      );
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error loading transcription hotkey: $e');
-      }
-    }
-  }
-
-  if (assistantHotkey != null) {
-    try {
-      final hotkey = hotKeyConverter(assistantHotkey);
-      await hotKeyManager.register(
-        hotkey,
-        keyDownHandler: (hotKey) {
-          String log = 'keyDown ${hotKey.debugName} (${hotKey.scope})';
-          BotToast.showText(text: log);
-          print("keyDown ${hotKey.debugName} (${hotKey.scope})");
-        },
-        keyUpHandler: (hotKey) {
-          String log = 'keyUp   ${hotKey.debugName} (${hotKey.scope})';
-          BotToast.showText(text: log);
-          print("keyUp ${hotKey.debugName} (${hotKey.scope})");
-        },
-      );
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error loading assistant hotkey: $e');
-      }
-    }
-  }
+  // Only prepare hotkeys quickly, actual registration will happen after UI is rendered
+  await HotkeyHandler.prepareHotkeys();
 }
 
 class ExampleIntent extends Intent {}
