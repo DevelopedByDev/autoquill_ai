@@ -39,6 +39,16 @@ class _TranscriptionPageState extends State<TranscriptionPage> {
               SnackBar(content: Text(state.error!)),
             );
           }
+          
+          // Show notification when transcription is completed and copied to clipboard
+          if (!state.isLoading && state.transcriptionText != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Transcription copied to clipboard'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
         },
         builder: (context, transcriptionState) {
           return Scaffold(
@@ -172,7 +182,6 @@ class _TranscriptionPageState extends State<TranscriptionPage> {
                             style: TextStyle(fontWeight: FontWeight.bold)),
                         Padding(
                           padding: const EdgeInsets.all(16.0),
-                          // child: Text(transcriptionState.transcriptionText!),
                           child: ValueListenableBuilder(
                                   valueListenable:
                                       Hive.box('settings').listenable(),

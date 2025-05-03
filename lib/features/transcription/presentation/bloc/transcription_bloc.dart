@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:pasteboard/pasteboard.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart';
 import '../../../../core/storage/app_storage.dart';
 import '../../domain/repositories/transcription_repository.dart';
 
@@ -100,8 +104,13 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
 
     try {
       final response = await repository.transcribeAudio(event.audioPath, apiKey);
+      final transcriptionText = response.text;
+      
+      // Copy the transcription text to clipboard
+      await _copyToClipboard(transcriptionText);
+      
       emit(state.copyWith(
-        transcriptionText: response.text,
+        transcriptionText: transcriptionText,
         isLoading: false,
         apiKey: apiKey,
       ));
@@ -121,6 +130,39 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
     // If API key is empty or null, treat it as null to disable the recording button
     final apiKey = event.apiKey?.isEmpty == true ? null : event.apiKey;
     emit(state.copyWith(apiKey: apiKey));
+  }
+
+  /// Copy text to clipboard using pasteboard
+  Future<void> _copyToClipboard(String text) async {
+    try {
+      // Copy plain text to clipboard
+      Pasteboard.writeText(text);
+      
+      if (kDebugMode) {
+        print('Transcription copied to clipboard');
+      }
+      
+      // Also save as a file in the app documents directory for backup
+      try {
+        final appDir = await getApplicationDocumentsDirectory();
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final filePath = '${appDir.path}/transcription_$timestamp.txt';
+        final file = File(filePath);
+        await file.writeAsString(text);
+        
+        if (kDebugMode) {
+          print('Transcription saved to file: $filePath');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error saving transcription to file: $e');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error copying to clipboard: $e');
+      }
+    }
   }
 
   @override
