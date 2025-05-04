@@ -251,11 +251,11 @@ class AssistantService {
         'messages': [
           {
             'role': 'system',
-            'content': 'You are a text editor that rewrites text based on instructions. IMPORTANT: Your response must ONLY contain the edited text with NO introductory phrases, NO explanations, NO "Here is the rewritten text", NO comments about what you did, and NO concluding remarks. The user will only see your exact output, so it must be ready to use immediately.'
+            'content': 'You are a text editor that rewrites text based on instructions. CRITICAL: Your response MUST contain ONLY the edited text with ABSOLUTELY NO introductory phrases, NO explanations, NO "Here is the rewritten text", NO comments about what you did, and NO concluding remarks. Do not start with "Here", "I", or any other introductory word. Just give the edited text directly. The user will only see your exact output, so it must be ready to use immediately.'
           },
           {
             'role': 'user',
-            'content': 'I will give you instructions followed by text to edit. The format will be "[INSTRUCTIONS]: [TEXT]". Only return the edited text with no additional comments or explanations.'
+            'content': 'I will give you instructions followed by text to edit. The format will be "[INSTRUCTIONS]: [TEXT]". Only return the edited text with no additional comments or explanations. Do not start with "Here", "I", or any other introductory word or phrase.'
           },
           {
             'role': 'assistant',
@@ -263,10 +263,10 @@ class AssistantService {
           },
           {
             'role': 'user',
-            'content': content
+            'content': 'IMPORTANT: Your response must start with the edited text directly. Do not include any preamble like "Here is" or "I have". $content'
           }, 
         ],
-        'temperature': 0.3, // Lower temperature for more predictable, structured output
+        'temperature': 0.2, // Even lower temperature for more predictable output
         'max_tokens': 2000 // Ensure we have enough tokens for the response
       });
       
@@ -281,9 +281,14 @@ class AssistantService {
       );
       
       if (response.statusCode == 200) {
-        // Parse the response
-        final jsonResponse = jsonDecode(response.body);
-        final aiResponse = jsonResponse['choices'][0]['message']['content'];
+        // Extract the AI response from the JSON response
+        final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+        var aiResponse = jsonResponse['choices'][0]['message']['content'];
+
+        // print(aiResponse);
+        
+        // Post-process the response to remove common preambles
+        // aiResponse = _cleanAIResponse(aiResponse);
         
         if (kDebugMode) {
           print('AI Response: $aiResponse');
