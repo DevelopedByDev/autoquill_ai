@@ -7,6 +7,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:keypress_simulator/keypress_simulator.dart';
+import 'package:autoquill_ai/features/assistant/assistant_service.dart';
 import 'package:autoquill_ai/core/storage/app_storage.dart';
 import 'package:autoquill_ai/widgets/hotkey_converter.dart';
 import 'package:autoquill_ai/features/recording/presentation/bloc/recording_bloc.dart';
@@ -29,6 +30,9 @@ class HotkeyHandler {
   
   // Path to the recorded audio file when using hotkey
   static String? _hotkeyRecordedFilePath;
+  
+  // Assistant service for handling assistant mode
+  static final AssistantService _assistantService = AssistantService();
   // Cache for converted hotkeys to avoid repeated conversions
   static final Map<String, HotKey> _hotkeyCache = {};
   
@@ -69,14 +73,19 @@ class HotkeyHandler {
       print("Blocs initialized: ${_recordingBloc != null && _transcriptionBloc != null}");
     }
     
-    // Handle transcription hotkey
+    // Handle hotkeys based on identifier
     if (hotKey.identifier == 'transcription_hotkey') {
       if (kDebugMode) {
         print("Transcription hotkey detected, handling...");
       }
       _handleTranscriptionHotkey();
+    } else if (hotKey.identifier == 'assistant_hotkey') {
+      if (kDebugMode) {
+        print("Assistant hotkey detected, handling...");
+      }
+      _handleAssistantHotkey();
     } else if (kDebugMode) {
-      print("Not a transcription hotkey: '${hotKey.identifier}'");
+      print("Unknown hotkey: '${hotKey.identifier}'");
     }
     
     String log = 'keyDown ${hotKey.debugName} (${hotKey.scope})';
@@ -306,6 +315,19 @@ class HotkeyHandler {
       } catch (e) {
         BotToast.showText(text: 'Error during recording or transcription: $e');
       }
+    }
+  }
+  
+  /// Handles the assistant hotkey press
+  static void _handleAssistantHotkey() async {
+    try {
+      // Delegate to the assistant service
+      await _assistantService.handleAssistantHotkey();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error handling assistant hotkey: $e');
+      }
+      BotToast.showText(text: 'Error activating assistant mode');
     }
   }
   

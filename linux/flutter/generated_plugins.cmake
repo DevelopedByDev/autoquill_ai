@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_linux
+  clipboard_watcher
   desktop_multi_window
   hotkey_manager_linux
   pasteboard

@@ -24,6 +24,7 @@ dependencies:
   desktop_multi_window: ^0.2.1
   pasteboard: ^0.4.0
   keypress_simulator: ^0.2.0
+  clipboard_watcher: ^0.3.0
 
 dev_dependencies:
   flutter_test:
