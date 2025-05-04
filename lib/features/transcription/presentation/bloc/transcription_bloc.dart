@@ -43,12 +43,14 @@ class TranscriptionState extends Equatable {
   final String? transcriptionText;
   final String? error;
   final bool isLoading;
+  final bool previouslyLoading; // Track if the previous state was loading
 
   const TranscriptionState({
     this.apiKey,
     this.transcriptionText,
     this.error,
     this.isLoading = false,
+    this.previouslyLoading = false,
   });
 
   TranscriptionState copyWith({
@@ -62,11 +64,12 @@ class TranscriptionState extends Equatable {
       transcriptionText: transcriptionText ?? this.transcriptionText,
       error: error,
       isLoading: isLoading ?? this.isLoading,
+      previouslyLoading: this.isLoading, // Store current loading state as previous
     );
   }
 
   @override
-  List<Object?> get props => [apiKey, transcriptionText, error, isLoading];
+  List<Object?> get props => [apiKey, transcriptionText, error, isLoading, previouslyLoading];
 }
 
 class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {

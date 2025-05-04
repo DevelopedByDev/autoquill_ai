@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../../recording/presentation/bloc/recording_bloc.dart';
+import '../../../recording/domain/repositories/recording_repository.dart';
 import '../bloc/transcription_bloc.dart';
+import '../../domain/repositories/transcription_repository.dart';
 import '../../../settings/presentation/pages/settings.dart';
 import '../../../../widgets/hotkey_handler.dart';
 
@@ -18,13 +20,22 @@ class _TranscriptionPageState extends State<TranscriptionPage> {
   @override
   void initState() {
     super.initState();
-    // Initialize the blocs in the HotkeyHandler after the first frame is rendered
+    // Initialize the blocs and repositories in the HotkeyHandler after the first frame is rendered
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final recordingBloc = context.read<RecordingBloc>();
       final transcriptionBloc = context.read<TranscriptionBloc>();
-      HotkeyHandler.setBlocs(recordingBloc, transcriptionBloc);
+      final recordingRepository = context.read<RecordingRepository>();
+      final transcriptionRepository = context.read<TranscriptionRepository>();
+      
+      HotkeyHandler.setBlocs(
+        recordingBloc, 
+        transcriptionBloc,
+        recordingRepository,
+        transcriptionRepository
+      );
+      
       if (kDebugMode) {
-        print('HotkeyHandler initialized with blocs');
+        print('HotkeyHandler initialized with blocs and repositories');
       }
     });
   }
@@ -41,7 +52,9 @@ class _TranscriptionPageState extends State<TranscriptionPage> {
           }
           
           // Show notification when transcription is completed and copied to clipboard
-          if (!state.isLoading && state.transcriptionText != null) {
+          // But only for transcriptions initiated from the UI, not from hotkeys
+          // We can detect this by checking if the previous state had isLoading=true
+          if (!state.isLoading && state.transcriptionText != null && state.previouslyLoading == true) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Transcription copied to clipboard'),

@@ -1,12 +1,17 @@
+import 'dart:io';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:pasteboard/pasteboard.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:autoquill_ai/core/storage/app_storage.dart';
 import 'package:autoquill_ai/widgets/hotkey_converter.dart';
 import 'package:autoquill_ai/features/recording/presentation/bloc/recording_bloc.dart';
+import 'package:autoquill_ai/features/recording/domain/repositories/recording_repository.dart';
 import 'package:autoquill_ai/features/transcription/presentation/bloc/transcription_bloc.dart';
+import 'package:autoquill_ai/features/transcription/domain/repositories/transcription_repository.dart';
 
 /// A centralized class for handling keyboard hotkeys throughout the application
 class HotkeyHandler {
@@ -14,8 +19,15 @@ class HotkeyHandler {
   static RecordingBloc? _recordingBloc;
   static TranscriptionBloc? _transcriptionBloc;
   
+  // References to repositories for direct access (bypassing blocs)
+  static RecordingRepository? _recordingRepository;
+  static TranscriptionRepository? _transcriptionRepository;
+  
   // Flag to track if recording is in progress via hotkey
   static bool _isHotkeyRecordingActive = false;
+  
+  // Path to the recorded audio file when using hotkey
+  static String? _hotkeyRecordedFilePath;
   // Cache for converted hotkeys to avoid repeated conversions
   static final Map<String, HotKey> _hotkeyCache = {};
   
@@ -25,10 +37,13 @@ class HotkeyHandler {
   // Track active hotkeys to prevent duplicate events
   static final Set<String> _activeHotkeys = {};
   
-  /// Set the blocs for handling recording and transcription
-  static void setBlocs(RecordingBloc recordingBloc, TranscriptionBloc transcriptionBloc) {
+  /// Set the blocs and repositories for handling recording and transcription
+  static void setBlocs(RecordingBloc recordingBloc, TranscriptionBloc transcriptionBloc, 
+      RecordingRepository recordingRepository, TranscriptionRepository transcriptionRepository) {
     _recordingBloc = recordingBloc;
     _transcriptionBloc = transcriptionBloc;
+    _recordingRepository = recordingRepository;
+    _transcriptionRepository = transcriptionRepository;
   }
 
   /// Handles keyDown events for any registered hotkey
@@ -255,8 +270,8 @@ class HotkeyHandler {
   }
   
   /// Handles the transcription hotkey press
-  static void _handleTranscriptionHotkey() {
-    if (_recordingBloc == null || _transcriptionBloc == null) {
+  static void _handleTranscriptionHotkey() async {
+    if (_recordingRepository == null || _transcriptionRepository == null) {
       BotToast.showText(text: 'Recording system not initialized');
       return;
     }
@@ -269,15 +284,76 @@ class HotkeyHandler {
     }
     
     if (!_isHotkeyRecordingActive) {
-      // Start recording
-      _recordingBloc!.add(StartRecording());
-      _isHotkeyRecordingActive = true;
-      BotToast.showText(text: 'Recording started');
+      // Start recording directly using the repository
+      try {
+        await _recordingRepository!.startRecording();
+        _isHotkeyRecordingActive = true;
+        BotToast.showText(text: 'Recording started');
+      } catch (e) {
+        BotToast.showText(text: 'Failed to start recording: $e');
+      }
     } else {
-      // Stop recording and transcribe
-      _recordingBloc!.add(StopRecording());
-      _isHotkeyRecordingActive = false;
-      BotToast.showText(text: 'Recording stopped, transcribing...');
+      // Stop recording and transcribe directly
+      try {
+        // Stop recording
+        _hotkeyRecordedFilePath = await _recordingRepository!.stopRecording();
+        _isHotkeyRecordingActive = false;
+        BotToast.showText(text: 'Recording stopped, transcribing...');
+        
+        // Transcribe the audio
+        await _transcribeAndCopyToClipboard(_hotkeyRecordedFilePath!, apiKey);
+      } catch (e) {
+        BotToast.showText(text: 'Error during recording or transcription: $e');
+      }
+    }
+  }
+  
+  /// Transcribe audio and copy to clipboard without affecting UI
+  static Future<void> _transcribeAndCopyToClipboard(String audioPath, String apiKey) async {
+    try {
+      // Transcribe the audio
+      final response = await _transcriptionRepository!.transcribeAudio(audioPath, apiKey);
+      final transcriptionText = response.text;
+      
+      // Copy to clipboard
+      await _copyToClipboard(transcriptionText);
+      
+      BotToast.showText(text: 'Transcription copied to clipboard');
+    } catch (e) {
+      BotToast.showText(text: 'Transcription failed: $e');
+    }
+  }
+  
+  /// Copy text to clipboard using pasteboard
+  static Future<void> _copyToClipboard(String text) async {
+    try {
+      // Copy plain text to clipboard
+      Pasteboard.writeText(text);
+      
+      if (kDebugMode) {
+        print('Transcription copied to clipboard');
+      }
+      
+      // Also save as a file in the app documents directory for backup
+      try {
+        final appDir = await getApplicationDocumentsDirectory();
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final filePath = '${appDir.path}/transcription_$timestamp.txt';
+        final file = File(filePath);
+        await file.writeAsString(text);
+        
+        if (kDebugMode) {
+          print('Transcription saved to file: $filePath');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error saving transcription to file: $e');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error copying to clipboard: $e');
+      }
     }
   }
 }
