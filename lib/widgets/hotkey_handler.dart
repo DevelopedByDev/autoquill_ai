@@ -87,6 +87,16 @@ class HotkeyHandler {
         print("Assistant hotkey detected, handling...");
       }
       _handleAssistantHotkey();
+    } else if (hotKey.identifier == 'agent_hotkey') {
+      if (kDebugMode) {
+        print("Agent hotkey detected, handling...");
+      }
+      _handleAgentHotkey();
+    } else if (hotKey.identifier == 'text_hotkey') {
+      if (kDebugMode) {
+        print("Text hotkey detected, handling...");
+      }
+      _handleTextHotkey();
     } else if (kDebugMode) {
       print("Unknown hotkey: '${hotKey.identifier}'");
     }
@@ -178,6 +188,8 @@ class HotkeyHandler {
       final settingsBox = Hive.box('settings');
       final transcriptionHotkey = settingsBox.get('transcription_hotkey');
       final assistantHotkey = settingsBox.get('assistant_hotkey');
+      final agentHotkey = settingsBox.get('agent_hotkey');
+      final textHotkey = settingsBox.get('text_hotkey');
       
       // Convert hotkeys and store in cache (fast operation)
       if (transcriptionHotkey != null) {
@@ -202,6 +214,30 @@ class HotkeyHandler {
           identifier: 'assistant_hotkey',
         );
         _hotkeyCache['assistant_hotkey'] = updatedHotkey;
+      }
+      
+      if (agentHotkey != null) {
+        final hotkey = hotKeyConverter(agentHotkey);
+        // Explicitly set the identifier
+        final updatedHotkey = HotKey(
+          key: hotkey.key,
+          modifiers: hotkey.modifiers,
+          scope: hotkey.scope,
+          identifier: 'agent_hotkey',
+        );
+        _hotkeyCache['agent_hotkey'] = updatedHotkey;
+      }
+      
+      if (textHotkey != null) {
+        final hotkey = hotKeyConverter(textHotkey);
+        // Explicitly set the identifier
+        final updatedHotkey = HotKey(
+          key: hotkey.key,
+          modifiers: hotkey.modifiers,
+          scope: hotkey.scope,
+          identifier: 'text_hotkey',
+        );
+        _hotkeyCache['text_hotkey'] = updatedHotkey;
       }
       
       _hotkeysLoaded = true;
@@ -331,6 +367,42 @@ class HotkeyHandler {
         print('Error handling assistant hotkey: $e');
       }
       BotToast.showText(text: 'Error activating assistant mode');
+    }
+  }
+  
+  /// Handles the agent hotkey press
+  static void _handleAgentHotkey() async {
+    try {
+      // Get the selected agent model from settings
+      final settingsBox = Hive.box('settings');
+      final selectedModel = settingsBox.get('agent-model') ?? 'compound-beta-mini';
+      
+      // For now, just show a toast notification with the selected model
+      if (kDebugMode) {
+        print('Agent hotkey pressed, using model: $selectedModel');
+      }
+      BotToast.showText(text: 'Agent mode activated using $selectedModel');
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error handling agent hotkey: $e');
+      }
+      BotToast.showText(text: 'Error activating agent mode');
+    }
+  }
+  
+  /// Handles the text hotkey press
+  static void _handleTextHotkey() async {
+    try {
+      // For now, just show a toast notification
+      if (kDebugMode) {
+        print('Text hotkey pressed');
+      }
+      BotToast.showText(text: 'Text mode activated');
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error handling text hotkey: $e');
+      }
+      BotToast.showText(text: 'Error activating text mode');
     }
   }
   

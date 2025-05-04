@@ -35,9 +35,10 @@ class SettingsPage extends StatelessWidget {
             ),
             body: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   const Text(
                     'API Key',
                     style: TextStyle(
@@ -122,6 +123,62 @@ class SettingsPage extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          const Text('Text mode'),
+                          const Spacer(),
+                          Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: BlocBuilder<SettingsBloc, SettingsState>(
+                                      builder: (context, state) {
+                                        final hotkeyData = state.storedHotkeys['text_hotkey'];
+                                        if (hotkeyData == null) {
+                                          return const Text('None configured');
+                                        }
+                                        return HotKeyVirtualView(
+                                          hotKey: hotKeyConverter(hotkeyData),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () {
+                                    _showRecordHotkeyDialog(context, 'text_hotkey');
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: () {
+                                    context.read<SettingsBloc>().add(
+                                          const DeleteHotkey('text_hotkey'),
+                                        );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   const SizedBox(height: 16),
                   Container(
                     decoration: BoxDecoration(
@@ -234,7 +291,238 @@ class SettingsPage extends StatelessWidget {
                         ),
                       ),
                     ),
-                ],
+                  const SizedBox(height: 16),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          const Text('Agent mode'),
+                          const Spacer(),
+                          Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: BlocBuilder<SettingsBloc, SettingsState>(
+                                      builder: (context, state) {
+                                        final hotkeyData = state.storedHotkeys['agent_hotkey'];
+                                        if (hotkeyData == null) {
+                                          return const Text('None configured');
+                                        }
+                                        return HotKeyVirtualView(
+                                          hotKey: hotKeyConverter(hotkeyData),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () {
+                                    _showRecordHotkeyDialog(context, 'agent_hotkey');
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: () {
+                                    context.read<SettingsBloc>().add(
+                                          const DeleteHotkey('agent_hotkey'),
+                                        );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 32),
+                  const Text(
+                    'Models',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Transcription model selection
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          const Text('Transcription model'),
+                          const Spacer(),
+                          BlocBuilder<SettingsBloc, SettingsState>(
+                            builder: (context, state) {
+                              return DropdownButton<String>(
+                                value: state.transcriptionModel,
+                                onChanged: (String? newValue) {
+                                  if (newValue != null) {
+                                    context.read<SettingsBloc>().add(
+                                          SaveTranscriptionModel(newValue),
+                                        );
+                                  }
+                                },
+                                items: [
+                                  DropdownMenuItem(
+                                    value: 'whisper-large-v3',
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Text('whisper-large-v3'),
+                                        Text(
+                                          'multilingual, more accurate',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'whisper-large-v3-turbo',
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Text('whisper-large-v3-turbo'),
+                                        Text(
+                                          'multilingual, faster',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'distil-whisper-large-v3-en',
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Text('distil-whisper-large-v3-en'),
+                                        Text(
+                                          'english, fastest',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Assistant model selection
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          const Text('Assistant model'),
+                          const Spacer(),
+                          BlocBuilder<SettingsBloc, SettingsState>(
+                            builder: (context, state) {
+                              return DropdownButton<String>(
+                                value: state.assistantModel,
+                                onChanged: (String? newValue) {
+                                  if (newValue != null) {
+                                    context.read<SettingsBloc>().add(
+                                          SaveAssistantModel(newValue),
+                                        );
+                                  }
+                                },
+                                items: [
+                                  DropdownMenuItem(
+                                    value: 'llama-3.3-70b-versatile',
+                                    child: const Text('llama-3.3-70b-versatile'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'gemma2-9b-it',
+                                    child: const Text('gemma2-9b-it'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'llama3-70b-8192',
+                                    child: const Text('llama3-70b-8192'),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Agent model selection
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          const Text('Agent model'),
+                          const Spacer(),
+                          BlocBuilder<SettingsBloc, SettingsState>(
+                            builder: (context, state) {
+                              return DropdownButton<String>(
+                                value: state.agentModel,
+                                onChanged: (String? newValue) {
+                                  if (newValue != null) {
+                                    context.read<SettingsBloc>().add(
+                                          SaveAgentModel(newValue),
+                                        );
+                                  }
+                                },
+                                items: [
+                                  DropdownMenuItem(
+                                    value: 'compound-beta-mini',
+                                    child: const Text('compound-beta-mini'),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  ],
+                ),
               ),
             ),
           );

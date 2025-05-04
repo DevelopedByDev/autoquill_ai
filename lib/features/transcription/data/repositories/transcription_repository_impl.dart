@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:hive_flutter/hive_flutter.dart';
 import '../datasources/transcription_local_datasource.dart';
 import '../../domain/repositories/transcription_repository.dart';
 import '../models/transcription_response.dart';
@@ -18,10 +19,14 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
       throw Exception('Audio file not found');
     }
 
+    // Get the selected transcription model from settings, default to whisper-large-v3 if not set
+    final settingsBox = Hive.box('settings');
+    final selectedModel = settingsBox.get('transcription-model') ?? 'whisper-large-v3';
+    
     final request = http.MultipartRequest('POST', Uri.parse(_baseUrl))
       ..headers['Authorization'] = 'Bearer $apiKey'
       ..files.add(await http.MultipartFile.fromPath('file', audioPath))
-      ..fields['model'] = 'whisper-large-v3-turbo'
+      ..fields['model'] = selectedModel
       ..fields['temperature'] = '0'
       ..fields['response_format'] = 'verbose_json';
 

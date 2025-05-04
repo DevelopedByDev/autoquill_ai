@@ -57,3 +57,27 @@ class DeleteHotkey extends SettingsEvent {
 }
 
 class LoadStoredHotkeys extends SettingsEvent {}
+
+class SaveTranscriptionModel extends SettingsEvent {
+  final String model;
+  const SaveTranscriptionModel(this.model);
+
+  @override
+  List<Object?> get props => [model];
+}
+
+class SaveAssistantModel extends SettingsEvent {
+  final String model;
+  const SaveAssistantModel(this.model);
+
+  @override
+  List<Object?> get props => [model];
+}
+
+class SaveAgentModel extends SettingsEvent {
+  final String model;
+  const SaveAgentModel(this.model);
+
+  @override
+  List<Object?> get props => [model];
+}

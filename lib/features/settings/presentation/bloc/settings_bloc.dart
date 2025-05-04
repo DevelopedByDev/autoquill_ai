@@ -21,6 +21,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<CancelHotkeyRecording>(_onCancelHotkeyRecording);
     on<DeleteHotkey>(_onDeleteHotkey);
     on<LoadStoredHotkeys>(_onLoadStoredHotkeys);
+    
+    // Model selection events
+    on<SaveTranscriptionModel>(_onSaveTranscriptionModel);
+    on<SaveAssistantModel>(_onSaveAssistantModel);
+    on<SaveAgentModel>(_onSaveAgentModel);
   }
 
   Future<void> _onLoadSettings(LoadSettings event, Emitter<SettingsState> emit) async {
@@ -30,8 +35,17 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       // Load stored hotkeys
       add(LoadStoredHotkeys());
       
+      // Load model selections from Hive
+      final settingsBox = Hive.box('settings');
+      final transcriptionModel = settingsBox.get('transcription-model') ?? 'whisper-large-v3';
+      final assistantModel = settingsBox.get('assistant-model') ?? 'llama3-70b-8192';
+      final agentModel = settingsBox.get('agent-model') ?? 'compound-beta-mini';
+      
       emit(state.copyWith(
         apiKey: apiKey,
+        transcriptionModel: transcriptionModel,
+        assistantModel: assistantModel,
+        agentModel: agentModel,
       ));
     } catch (e) {
       emit(state.copyWith(error: e.toString()));
@@ -163,10 +177,53 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         hotkeys['assistant_hotkey'] = assistantHotkey;
       }
       
+      // Load agent hotkey
+      final agentHotkey = settingsBox.get('agent_hotkey');
+      if (agentHotkey != null) {
+        hotkeys['agent_hotkey'] = agentHotkey;
+      }
+      
+      // Load text hotkey
+      final textHotkey = settingsBox.get('text_hotkey');
+      if (textHotkey != null) {
+        hotkeys['text_hotkey'] = textHotkey;
+      }
+      
       emit(state.copyWith(storedHotkeys: hotkeys));
       
       // Register all hotkeys with the system
       await HotkeyHandler.loadAndRegisterStoredHotkeys();
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+  
+  // Model selection handlers
+  Future<void> _onSaveTranscriptionModel(SaveTranscriptionModel event, Emitter<SettingsState> emit) async {
+    try {
+      final settingsBox = Hive.box('settings');
+      await settingsBox.put('transcription-model', event.model);
+      emit(state.copyWith(transcriptionModel: event.model));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+  
+  Future<void> _onSaveAssistantModel(SaveAssistantModel event, Emitter<SettingsState> emit) async {
+    try {
+      final settingsBox = Hive.box('settings');
+      await settingsBox.put('assistant-model', event.model);
+      emit(state.copyWith(assistantModel: event.model));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+  
+  Future<void> _onSaveAgentModel(SaveAgentModel event, Emitter<SettingsState> emit) async {
+    try {
+      final settingsBox = Hive.box('settings');
+      await settingsBox.put('agent-model', event.model);
+      emit(state.copyWith(agentModel: event.model));
     } catch (e) {
       emit(state.copyWith(error: e.toString()));
     }

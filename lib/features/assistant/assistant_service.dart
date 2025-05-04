@@ -269,10 +269,14 @@ class AssistantService {
       // Prepare the request body
       final Map<String, dynamic> requestBody;
       
+      // Get the selected assistant model from settings
+      final settingsBox = Hive.box('settings');
+      final selectedModel = settingsBox.get('assistant-model') ?? 'llama3-70b-8192';
+      
       if (selectedText != null) {
         // Edit mode - use system prompt for text editing
         requestBody = {
-          'model': 'llama3-70b-8192',
+          'model': selectedModel,
           'messages': [
             {
               'role': 'system',
@@ -297,7 +301,7 @@ class AssistantService {
       } else {
         // Generation mode - use system prompt for text generation
         requestBody = {
-          'model': 'llama3-70b-8192',
+          'model': selectedModel,
           'messages': [
             {
               'role': 'system',
