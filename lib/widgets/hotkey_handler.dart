@@ -8,6 +8,7 @@ import 'package:pasteboard/pasteboard.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:keypress_simulator/keypress_simulator.dart';
 import 'package:autoquill_ai/features/assistant/assistant_service.dart';
+import 'package:autoquill_ai/features/agent/agent_service.dart';
 import 'package:autoquill_ai/core/storage/app_storage.dart';
 import 'package:autoquill_ai/widgets/hotkey_converter.dart';
 import 'package:autoquill_ai/features/recording/presentation/bloc/recording_bloc.dart';
@@ -33,6 +34,8 @@ class HotkeyHandler {
   
   // Assistant service for handling assistant mode
   static final AssistantService _assistantService = AssistantService();
+  // Agent service for handling agent mode
+  static final AgentService _agentService = AgentService();
   // Cache for converted hotkeys to avoid repeated conversions
   static final Map<String, HotKey> _hotkeyCache = {};
   
@@ -50,8 +53,9 @@ class HotkeyHandler {
     _recordingRepository = recordingRepository;
     _transcriptionRepository = transcriptionRepository;
     
-    // Initialize the assistant service with repositories
+    // Initialize the assistant and agent services with repositories
     _assistantService.setRepositories(recordingRepository, transcriptionRepository);
+    _agentService.setRepositories(recordingRepository, transcriptionRepository);
   }
 
   /// Handles keyDown events for any registered hotkey
@@ -373,15 +377,8 @@ class HotkeyHandler {
   /// Handles the agent hotkey press
   static void _handleAgentHotkey() async {
     try {
-      // Get the selected agent model from settings
-      final settingsBox = Hive.box('settings');
-      final selectedModel = settingsBox.get('agent-model') ?? 'compound-beta-mini';
-      
-      // For now, just show a toast notification with the selected model
-      if (kDebugMode) {
-        print('Agent hotkey pressed, using model: $selectedModel');
-      }
-      BotToast.showText(text: 'Agent mode activated using $selectedModel');
+      // Delegate to the agent service
+      await _agentService.handleAgentHotkey();
     } catch (e) {
       if (kDebugMode) {
         print('Error handling agent hotkey: $e');
