@@ -151,21 +151,33 @@ class AssistantService {
   }
   
   /// Handle timeout when no clipboard changes are detected
-  void _handleTimeout() {
+  Future<void> _handleTimeout() async {
     if (kDebugMode) {
       print('Clipboard change timeout');
     }
     
-    BotToast.showText(text: 'No text was selected');
+    BotToast.showText(text: 'No text selected. Recording instructions for generation...');
+    
+    // Set selected text to null to indicate generation-only mode
+    _selectedText = null;
+    
+    // Start recording the user's speech
+    await _startRecording();
   }
   
   /// Handle empty clipboard
-  void _handleEmptyClipboard() {
+  Future<void> _handleEmptyClipboard() async {
     if (kDebugMode) {
       print('Clipboard is empty');
     }
     
-    BotToast.showText(text: 'No text was selected');
+    BotToast.showText(text: 'No text selected. Recording instructions for generation...');
+    
+    // Set selected text to null to indicate generation-only mode
+    _selectedText = null;
+    
+    // Start recording the user's speech
+    await _startRecording();
   }
   
   /// Start recording the user's speech
@@ -211,8 +223,8 @@ class AssistantService {
   
   /// Transcribe the audio and process with Groq API
   Future<void> _transcribeAndProcess(String apiKey) async {
-    if (_recordedFilePath == null || _selectedText == null) {
-      BotToast.showText(text: 'Missing recording or selected text');
+    if (_recordedFilePath == null) {
+      BotToast.showText(text: 'Missing recording');
       return;
     }
     
@@ -225,10 +237,12 @@ class AssistantService {
         print('Transcribed text: $transcribedText');
       }
       
-      BotToast.showText(text: 'Transcription complete, processing with AI...');
+      // Determine the mode based on whether text was selected
+      final String mode = _selectedText == null ? 'generation' : 'editing';
+      BotToast.showText(text: 'Transcription complete, processing with AI for $mode...');
       
-      // Send to Groq API
-      await _sendToGroqAPI(transcribedText, _selectedText!, apiKey);
+      // Send to Groq API - pass _selectedText as is (can be null)
+      await _sendToGroqAPI(transcribedText, _selectedText, apiKey);
     } catch (e) {
       if (kDebugMode) {
         print('Error in transcription: $e');
@@ -238,37 +252,77 @@ class AssistantService {
   }
   
   /// Send the transcribed text and selected text to Groq API
-  Future<void> _sendToGroqAPI(String transcribedText, String selectedText, String apiKey) async {
+  Future<void> _sendToGroqAPI(String transcribedText, String? selectedText, String apiKey) async {
     try {
       final url = Uri.parse('https://api.groq.com/openai/v1/chat/completions');
       
       // Prepare the message content
-      final content = '$transcribedText: $selectedText';
+      final String content;
+      if (selectedText != null) {
+        // Edit mode - instruction followed by text to edit
+        content = '$transcribedText: $selectedText';
+      } else {
+        // Generation mode - just the instruction
+        content = transcribedText;
+      }
       
       // Prepare the request body
-      final body = jsonEncode({
-        'model': 'llama3-70b-8192',
-        'messages': [
-          {
-            'role': 'system',
-            'content': 'You are a text editor that rewrites text based on instructions. CRITICAL: Your response MUST contain ONLY the edited text with ABSOLUTELY NO introductory phrases, NO explanations, NO "Here is the rewritten text", NO comments about what you did, and NO concluding remarks. Do not start with "Here", "I", or any other introductory word. Just give the edited text directly. The user will only see your exact output, so it must be ready to use immediately.'
-          },
-          {
-            'role': 'user',
-            'content': 'I will give you instructions followed by text to edit. The format will be "[INSTRUCTIONS]: [TEXT]". Only return the edited text with no additional comments or explanations. Do not start with "Here", "I", or any other introductory word or phrase.'
-          },
-          {
-            'role': 'assistant',
-            'content': 'I understand. I will only return the edited text with no additional comments or explanations.'
-          },
-          {
-            'role': 'user',
-            'content': 'IMPORTANT: Your response must start with the edited text directly. Do not include any preamble like "Here is" or "I have". $content'
-          }, 
-        ],
-        'temperature': 0.2, // Even lower temperature for more predictable output
-        'max_tokens': 2000 // Ensure we have enough tokens for the response
-      });
+      final Map<String, dynamic> requestBody;
+      
+      if (selectedText != null) {
+        // Edit mode - use system prompt for text editing
+        requestBody = {
+          'model': 'llama3-70b-8192',
+          'messages': [
+            {
+              'role': 'system',
+              'content': 'You are a text editor that rewrites text based on instructions. CRITICAL: Your response MUST contain ONLY the edited text with ABSOLUTELY NO introductory phrases, NO explanations, NO "Here is the rewritten text", NO comments about what you did, and NO concluding remarks. Do not start with "Here", "I", or any other introductory word. Just give the edited text directly. The user will only see your exact output, so it must be ready to use immediately.'
+            },
+            {
+              'role': 'user',
+              'content': 'I will give you instructions followed by text to edit. The format will be "[INSTRUCTIONS]: [TEXT]". Only return the edited text with no additional comments or explanations. Do not start with "Here", "I", or any other introductory word or phrase.'
+            },
+            {
+              'role': 'assistant',
+              'content': 'I understand. I will only return the edited text with no additional comments or explanations.'
+            },
+            {
+              'role': 'user',
+              'content': 'IMPORTANT: Your response must start with the edited text directly. Do not include any preamble like "Here is" or "I have". $content'
+            }, 
+          ],
+          'temperature': 0.2, // Even lower temperature for more predictable output
+          'max_tokens': 2000 // Ensure we have enough tokens for the response
+        };
+      } else {
+        // Generation mode - use system prompt for text generation
+        requestBody = {
+          'model': 'llama3-70b-8192',
+          'messages': [
+            {
+              'role': 'system',
+              'content': 'You are a helpful text generation assistant. CRITICAL: Your response MUST contain ONLY the generated text with ABSOLUTELY NO introductory phrases, NO explanations, NO "Here is the text", NO comments about what you did, and NO concluding remarks. Do not start with "Here", "I", or any other introductory word. Just give the generated text directly. The user will only see your exact output, so it must be ready to use immediately.'
+            },
+            {
+              'role': 'user',
+              'content': 'I will give you instructions for generating text. Only return the generated text with no additional comments or explanations. Do not start with "Here", "I", or any other introductory word or phrase.'
+            },
+            {
+              'role': 'assistant',
+              'content': 'I understand. I will only return the generated text with no additional comments or explanations.'
+            },
+            {
+              'role': 'user',
+              'content': 'IMPORTANT: Your response must start with the generated text directly. Do not include any preamble like "Here is" or "I have". $content'
+            }, 
+          ],
+          'temperature': 0.2, // Even lower temperature for more predictable output
+          'max_tokens': 2000 // Ensure we have enough tokens for the response
+        };
+      }
+      
+      // Encode the final body
+      final body = jsonEncode(requestBody);
       
       // Send the request
       final response = await http.post(
