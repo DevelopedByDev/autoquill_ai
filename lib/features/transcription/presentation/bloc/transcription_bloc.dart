@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
+import 'package:keypress_simulator/keypress_simulator.dart';
 import '../../../../core/storage/app_storage.dart';
 import '../../domain/repositories/transcription_repository.dart';
 
@@ -135,7 +137,7 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
     emit(state.copyWith(apiKey: apiKey));
   }
 
-  /// Copy text to clipboard using pasteboard
+  /// Copy text to clipboard using pasteboard and then simulate paste command
   Future<void> _copyToClipboard(String text) async {
     try {
       // Copy plain text to clipboard
@@ -161,9 +163,39 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
           print('Error saving transcription to file: $e');
         }
       }
+      
+      // Simulate paste command (Meta + V) after a short delay
+      await Future.delayed(const Duration(milliseconds: 500));
+      await _simulatePasteCommand();
+      
     } catch (e) {
       if (kDebugMode) {
         print('Error copying to clipboard: $e');
+      }
+    }
+  }
+  
+  /// Simulate paste command (Meta + V)
+  Future<void> _simulatePasteCommand() async {
+    try {
+      // Simulate key down for Meta + V
+      await keyPressSimulator.simulateKeyDown(
+        PhysicalKeyboardKey.keyV,
+        [ModifierKey.metaModifier],
+      );
+      
+      // Simulate key up for Meta + V
+      await keyPressSimulator.simulateKeyUp(
+        PhysicalKeyboardKey.keyV,
+        [ModifierKey.metaModifier],
+      );
+      
+      if (kDebugMode) {
+        print('Paste command simulated');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error simulating paste command: $e');
       }
     }
   }

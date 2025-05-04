@@ -6,6 +6,7 @@ import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:keypress_simulator/keypress_simulator.dart';
 import 'package:autoquill_ai/core/storage/app_storage.dart';
 import 'package:autoquill_ai/widgets/hotkey_converter.dart';
 import 'package:autoquill_ai/features/recording/presentation/bloc/recording_bloc.dart';
@@ -324,7 +325,7 @@ class HotkeyHandler {
     }
   }
   
-  /// Copy text to clipboard using pasteboard
+  /// Copy text to clipboard using pasteboard and then simulate paste command
   static Future<void> _copyToClipboard(String text) async {
     try {
       // Copy plain text to clipboard
@@ -350,9 +351,39 @@ class HotkeyHandler {
           print('Error saving transcription to file: $e');
         }
       }
+      
+      // Simulate paste command (Meta + V) after a short delay
+      await Future.delayed(const Duration(milliseconds: 500));
+      await _simulatePasteCommand();
+      
     } catch (e) {
       if (kDebugMode) {
         print('Error copying to clipboard: $e');
+      }
+    }
+  }
+  
+  /// Simulate paste command (Meta + V)
+  static Future<void> _simulatePasteCommand() async {
+    try {
+      // Simulate key down for Meta + V
+      await keyPressSimulator.simulateKeyDown(
+        PhysicalKeyboardKey.keyV,
+        [ModifierKey.metaModifier],
+      );
+      
+      // Simulate key up for Meta + V
+      await keyPressSimulator.simulateKeyUp(
+        PhysicalKeyboardKey.keyV,
+        [ModifierKey.metaModifier],
+      );
+      
+      if (kDebugMode) {
+        print('Paste command simulated');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error simulating paste command: $e');
       }
     }
   }

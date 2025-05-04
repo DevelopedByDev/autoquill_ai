@@ -23,6 +23,7 @@ dependencies:
   bot_toast: ^4.0.1
   desktop_multi_window: ^0.2.1
   pasteboard: ^0.4.0
+  keypress_simulator: ^0.2.0
 
 dev_dependencies:
   flutter_test:

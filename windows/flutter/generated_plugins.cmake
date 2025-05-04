@@ -6,6 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_windows
   desktop_multi_window
   hotkey_manager_windows
+  keypress_simulator_windows
   pasteboard
   record_windows
 )
