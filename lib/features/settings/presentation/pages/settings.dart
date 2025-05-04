@@ -511,7 +511,54 @@ class SettingsPage extends StatelessWidget {
                                 items: [
                                   DropdownMenuItem(
                                     value: 'compound-beta-mini',
-                                    child: const Text('compound-beta-mini'),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Text('compound-beta-mini'),
+                                        Text(
+                                          'search only',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'compound-beta',
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Text('compound-beta'),
+                                        Text(
+                                          'search + code execution',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'meta-llama/llama-4-scout-17b-16e-instruct',
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Text('compound-beta + llama 4 17b-16e-instruct'),
+                                        Text(
+                                          'search + code execution + screen context',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               );
