@@ -81,3 +81,21 @@ class SaveAgentModel extends SettingsEvent {
   @override
   List<Object?> get props => [model];
 }
+
+class LoadDictionary extends SettingsEvent {}
+
+class AddWordToDictionary extends SettingsEvent {
+  final String word;
+  const AddWordToDictionary(this.word);
+
+  @override
+  List<Object?> get props => [word];
+}
+
+class RemoveWordFromDictionary extends SettingsEvent {
+  final String word;
+  const RemoveWordFromDictionary(this.word);
+
+  @override
+  List<Object?> get props => [word];
+}

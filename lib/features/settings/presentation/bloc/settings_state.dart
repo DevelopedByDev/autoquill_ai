@@ -18,6 +18,9 @@ class SettingsState extends Equatable {
   final String? transcriptionModel; // whisper-large-v3, whisper-large-v3-turbo, or distil-whisper-large-v3-en
   final String? assistantModel; // llama-3.3-70b-versatile, gemma2-9b-it, or llama3-70b-8192
   final String? agentModel; // compound-beta-mini
+  
+  // Dictionary of words that are harder for models to spell
+  final List<String> dictionary;
 
   const SettingsState({
     this.apiKey,
@@ -30,6 +33,7 @@ class SettingsState extends Equatable {
     this.transcriptionModel = 'whisper-large-v3',
     this.assistantModel = 'llama3-70b-8192',
     this.agentModel = 'compound-beta-mini',
+    this.dictionary = const [],
   });
 
   SettingsState copyWith({
@@ -43,6 +47,7 @@ class SettingsState extends Equatable {
     String? transcriptionModel,
     String? assistantModel,
     String? agentModel,
+    List<String>? dictionary,
   }) {
     return SettingsState(
       apiKey: apiKey ?? this.apiKey,
@@ -55,6 +60,7 @@ class SettingsState extends Equatable {
       transcriptionModel: transcriptionModel ?? this.transcriptionModel,
       assistantModel: assistantModel ?? this.assistantModel,
       agentModel: agentModel ?? this.agentModel,
+      dictionary: dictionary ?? this.dictionary,
     );
   }
 
@@ -66,6 +72,7 @@ class SettingsState extends Equatable {
         transcriptionModel,
         assistantModel,
         agentModel,
+        dictionary,
         isRecordingHotkey,
         recordingFor,
         currentRecordedHotkey,

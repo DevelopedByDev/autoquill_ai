@@ -26,6 +26,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<SaveTranscriptionModel>(_onSaveTranscriptionModel);
     on<SaveAssistantModel>(_onSaveAssistantModel);
     on<SaveAgentModel>(_onSaveAgentModel);
+    
+    // Dictionary events
+    on<LoadDictionary>(_onLoadDictionary);
+    on<AddWordToDictionary>(_onAddWordToDictionary);
+    on<RemoveWordFromDictionary>(_onRemoveWordFromDictionary);
   }
 
   Future<void> _onLoadSettings(LoadSettings event, Emitter<SettingsState> emit) async {
@@ -34,6 +39,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       
       // Load stored hotkeys
       add(LoadStoredHotkeys());
+      
+      // Load dictionary
+      add(LoadDictionary());
       
       // Load model selections from Hive
       final settingsBox = Hive.box('settings');
@@ -224,6 +232,61 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       final settingsBox = Hive.box('settings');
       await settingsBox.put('agent-model', event.model);
       emit(state.copyWith(agentModel: event.model));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+  
+  // Dictionary management methods
+  Future<void> _onLoadDictionary(LoadDictionary event, Emitter<SettingsState> emit) async {
+    try {
+      final settingsBox = Hive.box('settings');
+      final List<dynamic>? storedDictionary = settingsBox.get('dictionary');
+      
+      if (storedDictionary != null) {
+        final List<String> dictionary = storedDictionary.cast<String>().toList();
+        emit(state.copyWith(dictionary: dictionary));
+      }
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+  
+  Future<void> _onAddWordToDictionary(AddWordToDictionary event, Emitter<SettingsState> emit) async {
+    try {
+      final word = event.word.trim();
+      
+      // Don't add empty words or duplicates
+      if (word.isEmpty || state.dictionary.contains(word)) {
+        return;
+      }
+      
+      final List<String> updatedDictionary = List.from(state.dictionary)..add(word);
+      
+      // Save to Hive
+      final settingsBox = Hive.box('settings');
+      await settingsBox.put('dictionary', updatedDictionary);
+      
+      // Update state
+      emit(state.copyWith(dictionary: updatedDictionary));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+  
+  Future<void> _onRemoveWordFromDictionary(RemoveWordFromDictionary event, Emitter<SettingsState> emit) async {
+    try {
+      final word = event.word;
+      
+      // Create a new list without the word to remove
+      final List<String> updatedDictionary = List.from(state.dictionary)..remove(word);
+      
+      // Save to Hive
+      final settingsBox = Hive.box('settings');
+      await settingsBox.put('dictionary', updatedDictionary);
+      
+      // Update state
+      emit(state.copyWith(dictionary: updatedDictionary));
     } catch (e) {
       emit(state.copyWith(error: e.toString()));
     }
