@@ -49,6 +49,9 @@ class HotkeyHandler {
     _transcriptionBloc = transcriptionBloc;
     _recordingRepository = recordingRepository;
     _transcriptionRepository = transcriptionRepository;
+    
+    // Initialize the assistant service with repositories
+    _assistantService.setRepositories(recordingRepository, transcriptionRepository);
   }
 
   /// Handles keyDown events for any registered hotkey
