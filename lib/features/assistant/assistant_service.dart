@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:keypress_simulator/keypress_simulator.dart';
 import 'package:autoquill_ai/features/recording/domain/repositories/recording_repository.dart';
 import 'package:autoquill_ai/features/transcription/domain/repositories/transcription_repository.dart';
+import 'package:pasteboard/pasteboard.dart';
 import 'clipboard_listener_service.dart';
 
 /// Service to handle assistant mode functionality
@@ -104,6 +105,32 @@ class AssistantService {
         print('Error simulating copy command: $e');
       }
       BotToast.showText(text: 'Error simulating copy command');
+    }
+  }
+  
+  /// Simulate paste command (Meta + V)
+  Future<void> _simulatePasteCommand() async {
+    try {
+      // Simulate key down for Meta + V
+      await keyPressSimulator.simulateKeyDown(
+        PhysicalKeyboardKey.keyV,
+        [ModifierKey.metaModifier],
+      );
+      
+      // Simulate key up for Meta + V
+      await keyPressSimulator.simulateKeyUp(
+        PhysicalKeyboardKey.keyV,
+        [ModifierKey.metaModifier],
+      );
+      
+      if (kDebugMode) {
+        print('Paste command simulated');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error simulating paste command: $e');
+      }
+      BotToast.showText(text: 'Error simulating paste command');
     }
   }
   
@@ -224,17 +251,23 @@ class AssistantService {
         'messages': [
           {
             'role': 'system',
-            'content': 'You are a helpful assistant that can rewrite text based on the user input instructions. Your output should not include any comments, not even "Here is the rewritten text" or anything like that. Just the edited text please'
+            'content': 'You are a text editor that rewrites text based on instructions. IMPORTANT: Your response must ONLY contain the edited text with NO introductory phrases, NO explanations, NO "Here is the rewritten text", NO comments about what you did, and NO concluding remarks. The user will only see your exact output, so it must be ready to use immediately.'
+          },
+          {
+            'role': 'user',
+            'content': 'I will give you instructions followed by text to edit. The format will be "[INSTRUCTIONS]: [TEXT]". Only return the edited text with no additional comments or explanations.'
           },
           {
             'role': 'assistant',
-            'content': 'Your job is to filter out any comments, any "Here is the rewritten text" or anything like that. Output only the edited text.'
+            'content': 'I understand. I will only return the edited text with no additional comments or explanations.'
           },
           {
             'role': 'user',
             'content': content
           }, 
-        ]
+        ],
+        'temperature': 0.3, // Lower temperature for more predictable, structured output
+        'max_tokens': 2000 // Ensure we have enough tokens for the response
       });
       
       // Send the request
@@ -256,10 +289,14 @@ class AssistantService {
           print('AI Response: $aiResponse');
         }
         
-        // Copy the AI response to clipboard
-        Clipboard.setData(ClipboardData(text: aiResponse));
+        // Copy the AI response to clipboard using pasteboard for better compatibility
+        Pasteboard.writeText(aiResponse);
         
         BotToast.showText(text: 'AI response copied to clipboard');
+        
+        // Simulate paste command after a short delay
+        await Future.delayed(const Duration(milliseconds: 500));
+        await _simulatePasteCommand();
       } else {
         if (kDebugMode) {
           print('API Error: ${response.statusCode} ${response.body}');
