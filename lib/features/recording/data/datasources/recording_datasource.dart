@@ -21,17 +21,18 @@ class RecordingDataSourceImpl implements RecordingDataSource {
     // Get system Documents directory
     final home = Platform.environment['HOME'];
     if (home == null) throw Exception('Could not find home directory');
-    
+
     final recordingsDir = Directory('$home/Documents/AutoQuillAIRecordings');
     if (!await recordingsDir.exists()) {
       await recordingsDir.create(recursive: true);
     }
-    
+
     return '${recordingsDir.path}/last_recording.m4a';
   }
 
   @override
   Future<void> startRecording() async {
+    print('Recording started');
     if (!await recorder.hasPermission()) {
       throw Exception('Microphone permission not granted');
     }
@@ -46,6 +47,7 @@ class RecordingDataSourceImpl implements RecordingDataSource {
 
   @override
   Future<String> stopRecording() async {
+    print('Recording stopped');
     final path = await recorder.stop();
     if (path == null) throw Exception('Failed to stop recording');
     _currentRecordingPath = null;
