@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:record/record.dart';
 import '../platform/recording_overlay_platform.dart';
 
@@ -47,6 +48,28 @@ class RecordingDataSourceImpl implements RecordingDataSource {
     
     // Show the recording overlay
     await RecordingOverlayPlatform.showOverlay();
+    
+    // Start sending audio levels to the platform
+    RecordingOverlayPlatform.startSendingAudioLevels(() async {
+      // Get the current amplitude from the recorder
+      // The record package doesn't provide direct amplitude access,
+      // so we'll use a simulated value for now
+      return _getSimulatedAudioLevel();
+    });
+  }
+  
+  // Simulates an audio level between 0.0 and 1.0
+  // In a real implementation, this would get the actual audio level from the recorder
+  double _getSimulatedAudioLevel() {
+    // Generate a somewhat realistic audio pattern
+    // Base level plus some randomness
+    final baseLevel = 0.2;
+    final randomComponent = math.Random().nextDouble() * 0.6;
+    
+    // Occasionally add a spike for more natural look
+    final spike = math.Random().nextInt(10) == 0 ? 0.3 : 0.0;
+    
+    return math.min(1.0, baseLevel + randomComponent + spike);
   }
 
   @override
