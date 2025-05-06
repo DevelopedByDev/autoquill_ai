@@ -1,7 +1,5 @@
 import Cocoa
-import FlutterMacOS
 
-// Recording overlay window implementation
 class RecordingOverlayWindow: NSPanel {
     static let shared = RecordingOverlayWindow()
     private let label = NSTextField()
@@ -79,39 +77,4 @@ class RecordingOverlayWindow: NSPanel {
             })
         }
     }
-}
-
-class MainFlutterWindow: NSWindow {
-  override func awakeFromNib() {
-    let flutterViewController = FlutterViewController()
-    let windowFrame = self.frame
-    self.contentViewController = flutterViewController
-    self.setFrame(windowFrame, display: true)
-
-    RegisterGeneratedPlugins(registry: flutterViewController)
-    
-    // Set up method channel for recording overlay
-    setupMethodChannel(flutterViewController: flutterViewController)
-
-    super.awakeFromNib()
-  }
-  
-  private func setupMethodChannel(flutterViewController: FlutterViewController) {
-    let channel = FlutterMethodChannel(
-      name: "com.autoquill.recording_overlay",
-      binaryMessenger: flutterViewController.engine.binaryMessenger)
-    
-    channel.setMethodCallHandler { (call, result) in
-      switch call.method {
-      case "showOverlay":
-        RecordingOverlayWindow.shared.showOverlay()
-        result(nil)
-      case "hideOverlay":
-        RecordingOverlayWindow.shared.hideOverlay()
-        result(nil)
-      default:
-        result(FlutterMethodNotImplemented)
-      }
-    }
-  }
 }

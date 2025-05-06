@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:record/record.dart';
+import '../platform/recording_overlay_platform.dart';
 
 abstract class RecordingDataSource {
   Future<void> startRecording();
@@ -43,6 +44,9 @@ class RecordingDataSourceImpl implements RecordingDataSource {
       sampleRate: 44100,
     );
     await recorder.start(config, path: _currentRecordingPath!);
+    
+    // Show the recording overlay
+    await RecordingOverlayPlatform.showOverlay();
   }
 
   @override
@@ -51,6 +55,10 @@ class RecordingDataSourceImpl implements RecordingDataSource {
     final path = await recorder.stop();
     if (path == null) throw Exception('Failed to stop recording');
     _currentRecordingPath = null;
+    
+    // Hide the recording overlay
+    await RecordingOverlayPlatform.hideOverlay();
+    
     return path;
   }
 
@@ -80,6 +88,9 @@ class RecordingDataSourceImpl implements RecordingDataSource {
         await file.delete();
       }
       _currentRecordingPath = null;
+      
+      // Hide the recording overlay
+      await RecordingOverlayPlatform.hideOverlay();
     }
   }
 }
