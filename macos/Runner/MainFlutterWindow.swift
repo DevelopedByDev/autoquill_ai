@@ -58,86 +58,87 @@ class BlinkingLabel: NSTextField {
     }
 }
 
-// Recording overlay window implementation
+// Enhanced RecordingOverlayWindow with neumorphic glow and rounded blur
 class RecordingOverlayWindow: NSPanel {
     static let shared = RecordingOverlayWindow()
-    private let blinkingLabel = BlinkingLabel(frame: NSRect(x: 0, y: 0, width: 180, height: 80))
-    
+    private let blinkingLabel = BlinkingLabel(frame: NSRect(x: 40, y: 20, width: 100, height: 40))
+
     private init() {
-        // Create a borderless panel that stays on top of all other windows
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: 180, height: 80),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
-        
-        // Configure the window
-        self.level = .floating // Make it float above other windows
+
+        self.level = .floating
         self.isOpaque = false
-        self.backgroundColor = NSColor.clear
-        self.hasShadow = true
-        self.isMovableByWindowBackground = true
-        
-        // Position in the top-right corner of the screen
+        self.backgroundColor = .clear
+        self.hasShadow = false
+        self.ignoresMouseEvents = true
+        self.isMovableByWindowBackground = false
+
         if let screenFrame = NSScreen.main?.visibleFrame {
-            let xPos = screenFrame.width - 200
+            let xPos = screenFrame.width - 220
             let yPos = screenFrame.height - 100
             self.setFrameOrigin(NSPoint(x: xPos, y: yPos))
         }
-        
-        // Create a visual effect view for the background (semi-transparent)
+
+        // Neumorphic Glass Background
         let visualEffectView = NSVisualEffectView(frame: NSRect(x: 0, y: 0, width: 180, height: 80))
-        visualEffectView.material = .hudWindow
+        visualEffectView.material = .ultraDark
         visualEffectView.state = .active
         visualEffectView.wantsLayer = true
-        visualEffectView.layer?.cornerRadius = 15
-        
-        // Configure the blinking label to fill the entire window
-        blinkingLabel.frame = NSRect(x: 0, y: 0, width: 180, height: 80)
-        
-        // Add the view
+        visualEffectView.layer?.cornerRadius = 20
+        visualEffectView.layer?.borderColor = NSColor.white.withAlphaComponent(0.2).cgColor
+        visualEffectView.layer?.borderWidth = 1
+        visualEffectView.layer?.shadowColor = NSColor.systemPink.cgColor
+        visualEffectView.layer?.shadowOpacity = 0.3
+        visualEffectView.layer?.shadowOffset = .zero
+        visualEffectView.layer?.shadowRadius = 10
+
+        // Glow pulse animation
+        let glow = CABasicAnimation(keyPath: "shadowRadius")
+        glow.fromValue = 8
+        glow.toValue = 14
+        glow.duration = 1.5
+        glow.autoreverses = true
+        glow.repeatCount = .infinity
+        visualEffectView.layer?.add(glow, forKey: "glowPulse")
+
         visualEffectView.addSubview(blinkingLabel)
         self.contentView = visualEffectView
-        
-        // Make the window level high enough to appear above full-screen apps
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
     }
-    
+
     func showOverlay() {
         DispatchQueue.main.async {
             self.orderFront(nil)
-            
-            // Add a subtle animation
             self.alphaValue = 0
+            self.setIsVisible(true)
             NSAnimationContext.runAnimationGroup({ context in
-                context.duration = 0.3
+                context.duration = 0.35
                 self.animator().alphaValue = 1.0
+                self.animator().contentView?.layer?.transform = CATransform3DMakeScale(1.0, 1.0, 1.0)
             })
-            
-            // Start the blinking animation
             self.blinkingLabel.startBlinking()
         }
     }
-    
+
     func hideOverlay() {
         DispatchQueue.main.async {
-            // Stop the blinking animation
             self.blinkingLabel.stopBlinking()
-            
-            // Animate out
             NSAnimationContext.runAnimationGroup({ context in
-                context.duration = 0.3
+                context.duration = 0.25
                 self.animator().alphaValue = 0
             }, completionHandler: {
                 self.orderOut(nil)
             })
         }
     }
-    
-    // Method to update audio level (now a no-op since we're not showing audio levels)
+
     func updateAudioLevel(_ level: Float) {
-        // No-op since we're not showing audio levels anymore
+        // (Optional) Use level to animate future VU meter here
     }
 }
 
