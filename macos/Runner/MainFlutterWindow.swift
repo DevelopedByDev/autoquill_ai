@@ -2,124 +2,66 @@ import Cocoa
 import FlutterMacOS
 import AVFoundation
 
-// Pulsating sphere view for audio visualization
-class PulsatingSphereView: NSView {
-    private var currentAmplitude: CGFloat = 0.2
-    private let minRadius: CGFloat = 10
-    private let maxRadius: CGFloat = 25
-    private let baseColor = NSColor(calibratedRed: 0.2, green: 0.6, blue: 1.0, alpha: 1.0)
-    private var animationTimer: Timer?
-    
-    // Layer for the sphere
-    private let sphereLayer = CAShapeLayer()
+// Blinking label for recording indicator
+class BlinkingLabel: NSTextField {
+    private var blinkTimer: Timer?
+    private var isVisible = true
     
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        setupView()
+        self.setup()
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
-        setupView()
+        self.setup()
     }
     
-    private func setupView() {
-        self.wantsLayer = true
-        self.layer?.masksToBounds = false
-        
-        // Configure the sphere layer
-        sphereLayer.fillColor = baseColor.cgColor
-        sphereLayer.shadowColor = baseColor.cgColor
-        sphereLayer.shadowOffset = CGSize(width: 0, height: 0)
-        sphereLayer.shadowRadius = 10
-        sphereLayer.shadowOpacity = 0.7
-        
-        if let layer = self.layer {
-            layer.addSublayer(sphereLayer)
-        }
-        
-        updateSphereSize()
+    private func setup() {
+        self.stringValue = "Recording..."
+        self.alignment = .center
+        self.isBezeled = false
+        self.isEditable = false
+        self.isSelectable = false
+        self.drawsBackground = false
+        self.textColor = NSColor.white
+        self.font = NSFont.boldSystemFont(ofSize: 14)
     }
     
-    private func updateSphereSize() {
-        let radius = minRadius + (maxRadius - minRadius) * currentAmplitude
-        let centerX = bounds.width / 2
-        let centerY = bounds.height / 2
-        
-        // Create the sphere path
-        let path = CGMutablePath()
-        path.addArc(center: CGPoint(x: centerX, y: centerY), 
-                   radius: radius, 
-                   startAngle: 0, 
-                   endAngle: 2 * .pi, 
-                   clockwise: false)
-        
-        // Update the layer with the new path
-        sphereLayer.path = path
-        
-        // Update shadow to match the size
-        sphereLayer.shadowRadius = radius * 0.4
-        
-        // Update color intensity based on amplitude
-        let intensity = 0.2 + (0.8 * currentAmplitude)
-        sphereLayer.fillColor = baseColor.withAlphaComponent(intensity).cgColor
-    }
-    
-    override func layout() {
-        super.layout()
-        updateSphereSize()
-    }
-    
-    func updateWithAmplitude(_ amplitude: CGFloat) {
-        // Clamp amplitude between 0 and 1
-        let clampedAmplitude = min(max(amplitude, 0), 1)
-        
-        // Smoothly transition to the new amplitude
-        CATransaction.begin()
-        CATransaction.setAnimationDuration(0.1)
-        
-        // Update the current amplitude
-        self.currentAmplitude = clampedAmplitude
-        
-        // Update the sphere size and color
-        updateSphereSize()
-        
-        CATransaction.commit()
-    }
-    
-    // Simulate animation when no actual audio data is available
-    func startSimulation() {
+    func startBlinking() {
         // Stop any existing timer
-        animationTimer?.invalidate()
+        stopBlinking()
         
-        // Start a new timer
-        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] timer in
-            guard let self = self else {
-                timer.invalidate()
-                return
-            }
+        // Create a new timer that fires every 1 second
+        blinkTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
             
-            // Generate a somewhat realistic audio pattern
-            let baseLevel = 0.2
-            let randomComponent = CGFloat.random(in: 0...0.6)
-            let spike = CGFloat.random(in: 0...1) < 0.1 ? CGFloat.random(in: 0.2...0.4) : 0.0
+            // Animate the alpha value smoothly
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = 0.5
+                self.animator().alphaValue = self.isVisible ? 0.3 : 1.0
+            })
             
-            let amplitude = min(1.0, baseLevel + randomComponent + spike)
-            self.updateWithAmplitude(amplitude)
+            // Toggle visibility state
+            self.isVisible = !self.isVisible
         }
     }
     
-    func stopSimulation() {
-        animationTimer?.invalidate()
-        animationTimer = nil
+    func stopBlinking() {
+        blinkTimer?.invalidate()
+        blinkTimer = nil
+        self.alphaValue = 1.0
+    }
+    
+    deinit {
+        stopBlinking()
     }
 }
 
 // Recording overlay window implementation
 class RecordingOverlayWindow: NSPanel {
     static let shared = RecordingOverlayWindow()
-    private let label = NSTextField()
-    private let sphereView = PulsatingSphereView(frame: NSRect(x: 0, y: 0, width: 60, height: 60))
+    private let blinkingLabel = BlinkingLabel(frame: NSRect(x: 0, y: 0, width: 180, height: 80))
     
     private init() {
         // Create a borderless panel that stays on top of all other windows
@@ -151,23 +93,11 @@ class RecordingOverlayWindow: NSPanel {
         visualEffectView.wantsLayer = true
         visualEffectView.layer?.cornerRadius = 15
         
-        // Configure the label
-        label.stringValue = "Recording in progress..."
-        label.alignment = .center
-        label.isBezeled = false
-        label.isEditable = false
-        label.isSelectable = false
-        label.drawsBackground = false
-        label.textColor = NSColor.white
-        label.font = NSFont.boldSystemFont(ofSize: 12)
-        label.frame = NSRect(x: 0, y: 50, width: 180, height: 30)
+        // Configure the blinking label to fill the entire window
+        blinkingLabel.frame = NSRect(x: 0, y: 0, width: 180, height: 80)
         
-        // Configure the sphere view
-        sphereView.frame = NSRect(x: 60, y: 0, width: 60, height: 50)
-        
-        // Add the views
-        visualEffectView.addSubview(label)
-        visualEffectView.addSubview(sphereView)
+        // Add the view
+        visualEffectView.addSubview(blinkingLabel)
         self.contentView = visualEffectView
         
         // Make the window level high enough to appear above full-screen apps
@@ -185,15 +115,15 @@ class RecordingOverlayWindow: NSPanel {
                 self.animator().alphaValue = 1.0
             })
             
-            // Start the sphere pulsation
-            self.sphereView.startSimulation()
+            // Start the blinking animation
+            self.blinkingLabel.startBlinking()
         }
     }
     
     func hideOverlay() {
         DispatchQueue.main.async {
-            // Stop the sphere simulation
-            self.sphereView.stopSimulation()
+            // Stop the blinking animation
+            self.blinkingLabel.stopBlinking()
             
             // Animate out
             NSAnimationContext.runAnimationGroup({ context in
@@ -205,11 +135,9 @@ class RecordingOverlayWindow: NSPanel {
         }
     }
     
-    // Method to update the sphere with real audio levels
+    // Method to update audio level (now a no-op since we're not showing audio levels)
     func updateAudioLevel(_ level: Float) {
-        // Convert audio level to amplitude (0-1 range)
-        let normalizedLevel = max(0.0, min(1.0, CGFloat(level)))
-        sphereView.updateWithAmplitude(normalizedLevel)
+        // No-op since we're not showing audio levels anymore
     }
 }
 

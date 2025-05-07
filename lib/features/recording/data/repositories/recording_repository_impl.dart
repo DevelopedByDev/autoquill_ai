@@ -26,4 +26,7 @@ class RecordingRepositoryImpl implements RecordingRepository {
 
   @override
   Future<bool> get isPaused => dataSource.isPaused;
+  
+  @override
+  Future<void> restartRecording() => dataSource.restartRecording();
 }

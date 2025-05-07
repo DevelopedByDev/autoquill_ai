@@ -9,6 +9,7 @@ abstract class RecordingDataSource {
   Future<void> pauseRecording();
   Future<void> resumeRecording();
   Future<void> cancelRecording();
+  Future<void> restartRecording();
   Future<bool> get isRecording;
   Future<bool> get isPaused;
 }
@@ -16,6 +17,8 @@ abstract class RecordingDataSource {
 class RecordingDataSourceImpl implements RecordingDataSource {
   final AudioRecorder recorder;
   String? _currentRecordingPath;
+  // ignore: unused_field
+  bool _isRecording = false;
 
   RecordingDataSourceImpl({required this.recorder});
 
@@ -45,6 +48,7 @@ class RecordingDataSourceImpl implements RecordingDataSource {
       sampleRate: 44100,
     );
     await recorder.start(config, path: _currentRecordingPath!);
+    _isRecording = true;
     
     // Show the recording overlay
     await RecordingOverlayPlatform.showOverlay();
@@ -78,6 +82,7 @@ class RecordingDataSourceImpl implements RecordingDataSource {
     final path = await recorder.stop();
     if (path == null) throw Exception('Failed to stop recording');
     _currentRecordingPath = null;
+    _isRecording = false;
     
     // Hide the recording overlay
     await RecordingOverlayPlatform.hideOverlay();
@@ -105,6 +110,7 @@ class RecordingDataSourceImpl implements RecordingDataSource {
   Future<void> cancelRecording() async {
     if (await isRecording && _currentRecordingPath != null) {
       await recorder.stop();
+      _isRecording = false;
       // Delete the current recording file
       final file = File(_currentRecordingPath!);
       if (await file.exists()) {
@@ -115,5 +121,25 @@ class RecordingDataSourceImpl implements RecordingDataSource {
       // Hide the recording overlay
       await RecordingOverlayPlatform.hideOverlay();
     }
+  }
+  
+  @override
+  Future<void> restartRecording() async {
+    // First stop the current recording but don't hide the overlay yet
+    if (await isRecording) {
+      await recorder.stop();
+      _isRecording = false;
+      
+      // Delete the current recording file if it exists
+      if (_currentRecordingPath != null) {
+        final file = File(_currentRecordingPath!);
+        if (await file.exists()) {
+          await file.delete();
+        }
+      }
+    }
+    
+    // Then start a new recording
+    await startRecording();
   }
 }

@@ -15,6 +15,7 @@ class StopRecording extends RecordingEvent {}
 class PauseRecording extends RecordingEvent {}
 class ResumeRecording extends RecordingEvent {}
 class CancelRecording extends RecordingEvent {}
+class RestartRecording extends RecordingEvent {}
 
 // States
 abstract class RecordingState extends Equatable {
@@ -65,6 +66,7 @@ class RecordingBloc extends Bloc<RecordingEvent, RecordingState> {
     on<PauseRecording>(_onPauseRecording);
     on<ResumeRecording>(_onResumeRecording);
     on<CancelRecording>(_onCancelRecording);
+    on<RestartRecording>(_onRestartRecording);
   }
 
   Future<void> _onStartRecording(StartRecording event, Emitter<RecordingState> emit) async {
@@ -107,6 +109,15 @@ class RecordingBloc extends Bloc<RecordingEvent, RecordingState> {
     try {
       await repository.cancelRecording();
       emit(const RecordingInitial());
+    } catch (e) {
+      emit(RecordingError(message: e.toString()));
+    }
+  }
+  
+  Future<void> _onRestartRecording(RestartRecording event, Emitter<RecordingState> emit) async {
+    try {
+      await repository.restartRecording();
+      emit(const RecordingInProgress(isPaused: false));
     } catch (e) {
       emit(RecordingError(message: e.toString()));
     }
