@@ -63,6 +63,33 @@ class RecordingOverlayPlatform {
     }
   }
   
+  /// Sets the overlay text to "Recording stopped"
+  static Future<void> setRecordingStopped() async {
+    try {
+      await _channel.invokeMethod('setRecordingStopped');
+    } on PlatformException catch (e) {
+      print('Failed to set recording stopped state: ${e.message}');
+    }
+  }
+  
+  /// Sets the overlay text to "Processing audio"
+  static Future<void> setProcessingAudio() async {
+    try {
+      await _channel.invokeMethod('setProcessingAudio');
+    } on PlatformException catch (e) {
+      print('Failed to set processing audio state: ${e.message}');
+    }
+  }
+  
+  /// Sets the overlay text to "Transcription copied"
+  static Future<void> setTranscriptionCompleted() async {
+    try {
+      await _channel.invokeMethod('setTranscriptionCompleted');
+    } on PlatformException catch (e) {
+      print('Failed to set transcription completed state: ${e.message}');
+    }
+  }
+  
   /// Updates the audio level in the overlay
   static Future<void> updateAudioLevel(double level) async {
     try {

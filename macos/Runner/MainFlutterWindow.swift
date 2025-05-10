@@ -7,6 +7,29 @@ class BlinkingLabel: NSTextField {
     private var blinkTimer: Timer?
     private var isVisible = true
     
+    // Text states for different recording and transcription states
+    enum TextState {
+        case recording
+        case stopped
+        case processing
+        case completed
+        
+        var text: String {
+            switch self {
+            case .recording: return "Recording..."
+            case .stopped: return "Recording stopped"
+            case .processing: return "Processing audio"
+            case .completed: return "Transcription copied"
+            }
+        }
+        
+        var shouldBlink: Bool {
+            return self == .recording
+        }
+    }
+    
+    private var currentState: TextState = .recording
+    
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.setup()
@@ -18,7 +41,7 @@ class BlinkingLabel: NSTextField {
     }
     
     private func setup() {
-        self.stringValue = "Recording..."
+        self.stringValue = TextState.recording.text
         self.alignment = .center
         self.isBezeled = false
         self.isEditable = false
@@ -28,9 +51,23 @@ class BlinkingLabel: NSTextField {
         self.font = NSFont.boldSystemFont(ofSize: 14)
     }
     
+    func setState(_ state: TextState) {
+        self.currentState = state
+        self.stringValue = state.text
+        
+        if state.shouldBlink {
+            startBlinking()
+        } else {
+            stopBlinking()
+        }
+    }
+    
     func startBlinking() {
         // Stop any existing timer
         stopBlinking()
+        
+        // Only blink if the current state should blink
+        guard currentState.shouldBlink else { return }
         
         // Create a new timer that fires every 1 second
         blinkTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
@@ -61,7 +98,7 @@ class BlinkingLabel: NSTextField {
 // Enhanced RecordingOverlayWindow with neumorphic glow and rounded blur
 class RecordingOverlayWindow: NSPanel {
     static let shared = RecordingOverlayWindow()
-    private let blinkingLabel = BlinkingLabel(frame: NSRect(x: 40, y: 20, width: 100, height: 40))
+    private let blinkingLabel = BlinkingLabel(frame: NSRect(x: 10, y: 20, width: 160, height: 40))
 
     private init() {
         super.init(
@@ -121,7 +158,8 @@ class RecordingOverlayWindow: NSPanel {
                 self.animator().alphaValue = 1.0
                 self.animator().contentView?.layer?.transform = CATransform3DMakeScale(1.0, 1.0, 1.0)
             })
-            self.blinkingLabel.startBlinking()
+            // Set initial state to recording and start blinking
+            self.setOverlayState(.recording)
         }
     }
 
@@ -135,6 +173,24 @@ class RecordingOverlayWindow: NSPanel {
                 self.orderOut(nil)
             })
         }
+    }
+    
+    func setOverlayState(_ state: BlinkingLabel.TextState) {
+        DispatchQueue.main.async {
+            self.blinkingLabel.setState(state)
+        }
+    }
+    
+    func setRecordingStopped() {
+        setOverlayState(.stopped)
+    }
+    
+    func setProcessingAudio() {
+        setOverlayState(.processing)
+    }
+    
+    func setTranscriptionCompleted() {
+        setOverlayState(.completed)
     }
 
     func updateAudioLevel(_ level: Float) {
@@ -181,6 +237,15 @@ class MainFlutterWindow: NSWindow {
                              message: "Expected level parameter", 
                              details: nil))
         }
+      case "setRecordingStopped":
+        RecordingOverlayWindow.shared.setRecordingStopped()
+        result(nil)
+      case "setProcessingAudio":
+        RecordingOverlayWindow.shared.setProcessingAudio()
+        result(nil)
+      case "setTranscriptionCompleted":
+        RecordingOverlayWindow.shared.setTranscriptionCompleted()
+        result(nil)
       default:
         result(FlutterMethodNotImplemented)
       }

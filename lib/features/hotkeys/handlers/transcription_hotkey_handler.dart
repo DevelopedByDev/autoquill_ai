@@ -3,6 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import 'package:autoquill_ai/features/recording/domain/repositories/recording_repository.dart';
 import 'package:autoquill_ai/features/transcription/domain/repositories/transcription_repository.dart';
+import '../../../features/recording/data/platform/recording_overlay_platform.dart';
 import '../services/clipboard_service.dart';
 
 /// Handler for transcription hotkey functionality
@@ -68,16 +69,22 @@ class TranscriptionHotkeyHandler {
   /// Transcribe audio and copy to clipboard without affecting UI
   static Future<void> _transcribeAndCopyToClipboard(String audioPath, String apiKey) async {
     try {
+      // Update overlay to show we're processing the audio
+      await RecordingOverlayPlatform.setProcessingAudio();
+      
       // Transcribe the audio
       final response = await _transcriptionRepository!.transcribeAudio(audioPath, apiKey);
       // Trim any leading/trailing whitespace from the transcription text
       final transcriptionText = response.text.trim();
       
-      // Copy to clipboard
+      // Copy to clipboard - this will also update the overlay state to "Transcription copied"
+      // and hide the overlay after pasting
       await ClipboardService.copyToClipboard(transcriptionText);
       
       BotToast.showText(text: 'Transcription copied to clipboard');
     } catch (e) {
+      // Hide the overlay on error
+      await RecordingOverlayPlatform.hideOverlay();
       BotToast.showText(text: 'Transcription failed: $e');
     }
   }

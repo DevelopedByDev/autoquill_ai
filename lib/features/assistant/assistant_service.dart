@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import '../recording/data/platform/recording_overlay_platform.dart';
 import 'package:http/http.dart' as http;
 import 'package:keypress_simulator/keypress_simulator.dart';
 import 'package:autoquill_ai/features/recording/domain/repositories/recording_repository.dart';
@@ -126,11 +127,17 @@ class AssistantService {
       if (kDebugMode) {
         print('Paste command simulated');
       }
+      
+      // Now that we've pasted the text, hide the overlay
+      await RecordingOverlayPlatform.hideOverlay();
     } catch (e) {
       if (kDebugMode) {
         print('Error simulating paste command: $e');
       }
       BotToast.showText(text: 'Error simulating paste command');
+      
+      // Hide the overlay even if there's an error
+      await RecordingOverlayPlatform.hideOverlay();
     }
   }
   
@@ -225,10 +232,15 @@ class AssistantService {
   Future<void> _transcribeAndProcess(String apiKey) async {
     if (_recordedFilePath == null) {
       BotToast.showText(text: 'Missing recording');
+      // Hide the overlay since we can't proceed
+      await RecordingOverlayPlatform.hideOverlay();
       return;
     }
     
     try {
+      // Update overlay to show we're processing the audio
+      await RecordingOverlayPlatform.setProcessingAudio();
+      
       // Transcribe the audio
       final response = await _transcriptionRepository!.transcribeAudio(_recordedFilePath!, apiKey);
       final transcribedText = response.text;
@@ -236,6 +248,9 @@ class AssistantService {
       if (kDebugMode) {
         print('Transcribed text: $transcribedText');
       }
+      
+      // Update overlay to show transcription is complete
+      await RecordingOverlayPlatform.setTranscriptionCompleted();
       
       // Determine the mode based on whether text was selected
       final String mode = _selectedText == null ? 'generation' : 'editing';
@@ -247,6 +262,8 @@ class AssistantService {
       if (kDebugMode) {
         print('Error in transcription: $e');
       }
+      // Hide the overlay on error
+      await RecordingOverlayPlatform.hideOverlay();
       BotToast.showText(text: 'Transcription failed: $e');
     }
   }

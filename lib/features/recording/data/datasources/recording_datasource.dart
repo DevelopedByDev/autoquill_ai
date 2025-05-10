@@ -98,8 +98,8 @@ class RecordingDataSourceImpl implements RecordingDataSource {
     
     _isRecording = false;
     
-    // Hide the recording overlay
-    await RecordingOverlayPlatform.hideOverlay();
+    // Update the overlay text to show recording stopped
+    await RecordingOverlayPlatform.setRecordingStopped();
     
     // Check if we need to pad the recording with silence
     String finalPath = path;

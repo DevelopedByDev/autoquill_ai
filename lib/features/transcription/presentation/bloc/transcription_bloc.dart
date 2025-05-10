@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:keypress_simulator/keypress_simulator.dart';
 import '../../../../core/storage/app_storage.dart';
 import '../../domain/repositories/transcription_repository.dart';
+import '../../../recording/data/platform/recording_overlay_platform.dart';
 
 // Events
 abstract class TranscriptionEvent extends Equatable {
@@ -102,15 +103,23 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
         error: 'No API key found. Please add your Groq API key in Settings.',
         apiKey: null,
       ));
+      // Hide the overlay since we can't proceed
+      await RecordingOverlayPlatform.hideOverlay();
       return;
     }
 
     emit(state.copyWith(isLoading: true, error: null));
+    
+    // Update overlay to show we're processing the audio
+    await RecordingOverlayPlatform.setProcessingAudio();
 
     try {
       final response = await repository.transcribeAudio(event.audioPath, apiKey);
       // Trim any leading/trailing whitespace from the transcription text
       final transcriptionText = response.text.trim();
+      
+      // Update overlay to show transcription is complete
+      await RecordingOverlayPlatform.setTranscriptionCompleted();
       
       // Copy the transcription text to clipboard
       await _copyToClipboard(transcriptionText);
@@ -121,6 +130,9 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
         apiKey: apiKey,
       ));
     } catch (e) {
+      // Hide the overlay on error
+      await RecordingOverlayPlatform.hideOverlay();
+      
       emit(state.copyWith(
         error: 'Transcription failed: $e',
         isLoading: false,
@@ -194,10 +206,15 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
       if (kDebugMode) {
         print('Paste command simulated');
       }
+      
+      // Now that we've pasted the text, hide the overlay
+      await RecordingOverlayPlatform.hideOverlay();
     } catch (e) {
       if (kDebugMode) {
         print('Error simulating paste command: $e');
       }
+      // Hide the overlay even if there's an error
+      await RecordingOverlayPlatform.hideOverlay();
     }
   }
 

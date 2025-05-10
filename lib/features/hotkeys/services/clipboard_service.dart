@@ -4,6 +4,7 @@ import 'package:pasteboard/pasteboard.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:keypress_simulator/keypress_simulator.dart';
 import 'package:flutter/services.dart';
+import '../../../features/recording/data/platform/recording_overlay_platform.dart';
 
 /// Service for handling clipboard operations
 class ClipboardService {
@@ -12,6 +13,9 @@ class ClipboardService {
     try {
       // Trim any leading/trailing whitespace before copying to clipboard
       final trimmedText = text.trim();
+      
+      // Update overlay to show transcription is complete
+      await RecordingOverlayPlatform.setTranscriptionCompleted();
       
       // Copy plain text to clipboard
       Pasteboard.writeText(trimmedText);
@@ -45,6 +49,8 @@ class ClipboardService {
       if (kDebugMode) {
         print('Error copying to clipboard: $e');
       }
+      // Hide the overlay on error
+      await RecordingOverlayPlatform.hideOverlay();
     }
   }
   
@@ -66,10 +72,15 @@ class ClipboardService {
       if (kDebugMode) {
         print('Paste command simulated');
       }
+      
+      // Now that we've pasted the text, hide the overlay
+      await RecordingOverlayPlatform.hideOverlay();
     } catch (e) {
       if (kDebugMode) {
         print('Error simulating paste command: $e');
       }
+      // Hide the overlay even if there's an error
+      await RecordingOverlayPlatform.hideOverlay();
     }
   }
 }
