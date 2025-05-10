@@ -18,13 +18,13 @@ class BlinkingLabel: NSTextField {
             switch self {
             case .recording: return "Recording..."
             case .stopped: return "Recording stopped"
-            case .processing: return "Processing audio"
+            case .processing: return "Processing..."
             case .completed: return "Transcription copied"
             }
         }
         
         var shouldBlink: Bool {
-            return self == .recording
+            return self == .recording || self == .processing
         }
     }
     
