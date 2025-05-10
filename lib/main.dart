@@ -78,6 +78,8 @@ class MainApp extends StatelessWidget {
           navigatorObservers: [BotToastNavigatorObserver()],
           theme: ThemeData(
             primarySwatch: Colors.blue,
+            fontFamily: 'SF Pro Display',
+            scaffoldBackgroundColor: Colors.white,
             useMaterial3: true,
           ),
           home: MultiRepositoryProvider(
