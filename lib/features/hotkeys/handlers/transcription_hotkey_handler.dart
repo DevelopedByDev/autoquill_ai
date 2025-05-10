@@ -70,7 +70,8 @@ class TranscriptionHotkeyHandler {
     try {
       // Transcribe the audio
       final response = await _transcriptionRepository!.transcribeAudio(audioPath, apiKey);
-      final transcriptionText = response.text;
+      // Trim any leading/trailing whitespace from the transcription text
+      final transcriptionText = response.text.trim();
       
       // Copy to clipboard
       await ClipboardService.copyToClipboard(transcriptionText);

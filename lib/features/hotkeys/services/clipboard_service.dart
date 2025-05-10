@@ -10,8 +10,11 @@ class ClipboardService {
   /// Copy text to clipboard using pasteboard and then simulate paste command
   static Future<void> copyToClipboard(String text) async {
     try {
+      // Trim any leading/trailing whitespace before copying to clipboard
+      final trimmedText = text.trim();
+      
       // Copy plain text to clipboard
-      Pasteboard.writeText(text);
+      Pasteboard.writeText(trimmedText);
       
       if (kDebugMode) {
         print('Transcription copied to clipboard');
@@ -23,7 +26,7 @@ class ClipboardService {
         final timestamp = DateTime.now().millisecondsSinceEpoch;
         final filePath = '${appDir.path}/transcription_$timestamp.txt';
         final file = File(filePath);
-        await file.writeAsString(text);
+        await file.writeAsString(trimmedText);
         
         if (kDebugMode) {
           print('Transcription saved to file: $filePath');

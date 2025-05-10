@@ -109,7 +109,8 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
 
     try {
       final response = await repository.transcribeAudio(event.audioPath, apiKey);
-      final transcriptionText = response.text;
+      // Trim any leading/trailing whitespace from the transcription text
+      final transcriptionText = response.text.trim();
       
       // Copy the transcription text to clipboard
       await _copyToClipboard(transcriptionText);
