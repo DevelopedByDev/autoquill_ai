@@ -160,7 +160,11 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
         print('Transcription copied to clipboard');
       }
       
-      // Also save as a file in the app documents directory for backup
+      // Simulate paste command (Meta + V) after a short delay
+      await Future.delayed(const Duration(milliseconds: 200));
+      await _simulatePasteCommand();
+      
+      // After pasting, save as a file in the app documents directory for backup
       try {
         final appDir = await getApplicationDocumentsDirectory();
         final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -176,11 +180,6 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
           print('Error saving transcription to file: $e');
         }
       }
-      
-      // Simulate paste command (Meta + V) after a short delay
-      await Future.delayed(const Duration(milliseconds: 500));
-      await _simulatePasteCommand();
-      
     } catch (e) {
       if (kDebugMode) {
         print('Error copying to clipboard: $e');
