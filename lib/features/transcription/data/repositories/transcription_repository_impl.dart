@@ -23,12 +23,28 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
     final settingsBox = Hive.box('settings');
     final selectedModel = settingsBox.get('transcription-model') ?? 'whisper-large-v3';
     
+    // Get dictionary words from settings
+    final List<dynamic>? storedDictionary = settingsBox.get('dictionary');
+    String? prompt;
+    
+    // If dictionary has words, create a prompt string with them
+    if (storedDictionary != null && storedDictionary.isNotEmpty) {
+      final List<String> dictionary = storedDictionary.cast<String>().toList();
+      // Join dictionary words with commas to create a prompt
+      prompt = 'Vocabulary: ${dictionary.join(', ')}.';
+    }
+    
     final request = http.MultipartRequest('POST', Uri.parse(_baseUrl))
       ..headers['Authorization'] = 'Bearer $apiKey'
       ..files.add(await http.MultipartFile.fromPath('file', audioPath))
       ..fields['model'] = selectedModel
       ..fields['temperature'] = '0'
       ..fields['response_format'] = 'verbose_json';
+      
+    // Add prompt if dictionary words exist
+    if (prompt != null && prompt.isNotEmpty) {
+      request.fields['prompt'] = prompt;
+    }
 
     final response = await request.send();
     final responseString = await response.stream.bytesToString();
