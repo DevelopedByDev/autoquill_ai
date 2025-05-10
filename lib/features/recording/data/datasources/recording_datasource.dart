@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:async';
 import 'package:record/record.dart';
 import '../platform/recording_overlay_platform.dart';
+import '../../utils/audio_utils.dart';
 
 abstract class RecordingDataSource {
   Future<void> startRecording();
@@ -17,8 +19,13 @@ abstract class RecordingDataSource {
 class RecordingDataSourceImpl implements RecordingDataSource {
   final AudioRecorder recorder;
   String? _currentRecordingPath;
-  // ignore: unused_field
   bool _isRecording = false;
+  
+  // Track recording start time to calculate duration
+  DateTime? _recordingStartTime;
+  
+  // Minimum recording duration in seconds
+  static const int _minimumRecordingDuration = 5;
 
   RecordingDataSourceImpl({required this.recorder});
 
@@ -50,6 +57,10 @@ class RecordingDataSourceImpl implements RecordingDataSource {
     await recorder.start(config, path: _currentRecordingPath!);
     _isRecording = true;
     
+    // Store the recording start time
+    _recordingStartTime = DateTime.now();
+    print('Recording started at: $_recordingStartTime');
+    
     // Show the recording overlay
     await RecordingOverlayPlatform.showOverlay();
     
@@ -79,15 +90,54 @@ class RecordingDataSourceImpl implements RecordingDataSource {
   @override
   Future<String> stopRecording() async {
     print('Recording stopped');
+    final recordingEndTime = DateTime.now();
+    
+    // Stop the recording immediately to capture only what the user intended
     final path = await recorder.stop();
     if (path == null) throw Exception('Failed to stop recording');
-    _currentRecordingPath = null;
+    
     _isRecording = false;
     
     // Hide the recording overlay
     await RecordingOverlayPlatform.hideOverlay();
     
-    return path;
+    // Check if we need to pad the recording with silence
+    String finalPath = path;
+    if (_recordingStartTime != null) {
+      final recordingDuration = recordingEndTime.difference(_recordingStartTime!).inMilliseconds / 1000.0;
+      print('Recording duration: $recordingDuration seconds');
+      
+      if (recordingDuration < _minimumRecordingDuration) {
+        print('Recording too short, padding with silence to reach $_minimumRecordingDuration seconds');
+        
+        try {
+          // Pad the recording with silence to reach the minimum duration
+          finalPath = await AudioUtils.padWithSilence(
+            path, 
+            Duration(seconds: _minimumRecordingDuration)
+          );
+          print('Successfully padded recording with silence: $finalPath');
+          
+          // Delete the original file if it's different from the padded one
+          if (finalPath != path) {
+            try {
+              await File(path).delete();
+              print('Deleted original short recording file');
+            } catch (e) {
+              print('Error deleting original recording file: $e');
+            }
+          }
+        } catch (e) {
+          print('Error padding recording with silence: $e');
+          // If padding fails, we'll use the original recording
+          finalPath = path;
+        }
+      }
+    }
+    
+    _currentRecordingPath = null;
+    _recordingStartTime = null;
+    return finalPath;
   }
 
   @override
@@ -117,6 +167,7 @@ class RecordingDataSourceImpl implements RecordingDataSource {
         await file.delete();
       }
       _currentRecordingPath = null;
+      _recordingStartTime = null;
       
       // Hide the recording overlay
       await RecordingOverlayPlatform.hideOverlay();
@@ -137,9 +188,14 @@ class RecordingDataSourceImpl implements RecordingDataSource {
           await file.delete();
         }
       }
+      
+      // Reset recording start time
+      _recordingStartTime = null;
     }
     
     // Then start a new recording
     await startRecording();
   }
+  
+
 }
