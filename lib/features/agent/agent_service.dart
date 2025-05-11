@@ -10,6 +10,7 @@ import 'package:autoquill_ai/features/recording/domain/repositories/recording_re
 import 'package:autoquill_ai/features/transcription/domain/repositories/transcription_repository.dart';
 import 'package:pasteboard/pasteboard.dart';
 import '../assistant/clipboard_listener_service.dart';
+import '../../core/utils/sound_player.dart';
 
 /// Service to handle agent mode functionality
 class AgentService {
@@ -105,6 +106,8 @@ class AgentService {
       if (kDebugMode) {
         print('Error simulating copy command: $e');
       }
+      // Play error sound
+      await SoundPlayer.playErrorSound();
       BotToast.showText(text: 'Error simulating copy command');
     }
   }
@@ -112,6 +115,9 @@ class AgentService {
   /// Simulate paste command (Meta + V)
   Future<void> _simulatePasteCommand() async {
     try {
+      // Play typing sound for paste operation
+      await SoundPlayer.playTypingSound();
+      
       // Simulate key down for Meta + V
       await keyPressSimulator.simulateKeyDown(
         PhysicalKeyboardKey.keyV,
@@ -134,6 +140,8 @@ class AgentService {
       if (kDebugMode) {
         print('Error simulating paste command: $e');
       }
+      // Play error sound
+      await SoundPlayer.playErrorSound();
       BotToast.showText(text: 'Error simulating paste command');
       
       // Hide the overlay even if there's an error
@@ -201,6 +209,9 @@ class AgentService {
     }
     
     try {
+      // Play the start recording sound
+      await SoundPlayer.playStartRecordingSound();
+      
       // Show the overlay with the agent mode
       await RecordingOverlayPlatform.showOverlayWithMode('Agent');
       await _recordingRepository!.startRecording();
@@ -210,6 +221,8 @@ class AgentService {
       if (kDebugMode) {
         print('Error starting recording: $e');
       }
+      // Play error sound
+      await SoundPlayer.playErrorSound();
       BotToast.showText(text: 'Failed to start recording');
       await RecordingOverlayPlatform.hideOverlay();
     }
@@ -222,6 +235,9 @@ class AgentService {
     }
     
     try {
+      // Play the stop recording sound
+      await SoundPlayer.playStopRecordingSound();
+      
       // Stop recording
       _recordedFilePath = await _recordingRepository!.stopRecording();
       _isRecording = false;
@@ -233,6 +249,8 @@ class AgentService {
       if (kDebugMode) {
         print('Error stopping recording: $e');
       }
+      // Play error sound
+      await SoundPlayer.playErrorSound();
       BotToast.showText(text: 'Error processing recording');
     }
   }
