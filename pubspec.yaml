@@ -38,6 +38,7 @@ flutter:
 
   assets:
     - assets/icons/with_bg/
+    - assets/sounds/
 
 flutter_launcher_icons:
   macos:

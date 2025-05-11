@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:autoquill_ai/core/utils/sound_player.dart';
 import '../recording/data/platform/recording_overlay_platform.dart';
 import 'package:http/http.dart' as http;
 import 'package:keypress_simulator/keypress_simulator.dart';
@@ -86,6 +87,9 @@ class AgentService {
   /// Simulate copy command (Meta + C)
   Future<void> _simulateCopyCommand() async {
     try {
+      // Play typing sound for copy operation
+      await SoundPlayer.playTypingSound();
+      
       // Simulate key down for Meta + C
       await keyPressSimulator.simulateKeyDown(
         PhysicalKeyboardKey.keyC,
@@ -112,6 +116,9 @@ class AgentService {
   /// Simulate paste command (Meta + V)
   Future<void> _simulatePasteCommand() async {
     try {
+      // Play typing sound for paste operation
+      await SoundPlayer.playTypingSound();
+      
       // Simulate key down for Meta + V
       await keyPressSimulator.simulateKeyDown(
         PhysicalKeyboardKey.keyV,
@@ -201,6 +208,9 @@ class AgentService {
     }
     
     try {
+      // Play the start recording sound
+      await SoundPlayer.playStartRecordingSound();
+      
       // Show the overlay with the agent mode
       await RecordingOverlayPlatform.showOverlayWithMode('Agent');
       await _recordingRepository!.startRecording();
@@ -222,6 +232,9 @@ class AgentService {
     }
     
     try {
+      // Play the stop recording sound
+      await SoundPlayer.playStopRecordingSound();
+      
       // Stop recording
       _recordedFilePath = await _recordingRepository!.stopRecording();
       _isRecording = false;
