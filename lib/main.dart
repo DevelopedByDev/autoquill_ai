@@ -1,6 +1,6 @@
-import 'package:autoquill_ai/features/transcription/presentation/pages/transcription_page.dart';
 import 'package:autoquill_ai/features/transcription/presentation/bloc/transcription_bloc.dart';
 import 'package:autoquill_ai/features/recording/domain/repositories/recording_repository.dart';
+import 'package:autoquill_ai/features/navigation/presentation/pages/main_layout.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -104,7 +104,7 @@ class MainApp extends StatelessWidget {
                   )..add(InitializeTranscription()),
                 ),
               ],
-              child: const TranscriptionPage(),
+              child: const MainLayout(),
             ),
           ),
         ),

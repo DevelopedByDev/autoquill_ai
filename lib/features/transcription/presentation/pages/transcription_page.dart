@@ -1,13 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../../recording/presentation/bloc/recording_bloc.dart';
-import '../../../recording/domain/repositories/recording_repository.dart';
 import '../bloc/transcription_bloc.dart';
-import '../../domain/repositories/transcription_repository.dart';
-import '../../../settings/presentation/pages/settings.dart';
-import '../../../../widgets/hotkey_handler.dart';
 
 class TranscriptionPage extends StatefulWidget {
   const TranscriptionPage({super.key});
@@ -17,24 +12,6 @@ class TranscriptionPage extends StatefulWidget {
 }
 
 class _TranscriptionPageState extends State<TranscriptionPage> {
-  @override
-  void initState() {
-    super.initState();
-    // Initialize the blocs and repositories in the HotkeyHandler after the first frame is rendered
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final recordingBloc = context.read<RecordingBloc>();
-      final transcriptionBloc = context.read<TranscriptionBloc>();
-      final recordingRepository = context.read<RecordingRepository>();
-      final transcriptionRepository = context.read<TranscriptionRepository>();
-
-      HotkeyHandler.setBlocs(recordingBloc, transcriptionBloc,
-          recordingRepository, transcriptionRepository);
-
-      if (kDebugMode) {
-        print('HotkeyHandler initialized with blocs and repositories');
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,22 +40,6 @@ class _TranscriptionPageState extends State<TranscriptionPage> {
       },
       builder: (context, transcriptionState) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Audio Transcription'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.settings),
-                tooltip: 'Settings',
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => SettingsPage(),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
           body: BlocConsumer<RecordingBloc, RecordingState>(
             listener: (context, state) {
               if (state is RecordingComplete &&

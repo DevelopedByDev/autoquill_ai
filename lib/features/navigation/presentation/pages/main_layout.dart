@@ -1,0 +1,88 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:autoquill_ai/features/home/presentation/pages/home_page.dart';
+import 'package:autoquill_ai/features/transcription/presentation/pages/transcription_page.dart';
+import 'package:autoquill_ai/features/settings/presentation/pages/settings.dart';
+import 'package:autoquill_ai/features/recording/presentation/bloc/recording_bloc.dart';
+import 'package:autoquill_ai/features/transcription/presentation/bloc/transcription_bloc.dart';
+import 'package:autoquill_ai/features/recording/domain/repositories/recording_repository.dart';
+import 'package:autoquill_ai/features/transcription/domain/repositories/transcription_repository.dart';
+import 'package:autoquill_ai/widgets/hotkey_handler.dart';
+
+class MainLayout extends StatefulWidget {
+  const MainLayout({super.key});
+
+  @override
+  State<MainLayout> createState() => _MainLayoutState();
+}
+
+class _MainLayoutState extends State<MainLayout> {
+  int _selectedIndex = 0;
+
+  final List<Widget> _pages = [
+    const HomePage(),
+    const TranscriptionPage(),
+    const SettingsPage(),
+  ];
+  
+  @override
+  void initState() {
+    super.initState();
+    // Initialize the blocs and repositories in the HotkeyHandler after the first frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final recordingBloc = context.read<RecordingBloc>();
+      final transcriptionBloc = context.read<TranscriptionBloc>();
+      final recordingRepository = context.read<RecordingRepository>();
+      final transcriptionRepository = context.read<TranscriptionRepository>();
+
+      HotkeyHandler.setBlocs(recordingBloc, transcriptionBloc,
+          recordingRepository, transcriptionRepository);
+
+      if (kDebugMode) {
+        print('HotkeyHandler initialized with blocs and repositories');
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Row(
+        children: [
+          NavigationRail(
+            selectedIndex: _selectedIndex,
+            onDestinationSelected: (int index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+            },
+            labelType: NavigationRailLabelType.selected,
+            destinations: const [
+              NavigationRailDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home),
+                label: Text('Home'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.mic_outlined),
+                selectedIcon: Icon(Icons.mic),
+                label: Text('Transcription'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.settings_outlined),
+                selectedIcon: Icon(Icons.settings),
+                label: Text('Settings'),
+              ),
+            ],
+          ),
+          const VerticalDivider(thickness: 1, width: 1),
+          // This is the main content.
+          Expanded(
+            child: _pages[_selectedIndex],
+          ),
+        ],
+      ),
+    );
+  }
+}
