@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:autoquill_ai/core/utils/sound_player.dart';
+
 import '../recording/data/platform/recording_overlay_platform.dart';
 import 'package:http/http.dart' as http;
 import 'package:keypress_simulator/keypress_simulator.dart';
@@ -113,8 +113,7 @@ class AssistantService {
   /// Simulate paste command (Meta + V)
   Future<void> _simulatePasteCommand() async {
     try {
-      // Play typing sound for paste operation
-      await SoundPlayer.playTypingSound();
+
       
       // Simulate key down for Meta + V
       await keyPressSimulator.simulateKeyDown(
@@ -205,8 +204,7 @@ class AssistantService {
     }
     
     try {
-      // Play the start recording sound
-      await SoundPlayer.playStartRecordingSound();
+
       
       // Show the overlay with the assistant mode
       await RecordingOverlayPlatform.showOverlayWithMode('Assistant');
@@ -229,8 +227,7 @@ class AssistantService {
     }
     
     try {
-      // Play the stop recording sound
-      await SoundPlayer.playStopRecordingSound();
+
       
       // Stop recording
       _recordedFilePath = await _recordingRepository!.stopRecording();

@@ -5,7 +5,7 @@ import 'package:autoquill_ai/features/recording/domain/repositories/recording_re
 import 'package:autoquill_ai/features/transcription/domain/repositories/transcription_repository.dart';
 import '../../../features/recording/data/platform/recording_overlay_platform.dart';
 import '../services/clipboard_service.dart';
-import '../../../core/utils/sound_player.dart';
+
 
 /// Handler for transcription hotkey functionality
 class TranscriptionHotkeyHandler {
@@ -45,8 +45,7 @@ class TranscriptionHotkeyHandler {
     if (!_isHotkeyRecordingActive) {
       // Start recording directly using the repository
       try {
-        // Play the start recording sound
-        await SoundPlayer.playStartRecordingSound();
+
         
         // Show the overlay with the transcription mode
         await RecordingOverlayPlatform.showOverlayWithMode('Transcription');
@@ -59,8 +58,7 @@ class TranscriptionHotkeyHandler {
     } else {
       // Stop recording and transcribe directly
       try {
-        // Play the stop recording sound
-        await SoundPlayer.playStopRecordingSound();
+
         
         // Stop recording
         _hotkeyRecordedFilePath = await _recordingRepository!.stopRecording();

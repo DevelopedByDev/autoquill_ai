@@ -9,7 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:keypress_simulator/keypress_simulator.dart';
 import '../../../../core/storage/app_storage.dart';
-import '../../../../core/utils/sound_player.dart';
+
 import '../../domain/repositories/transcription_repository.dart';
 import '../../../recording/data/platform/recording_overlay_platform.dart';
 
@@ -191,8 +191,7 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
   /// Simulate paste command (Meta + V)
   Future<void> _simulatePasteCommand() async {
     try {
-      // Play typing sound for paste operation
-      await SoundPlayer.playTypingSound();
+
       
       // Simulate key down for Meta + V
       await keyPressSimulator.simulateKeyDown(
