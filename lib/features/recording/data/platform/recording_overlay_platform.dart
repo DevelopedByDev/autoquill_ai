@@ -7,15 +7,50 @@ class RecordingOverlayPlatform {
   static Timer? _levelUpdateTimer;
   static RecordingBloc? _recordingBloc;
 
+  // Flag to track if any recording is currently in progress
+  static bool isRecordingInProgress = false;
+
   /// Shows the recording overlay
   static Future<void> showOverlay() async {
+    // If a recording is already in progress, don't start another one
+    if (isRecordingInProgress) {
+      print('Recording already in progress, ignoring request to show overlay');
+      return;
+    }
+    
     try {
       // Set up method channel handler for button actions
       _setupMethodHandler();
       
+      // Set the flag to indicate a recording is in progress
+      isRecordingInProgress = true;
+      
       await _channel.invokeMethod('showOverlay');
     } on PlatformException catch (e) {
       print('Failed to show overlay: ${e.message}');
+      isRecordingInProgress = false;
+    }
+  }
+  
+  /// Shows the recording overlay with a specific mode label
+  static Future<void> showOverlayWithMode(String mode) async {
+    // If a recording is already in progress, don't start another one
+    if (isRecordingInProgress) {
+      print('Recording already in progress, ignoring request to show overlay for $mode mode');
+      return;
+    }
+    
+    try {
+      // Set up method channel handler for button actions
+      _setupMethodHandler();
+      
+      // Set the flag to indicate a recording is in progress
+      isRecordingInProgress = true;
+      
+      await _channel.invokeMethod('showOverlayWithMode', {'mode': mode});
+    } on PlatformException catch (e) {
+      print('Failed to show overlay with mode: ${e.message}');
+      isRecordingInProgress = false;
     }
   }
   
@@ -58,8 +93,12 @@ class RecordingOverlayPlatform {
       await _channel.invokeMethod('hideOverlay');
       // Stop sending audio levels when hiding the overlay
       _stopSendingAudioLevels();
+      // Reset the recording in progress flag
+      isRecordingInProgress = false;
     } on PlatformException catch (e) {
       print('Failed to hide overlay: ${e.message}');
+      // Reset the flag even if there's an error
+      isRecordingInProgress = false;
     }
   }
   

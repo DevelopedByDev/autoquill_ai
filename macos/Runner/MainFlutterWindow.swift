@@ -9,14 +9,19 @@ class BlinkingLabel: NSTextField {
     
     // Text states for different recording and transcription states
     enum TextState {
-        case recording
+        case recording(mode: String)
         case stopped
         case processing
         case completed
         
         var text: String {
             switch self {
-            case .recording: return "Recording..."
+            case .recording(let mode):
+                if mode.isEmpty {
+                    return "Recording..."
+                } else {
+                    return "Recording...\n(\(mode) mode)"
+                }
             case .stopped: return "Recording stopped"
             case .processing: return "Processing..."
             case .completed: return "Transcription copied"
@@ -24,11 +29,16 @@ class BlinkingLabel: NSTextField {
         }
         
         var shouldBlink: Bool {
-            return self == .recording || self == .processing
+            switch self {
+            case .recording, .processing:
+                return true
+            default:
+                return false
+            }
         }
     }
     
-    private var currentState: TextState = .recording
+    private var currentState: TextState = .recording(mode: "")
     
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -41,7 +51,7 @@ class BlinkingLabel: NSTextField {
     }
     
     private func setup() {
-        self.stringValue = TextState.recording.text
+        self.stringValue = TextState.recording(mode: "").text
         self.alignment = .center
         self.isBezeled = false
         self.isEditable = false
@@ -149,6 +159,10 @@ class RecordingOverlayWindow: NSPanel {
     }
 
     func showOverlay() {
+        showOverlayWithMode("")
+    }
+    
+    func showOverlayWithMode(_ mode: String) {
         DispatchQueue.main.async {
             self.orderFront(nil)
             self.alphaValue = 0
@@ -158,8 +172,8 @@ class RecordingOverlayWindow: NSPanel {
                 self.animator().alphaValue = 1.0
                 self.animator().contentView?.layer?.transform = CATransform3DMakeScale(1.0, 1.0, 1.0)
             })
-            // Set initial state to recording and start blinking
-            self.setOverlayState(.recording)
+            // Set initial state to recording with the specified mode and start blinking
+            self.setOverlayState(.recording(mode: mode))
         }
     }
 
@@ -223,6 +237,16 @@ class MainFlutterWindow: NSWindow {
       case "showOverlay":
         RecordingOverlayWindow.shared.showOverlay()
         result(nil)
+      case "showOverlayWithMode":
+        if let args = call.arguments as? [String: Any],
+           let mode = args["mode"] as? String {
+          RecordingOverlayWindow.shared.showOverlayWithMode(mode)
+          result(nil)
+        } else {
+          result(FlutterError(code: "INVALID_ARGUMENTS", 
+                             message: "Expected mode parameter", 
+                             details: nil))
+        }
       case "hideOverlay":
         RecordingOverlayWindow.shared.hideOverlay()
         result(nil)

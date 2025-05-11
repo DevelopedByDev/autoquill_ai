@@ -44,6 +44,8 @@ class TranscriptionHotkeyHandler {
     if (!_isHotkeyRecordingActive) {
       // Start recording directly using the repository
       try {
+        // Show the overlay with the transcription mode
+        await RecordingOverlayPlatform.showOverlayWithMode('Transcription');
         await _recordingRepository!.startRecording();
         _isHotkeyRecordingActive = true;
         BotToast.showText(text: 'Recording started');

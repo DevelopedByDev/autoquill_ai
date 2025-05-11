@@ -194,7 +194,15 @@ class AgentService {
       return;
     }
     
+    // Check if any recording is already in progress
+    if (RecordingOverlayPlatform.isRecordingInProgress) {
+      BotToast.showText(text: 'Another recording is already in progress');
+      return;
+    }
+    
     try {
+      // Show the overlay with the agent mode
+      await RecordingOverlayPlatform.showOverlayWithMode('Agent');
       await _recordingRepository!.startRecording();
       _isRecording = true;
       BotToast.showText(text: 'Recording started. Press agent hotkey again to stop.');
@@ -203,6 +211,7 @@ class AgentService {
         print('Error starting recording: $e');
       }
       BotToast.showText(text: 'Failed to start recording');
+      await RecordingOverlayPlatform.hideOverlay();
     }
   }
   

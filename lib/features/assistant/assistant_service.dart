@@ -194,7 +194,15 @@ class AssistantService {
       return;
     }
     
+    // Check if any recording is already in progress
+    if (RecordingOverlayPlatform.isRecordingInProgress) {
+      BotToast.showText(text: 'Another recording is already in progress');
+      return;
+    }
+    
     try {
+      // Show the overlay with the assistant mode
+      await RecordingOverlayPlatform.showOverlayWithMode('Assistant');
       await _recordingRepository!.startRecording();
       _isRecording = true;
       BotToast.showText(text: 'Recording started. Press assistant hotkey again to stop.');
@@ -203,6 +211,7 @@ class AssistantService {
         print('Error starting recording: $e');
       }
       BotToast.showText(text: 'Failed to start recording');
+      await RecordingOverlayPlatform.hideOverlay();
     }
   }
   
