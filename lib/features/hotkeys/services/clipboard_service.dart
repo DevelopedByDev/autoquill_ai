@@ -5,7 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:keypress_simulator/keypress_simulator.dart';
 import 'package:flutter/services.dart';
 import '../../../features/recording/data/platform/recording_overlay_platform.dart';
-
+import '../../../core/utils/sound_player.dart';
 
 /// Service for handling clipboard operations
 class ClipboardService {
@@ -57,7 +57,8 @@ class ClipboardService {
   /// Simulate paste command (Meta + V)
   static Future<void> _simulatePasteCommand() async {
     try {
-
+      // Play typing sound for paste operation
+      await SoundPlayer.playTypingSound();
       
       // Simulate key down for Meta + V
       await keyPressSimulator.simulateKeyDown(
@@ -81,6 +82,9 @@ class ClipboardService {
       if (kDebugMode) {
         print('Error simulating paste command: $e');
       }
+      // Play error sound
+      await SoundPlayer.playErrorSound();
+      
       // Hide the overlay even if there's an error
       await RecordingOverlayPlatform.hideOverlay();
     }

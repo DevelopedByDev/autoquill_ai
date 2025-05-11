@@ -15,6 +15,7 @@ import 'core/storage/app_storage.dart';
 import 'features/recording/presentation/bloc/recording_bloc.dart';
 import 'features/transcription/domain/repositories/transcription_repository.dart';
 import 'widgets/hotkey_handler.dart';
+import 'core/utils/sound_player.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +37,9 @@ void main() async {
   
   // Lazy load hotkeys after UI is rendered
   HotkeyHandler.lazyLoadHotkeys();
+  
+  // Register app lifecycle observer for cleaning up resources
+  WidgetsBinding.instance.addObserver(AppLifecycleObserver());
 }
 
 Future<void> _loadStoredData() async {
@@ -44,6 +48,17 @@ Future<void> _loadStoredData() async {
 
   // Only prepare hotkeys quickly, actual registration will happen after UI is rendered
   await HotkeyHandler.prepareHotkeys();
+}
+
+/// Observer for app lifecycle events to clean up resources
+class AppLifecycleObserver extends WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.detached || state == AppLifecycleState.hidden) {
+      // Clean up resources when app is closed or hidden
+      SoundPlayer.dispose();
+    }
+  }
 }
 
 class ExampleIntent extends Intent {}

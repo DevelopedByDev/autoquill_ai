@@ -1,11 +1,12 @@
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'package:autoquill_ai/features/recording/domain/repositories/recording_repository.dart';
 import 'package:autoquill_ai/features/transcription/domain/repositories/transcription_repository.dart';
 import '../../../features/recording/data/platform/recording_overlay_platform.dart';
 import '../services/clipboard_service.dart';
-
+import '../../../core/utils/sound_player.dart';
 
 /// Handler for transcription hotkey functionality
 class TranscriptionHotkeyHandler {
@@ -45,7 +46,8 @@ class TranscriptionHotkeyHandler {
     if (!_isHotkeyRecordingActive) {
       // Start recording directly using the repository
       try {
-
+        // Play the start recording sound
+        await SoundPlayer.playStartRecordingSound();
         
         // Show the overlay with the transcription mode
         await RecordingOverlayPlatform.showOverlayWithMode('Transcription');
@@ -53,12 +55,18 @@ class TranscriptionHotkeyHandler {
         _isHotkeyRecordingActive = true;
         BotToast.showText(text: 'Recording started');
       } catch (e) {
+        if (kDebugMode) {
+          print('Error starting recording: $e');
+        }
+        // Play error sound
+        await SoundPlayer.playErrorSound();
         BotToast.showText(text: 'Failed to start recording: $e');
       }
     } else {
       // Stop recording and transcribe directly
       try {
-
+        // Play the stop recording sound
+        await SoundPlayer.playStopRecordingSound();
         
         // Stop recording
         _hotkeyRecordedFilePath = await _recordingRepository!.stopRecording();
