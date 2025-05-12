@@ -43,4 +43,4 @@ flutter:
 flutter_launcher_icons:
   macos:
     generate: true
-    image_path: "assets/icons/with_bg/autoquill_ai_logo.png"
+    image_path: "assets/icons/with_bg/autoquill_centered_1024_rounded.png"
