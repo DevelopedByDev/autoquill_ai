@@ -22,19 +22,23 @@ class AudioUtils {
         return false;
       }
       
-      // For M4A files, check for proper header
-      if (path.toLowerCase().endsWith('.m4a')) {
-        final bytes = await file.openRead(0, 8).toList();
+      // For WAV files, check for proper header
+      if (path.toLowerCase().endsWith('.wav')) {
+        final bytes = await file.openRead(0, 12).toList();
         if (bytes.isEmpty) {
           print('Could not read file header');
           return false;
         }
         
         final header = bytes.first;
-        // Check for ftyp marker which should be present in valid M4A files
-        if (header.length < 8 || 
-            (header[4] != 102 || header[5] != 116 || header[6] != 121 || header[7] != 112)) { // 'ftyp' in ASCII
-          print('Invalid M4A file header');
+        // Check for RIFF and WAVE markers which should be present in valid WAV files
+        // RIFF at position 0-3 and WAVE at position 8-11
+        if (header.length < 12 || 
+            // Check for 'RIFF' in ASCII
+            (header[0] != 82 || header[1] != 73 || header[2] != 70 || header[3] != 70) ||
+            // Check for 'WAVE' in ASCII
+            (header[8] != 87 || header[9] != 65 || header[10] != 86 || header[11] != 69)) {
+          print('Invalid WAV file header');
           return false;
         }
       }
@@ -148,37 +152,25 @@ class AudioUtils {
   }
   
   /// Merges two audio files by concatenating them
-  /// Note: This is a simplified approach that works best with WAV files
-  /// For M4A files, this might produce invalid files
+  /// This approach works for WAV files by properly handling the headers
   static Future<File> _mergeAudioFiles(String file1Path, String file2Path, String outputPath) async {
-    // Check if we're dealing with M4A files
-    if (file1Path.toLowerCase().endsWith('.m4a')) {
-      // For M4A files, just use the original file if it's valid
-      // since proper merging requires complex container handling
-      final file1 = File(file1Path);
-      if (await file1.exists() && await file1.length() > 1000) {
-        // If the original file is substantial, just use it
-        return await file1.copy(outputPath);
+    // We're now dealing with WAV files which can be merged with proper header handling
+    if (file1Path.toLowerCase().endsWith('.wav')) {
+      try {
+        return await _mergeWavFiles(file1Path, file2Path, outputPath);
+      } catch (e) {
+        print('Error merging WAV files: $e');
+        // If merging fails, use the original file as fallback
+        final file1 = File(file1Path);
+        if (await file1.exists() && await file1.length() > 1000) {
+          return await file1.copy(outputPath);
+        }
       }
     }
     
-    // For WAV files or as a fallback
-    try {
-      final file1 = await File(file1Path).readAsBytes();
-      final file2 = await File(file2Path).readAsBytes();
-      
-      // For WAV files, we'd need to handle the headers properly
-      // This is a simplified approach that works for basic concatenation
-      final combined = Uint8List(file1.length + file2.length);
-      combined.setRange(0, file1.length, file1);
-      combined.setRange(file1.length, combined.length, file2);
-      
-      return await File(outputPath).writeAsBytes(combined);
-    } catch (e) {
-      print('Error merging audio files: $e');
-      // Return the original file as fallback
-      return File(file1Path);
-    }
+    // Fallback to just copying the original file
+    print('Using original file as fallback');
+    return await File(file1Path).copy(outputPath);
   }
   
   /// Converts a string to bytes
@@ -200,6 +192,93 @@ class AudioUtils {
     } else {
       for (var i = 0; i < byteCount; i++) {
         result[byteCount - i - 1] = (value >> (8 * i)) & 0xFF;
+      }
+    }
+    return result;
+  }
+  
+  /// Properly merges two WAV files by handling the headers correctly
+  static Future<File> _mergeWavFiles(String file1Path, String file2Path, String outputPath) async {
+    final file1 = await File(file1Path).readAsBytes();
+    final file2 = await File(file2Path).readAsBytes();
+    
+    // Parse WAV headers
+    // WAV structure: RIFF header (12 bytes) + fmt chunk + data chunk
+    
+    // Find the data chunk in the first file
+    int dataPos1 = _findDataChunkPosition(file1);
+    if (dataPos1 == -1) {
+      throw Exception('Could not find data chunk in first WAV file');
+    }
+    
+    // Find the data chunk in the second file
+    int dataPos2 = _findDataChunkPosition(file2);
+    if (dataPos2 == -1) {
+      throw Exception('Could not find data chunk in second WAV file');
+    }
+    
+    // Get data size from first file (4 bytes after 'data')
+    int dataSize1 = _bytesToInt(file1.sublist(dataPos1 + 4, dataPos1 + 8), Endian.little);
+    
+    // Get data size from second file
+    int dataSize2 = _bytesToInt(file2.sublist(dataPos2 + 4, dataPos2 + 8), Endian.little);
+    
+    // Calculate new data size
+    int newDataSize = dataSize1 + dataSize2;
+    
+    // Calculate new file size (RIFF chunk size = file size - 8)
+    int newRiffSize = file1.length - 8 + dataSize2;
+    
+    // Create new file
+    final result = Uint8List(file1.length + dataSize2);
+    
+    // Copy RIFF header from first file
+    result.setRange(0, 4, file1.sublist(0, 4)); // 'RIFF'
+    
+    // Update RIFF chunk size
+    final newRiffSizeBytes = _intToBytes(newRiffSize, 4, Endian.little);
+    result.setRange(4, 8, newRiffSizeBytes);
+    
+    // Copy rest of the header
+    result.setRange(8, dataPos1 + 4, file1.sublist(8, dataPos1 + 4));
+    
+    // Update data chunk size
+    final newDataSizeBytes = _intToBytes(newDataSize, 4, Endian.little);
+    result.setRange(dataPos1 + 4, dataPos1 + 8, newDataSizeBytes);
+    
+    // Copy audio data from first file
+    result.setRange(dataPos1 + 8, dataPos1 + 8 + dataSize1, 
+                   file1.sublist(dataPos1 + 8, dataPos1 + 8 + dataSize1));
+    
+    // Copy audio data from second file
+    result.setRange(dataPos1 + 8 + dataSize1, result.length,
+                   file2.sublist(dataPos2 + 8, dataPos2 + 8 + dataSize2));
+    
+    return await File(outputPath).writeAsBytes(result);
+  }
+  
+  /// Find the position of the 'data' chunk in a WAV file
+  static int _findDataChunkPosition(Uint8List wavFile) {
+    // Search for 'data' chunk marker (ASCII: 100, 97, 116, 97)
+    for (int i = 12; i < wavFile.length - 4; i++) {
+      if (wavFile[i] == 100 && wavFile[i + 1] == 97 && 
+          wavFile[i + 2] == 116 && wavFile[i + 3] == 97) {
+        return i;
+      }
+    }
+    return -1;
+  }
+  
+  /// Convert bytes to integer with specified endianness
+  static int _bytesToInt(Uint8List bytes, Endian endian) {
+    int result = 0;
+    if (endian == Endian.little) {
+      for (int i = 0; i < bytes.length; i++) {
+        result |= bytes[i] << (8 * i);
+      }
+    } else {
+      for (int i = 0; i < bytes.length; i++) {
+        result = (result << 8) | bytes[i];
       }
     }
     return result;

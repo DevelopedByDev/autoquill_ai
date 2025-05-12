@@ -79,7 +79,7 @@ class RecordingDataSourceImpl implements RecordingDataSource {
 
     // Generate a unique filename based on timestamp
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    return '${recordingsDir.path}/recording_$timestamp.m4a';
+    return '${recordingsDir.path}/recording_$timestamp.wav';
   }
 
   @override
@@ -100,7 +100,7 @@ class RecordingDataSourceImpl implements RecordingDataSource {
     print('Recording to: $_currentRecordingPath');
     
     final config = RecordConfig(
-      encoder: AudioEncoder.aacLc,
+      encoder: AudioEncoder.wav,  // Using WAV format as recommended by Groq API
       bitRate: 128000,
       sampleRate: 44100,
     );
