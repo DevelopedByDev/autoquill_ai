@@ -20,6 +20,7 @@ class RecordingDataSourceImpl implements RecordingDataSource {
   final AudioRecorder recorder;
   String? _currentRecordingPath;
   bool _isRecording = false;
+  bool _isInitialized = false;
   
   // Track recording start time to calculate duration
   DateTime? _recordingStartTime;
@@ -28,32 +29,82 @@ class RecordingDataSourceImpl implements RecordingDataSource {
   static const int _minimumRecordingDuration = 5;
 
   RecordingDataSourceImpl({required this.recorder});
+  
+  /// Initialize the recording system
+  /// This should be called when the app starts to ensure the recording system is ready
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+    
+    try {
+      // Ensure we have permissions
+      final hasPermission = await recorder.hasPermission();
+      if (!hasPermission) {
+        print('Requesting microphone permission during initialization');
+        // This will prompt the user for permission if needed
+        await recorder.hasPermission();
+      }
+      
+      // Ensure the recordings directory exists
+      final recordingsDir = await _getRecordingsDirectory();
+      if (!await recordingsDir.exists()) {
+        await recordingsDir.create(recursive: true);
+      }
+      
+      // Validate that we can write to the directory
+      final testFile = File('${recordingsDir.path}/test_init.txt');
+      await testFile.writeAsString('test');
+      await testFile.delete();
+      
+      _isInitialized = true;
+      print('Recording system initialized successfully');
+    } catch (e) {
+      print('Error initializing recording system: $e');
+      // We'll try again when needed
+    }
+  }
 
-  Future<String> _getRecordingPath() async {
+  Future<Directory> _getRecordingsDirectory() async {
     // Get system Documents directory
     final home = Platform.environment['HOME'];
     if (home == null) throw Exception('Could not find home directory');
 
-    final recordingsDir = Directory('$home/Documents/AutoQuillAIRecordings');
+    return Directory('$home/Documents/AutoQuillAIRecordings');
+  }
+  
+  Future<String> _getRecordingPath() async {
+    final recordingsDir = await _getRecordingsDirectory();
     if (!await recordingsDir.exists()) {
       await recordingsDir.create(recursive: true);
     }
 
-    return '${recordingsDir.path}/last_recording.m4a';
+    // Generate a unique filename based on timestamp
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    return '${recordingsDir.path}/recording_$timestamp.m4a';
   }
 
   @override
   Future<void> startRecording() async {
     print('Recording started');
+    
+    // Ensure the recording system is initialized
+    if (!_isInitialized) {
+      await initialize();
+    }
+    
     if (!await recorder.hasPermission()) {
       throw Exception('Microphone permission not granted');
     }
+    
+    // Get a unique path for this recording
     _currentRecordingPath = await _getRecordingPath();
+    print('Recording to: $_currentRecordingPath');
+    
     final config = RecordConfig(
       encoder: AudioEncoder.aacLc,
       bitRate: 128000,
       sampleRate: 44100,
     );
+    
     await recorder.start(config, path: _currentRecordingPath!);
     _isRecording = true;
     

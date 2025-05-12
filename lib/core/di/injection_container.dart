@@ -33,10 +33,16 @@ Future<void> init() async {
     ),
   );
 
+  // Create and initialize the recording data source
+  final recordingDataSource = RecordingDataSourceImpl(
+    recorder: AudioRecorder(),
+  );
+  
+  // Initialize the recording system immediately
+  await recordingDataSource.initialize();
+  
   sl.registerLazySingleton<RecordingDataSource>(
-    () => RecordingDataSourceImpl(
-      recorder: sl(),
-    ),
+    () => recordingDataSource,
   );
 
   // External

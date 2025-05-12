@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter/foundation.dart';
 import '../datasources/transcription_local_datasource.dart';
 import '../../domain/repositories/transcription_repository.dart';
 import '../models/transcription_response.dart';
+import '../../../recording/utils/audio_utils.dart';
 
 class TranscriptionRepositoryImpl implements TranscriptionRepository {
   final TranscriptionLocalDataSource localDataSource;
@@ -14,9 +16,24 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
 
   @override
   Future<TranscriptionResponse> transcribeAudio(String audioPath, String apiKey) async {
+    // Validate the audio file before attempting transcription
     final file = File(audioPath);
     if (!await file.exists()) {
       throw Exception('Audio file not found');
+    }
+    
+    // Check file size to ensure it's not empty
+    final fileSize = await file.length();
+    if (fileSize < 100) { // Arbitrary minimum size for a valid audio file
+      throw Exception('Audio file is too small or empty');
+    }
+    
+    // Use AudioUtils to validate the file
+    if (!await AudioUtils.validateAudioFile(audioPath)) {
+      if (kDebugMode) {
+        print('Audio file validation failed: $audioPath');
+      }
+      throw Exception('Invalid audio file format');
     }
 
     // Get the selected transcription model from settings, default to whisper-large-v3 if not set
@@ -34,6 +51,13 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
       prompt = 'Vocabulary: ${dictionary.join(', ')}.';
     }
     
+    // Log file information for debugging
+    if (kDebugMode) {
+      print('Transcribing file: $audioPath');
+      print('File size: ${await file.length()} bytes');
+    }
+    
+    // Create the API request
     final request = http.MultipartRequest('POST', Uri.parse(_baseUrl))
       ..headers['Authorization'] = 'Bearer $apiKey'
       ..files.add(await http.MultipartFile.fromPath('file', audioPath))
