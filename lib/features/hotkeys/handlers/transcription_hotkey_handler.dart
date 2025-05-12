@@ -43,6 +43,13 @@ class TranscriptionHotkeyHandler {
       return;
     }
     
+    // Check if this is our own recording or another mode's recording
+    if (RecordingOverlayPlatform.isRecordingInProgress && !_isHotkeyRecordingActive) {
+      // Another mode is recording, don't interrupt it
+      BotToast.showText(text: 'Another recording is in progress');
+      return;
+    }
+    
     if (!_isHotkeyRecordingActive) {
       // Start recording directly using the repository
       try {
