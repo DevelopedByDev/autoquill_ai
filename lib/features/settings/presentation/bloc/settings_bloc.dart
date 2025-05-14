@@ -130,6 +130,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       
       updatedHotkeys[state.recordingFor!] = keyData;
       
+      // Reload all hotkeys to ensure the new hotkey is active immediately
+      await HotkeyHandler.reloadHotkeys();
+      
       emit(state.copyWith(
         isRecordingHotkey: false,
         recordingFor: null,
@@ -158,6 +161,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       // Update the stored hotkeys in state
       final updatedHotkeys = Map<String, dynamic>.from(state.storedHotkeys);
       updatedHotkeys.remove(event.mode);
+      
+      // Reload all hotkeys to ensure changes take effect immediately
+      await HotkeyHandler.reloadHotkeys();
       
       emit(state.copyWith(
         storedHotkeys: updatedHotkeys,

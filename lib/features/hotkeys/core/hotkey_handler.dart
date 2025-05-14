@@ -121,4 +121,24 @@ class HotkeyHandler {
       keyUpHandler: keyUpHandler,
     );
   }
+  
+  /// Reloads all hotkeys to ensure changes take effect immediately
+  /// This unregisters all existing hotkeys and registers them again from storage
+  static Future<void> reloadHotkeys() async {
+    if (kDebugMode) {
+      print('Reloading all hotkeys to apply changes immediately');
+    }
+    
+    // Clear the active hotkeys set to prevent duplicate events
+    _activeHotkeys.clear();
+    
+    // Reload all hotkeys from storage
+    await HotkeyRegistration.reloadAllHotkeys(
+      keyDownHandler: keyDownHandler,
+      keyUpHandler: keyUpHandler,
+    );
+    
+    // Show a toast notification to inform the user
+    BotToast.showText(text: 'Hotkey changes applied successfully');
+  }
 }

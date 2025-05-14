@@ -206,7 +206,44 @@ class HotkeyRegistration {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Error registering hotkeys: $e');
+        print('Error loading and registering hotkeys: $e');
+      }
+    } finally {
+      stopwatch.stop();
+    }
+  }
+  
+  /// Reloads all hotkeys from storage and registers them with the system
+  /// This ensures that any changes to hotkeys take effect immediately
+  static Future<void> reloadAllHotkeys({
+    required Function(HotKey) keyDownHandler,
+    required Function(HotKey) keyUpHandler,
+  }) async {
+    final stopwatch = Stopwatch()..start();
+    
+    try {
+      if (kDebugMode) {
+        print('Reloading all hotkeys to apply changes immediately');
+      }
+      
+      // Reset the loaded flag to force a fresh load from storage
+      _hotkeysLoaded = false;
+      
+      // Clear the cache to ensure we get fresh data
+      _hotkeyCache.clear();
+      
+      // Load and register all hotkeys again
+      await loadAndRegisterStoredHotkeys(
+        keyDownHandler: keyDownHandler,
+        keyUpHandler: keyUpHandler,
+      );
+      
+      if (kDebugMode) {
+        print('Hotkeys reloaded successfully');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error reloading hotkeys: $e');
       }
     } finally {
       stopwatch.stop();

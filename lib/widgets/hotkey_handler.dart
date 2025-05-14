@@ -78,6 +78,13 @@ class HotkeyHandler {
     await refactored.HotkeyHandler.lazyLoadHotkeys();
   }
   
+  /// Reloads all hotkeys to ensure changes take effect immediately
+  /// This unregisters all existing hotkeys and registers them again from storage
+  static Future<void> reloadHotkeys() async {
+    // Forward to refactored implementation
+    await refactored.HotkeyHandler.reloadHotkeys();
+  }
+  
   // _handleTranscriptionHotkey is now in TranscriptionHotkeyHandler
   
   // _handleAssistantHotkey is now in AssistantHotkeyHandler
