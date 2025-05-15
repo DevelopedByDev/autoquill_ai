@@ -2,12 +2,13 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter/foundation.dart';
 import 'package:keypress_simulator/keypress_simulator.dart';
+
 import '../../../../core/storage/app_storage.dart';
 import '../../../../core/utils/sound_player.dart';
 import '../../../../core/stats/stats_service.dart';
@@ -96,17 +97,19 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
     on<ClearTranscription>(_onClearTranscription);
     on<UpdateApiKey>(_onUpdateApiKey);
   }
-
-  // Initialize stats service asynchronously
+  
+  /// Initialize stats service
   Future<void> _initStats() async {
     try {
       await _statsService.init();
     } catch (e) {
       if (kDebugMode) {
-        print('Error initializing stats service: $e');
+        print('Error initializing stats service in TranscriptionBloc: $e');
       }
     }
   }
+
+
 
   Future<void> _onInitializeTranscription(InitializeTranscription event, Emitter<TranscriptionState> emit) async {
     final savedApiKey = await AppStorage.getApiKey();
@@ -144,15 +147,38 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
       // Hide the overlay
       await RecordingOverlayPlatform.hideOverlay();
       
-      // Now that the overlay is hidden, directly update word count in Hive
+      // Now that the overlay is hidden, update word count using StatsService
       if (transcriptionText.isNotEmpty) {
-        final wordCount = transcriptionText.trim().split(RegExp(r'\s+')).length;
-        final box = Hive.box('settings');
-        final currentCount = box.get('transcription_words_count', defaultValue: 0);
-        final newCount = currentCount + wordCount;
-        
-        // Use synchronous put for immediate update
-        box.put('transcription_words_count', newCount);
+        // Ensure stats box is open
+        try {
+          if (!Hive.isBoxOpen('stats')) {
+            await Hive.openBox('stats');
+          }
+          // Use the StatsService to update the word count
+          await _statsService.addTranscriptionWords(transcriptionText);
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error updating word count via StatsService in TranscriptionBloc: $e');
+          }
+          
+          // Fallback: Update directly in the stats box
+          try {
+            if (!Hive.isBoxOpen('stats')) {
+              await Hive.openBox('stats');
+            }
+            final wordCount = transcriptionText.trim().split(RegExp(r'\s+')).length;
+            final box = Hive.box('stats');
+            final currentCount = box.get('transcription_words_count', defaultValue: 0);
+            final newCount = currentCount + wordCount;
+            
+            // Use synchronous put for immediate update
+            box.put('transcription_words_count', newCount);
+          } catch (boxError) {
+            if (kDebugMode) {
+              print('Error updating word count directly in TranscriptionBloc: $boxError');
+            }
+          }
+        }
       }
       
       emit(state.copyWith(

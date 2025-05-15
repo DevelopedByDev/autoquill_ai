@@ -65,6 +65,9 @@ class AssistantService {
   // Path to the recorded audio file
   String? _recordedFilePath;
   
+  // Recording start time for tracking duration
+  DateTime? _recordingStartTime;
+  
   /// Set the repositories for recording and transcription
   void setRepositories(RecordingRepository recordingRepository, TranscriptionRepository transcriptionRepository) {
     _recordingRepository = recordingRepository;
@@ -239,6 +242,7 @@ class AssistantService {
       await RecordingOverlayPlatform.showOverlayWithMode('Assistant');
       await _recordingRepository!.startRecording();
       _isRecording = true;
+      _recordingStartTime = DateTime.now();
       BotToast.showText(text: 'Recording started. Press assistant hotkey again to stop.');
     } catch (e) {
       if (kDebugMode) {
@@ -264,6 +268,29 @@ class AssistantService {
       // Stop recording
       _recordedFilePath = await _recordingRepository!.stopRecording();
       _isRecording = false;
+      
+      // Calculate recording duration
+      if (_recordingStartTime != null) {
+        try {
+          final recordingDuration = DateTime.now().difference(_recordingStartTime!);
+          await _statsService.addTranscriptionTime(recordingDuration.inSeconds);
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error updating transcription time in assistant service: $e');
+          }
+          // Fallback to direct Hive update if the stats service fails
+          try {
+            if (Hive.isBoxOpen('stats')) {
+              final box = Hive.box('stats');
+              final currentTime = box.get('transcription_time_seconds', defaultValue: 0);
+              box.put('transcription_time_seconds', currentTime + DateTime.now().difference(_recordingStartTime!).inSeconds);
+            }
+          } catch (_) {}
+        } finally {
+          _recordingStartTime = null;
+        }
+      }
+      
       BotToast.showText(text: 'Recording stopped, transcribing...');
       
       // Transcribe the audio
@@ -497,21 +524,49 @@ class AssistantService {
         // Hide the overlay
         await RecordingOverlayPlatform.hideOverlay();
         
-        // Now that the overlay is hidden, directly update word counts in Hive
-        if (transcribedText.isNotEmpty) {
-          final transcriptionWordCount = transcribedText.trim().split(RegExp(r'\s+')).length;
-          final box = Hive.box('settings');
-          final currentTranscriptionCount = box.get('transcription_words_count', defaultValue: 0);
-          // Use synchronous put to ensure immediate UI update
-          box.put('transcription_words_count', currentTranscriptionCount + transcriptionWordCount);
-        }
-        
-        if (aiResponse.isNotEmpty) {
-          final generationWordCount = aiResponse.trim().split(RegExp(r'\s+')).length;
-          final box = Hive.box('settings');
-          final currentGenerationCount = box.get('generation_words_count', defaultValue: 0);
-          // Use synchronous put to ensure immediate UI update
-          box.put('generation_words_count', currentGenerationCount + generationWordCount);
+        // Now that the overlay is hidden, update word counts using StatsService
+        try {
+          // Update transcription words
+          if (transcribedText.isNotEmpty) {
+            await _statsService.addTranscriptionWords(transcribedText);
+          }
+          
+          // Update generated words
+          if (aiResponse.isNotEmpty) {
+            await _statsService.addGenerationWords(aiResponse);
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error updating word counts in assistant service: $e');
+          }
+          
+          // Fallback: Update directly in the stats box
+          try {
+            // Ensure stats box is open
+            if (!Hive.isBoxOpen('stats')) {
+              await Hive.openBox('stats');
+            }
+            
+            final box = Hive.box('stats');
+            
+            // Update transcription words
+            if (transcribedText.isNotEmpty) {
+              final transcriptionWordCount = transcribedText.trim().split(RegExp(r'\s+')).length;
+              final currentTranscriptionCount = box.get('transcription_words_count', defaultValue: 0);
+              box.put('transcription_words_count', currentTranscriptionCount + transcriptionWordCount);
+            }
+            
+            // Update generated words
+            if (aiResponse.isNotEmpty) {
+              final generationWordCount = aiResponse.trim().split(RegExp(r'\s+')).length;
+              final currentGenerationCount = box.get('generation_words_count', defaultValue: 0);
+              box.put('generation_words_count', currentGenerationCount + generationWordCount);
+            }
+          } catch (boxError) {
+            if (kDebugMode) {
+              print('Error updating word counts directly in stats box: $boxError');
+            }
+          }
         }
       } else {
         if (kDebugMode) {

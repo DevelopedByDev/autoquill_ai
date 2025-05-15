@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/repositories/recording_repository.dart';
+import '../../../../core/stats/stats_service.dart';
 
 // Events
 abstract class RecordingEvent extends Equatable {
@@ -59,8 +60,12 @@ class RecordingError extends RecordingState {
 
 class RecordingBloc extends Bloc<RecordingEvent, RecordingState> {
   final RecordingRepository repository;
+  final StatsService _statsService = StatsService();
+  DateTime? _recordingStartTime;
 
   RecordingBloc({required this.repository}) : super(const RecordingInitial()) {
+    // Initialize stats service
+    _initStats();
     on<StartRecording>(_onStartRecording);
     on<StopRecording>(_onStopRecording);
     on<PauseRecording>(_onPauseRecording);
@@ -69,9 +74,19 @@ class RecordingBloc extends Bloc<RecordingEvent, RecordingState> {
     on<RestartRecording>(_onRestartRecording);
   }
 
+  // Initialize stats service asynchronously
+  Future<void> _initStats() async {
+    try {
+      await _statsService.init();
+    } catch (e) {
+      print('Error initializing stats service: $e');
+    }
+  }
+
   Future<void> _onStartRecording(StartRecording event, Emitter<RecordingState> emit) async {
     try {
       await repository.startRecording();
+      _recordingStartTime = DateTime.now();
       emit(const RecordingInProgress(isPaused: false));
     } catch (e) {
       emit(RecordingError(message: e.toString()));
@@ -81,8 +96,17 @@ class RecordingBloc extends Bloc<RecordingEvent, RecordingState> {
   Future<void> _onStopRecording(StopRecording event, Emitter<RecordingState> emit) async {
     try {
       final filePath = await repository.stopRecording();
+      
+      // Calculate recording duration
+      if (_recordingStartTime != null) {
+        final recordingDuration = DateTime.now().difference(_recordingStartTime!);
+        await _statsService.addTranscriptionTime(recordingDuration.inSeconds);
+        _recordingStartTime = null;
+      }
+      
       emit(RecordingComplete(filePath: filePath));
     } catch (e) {
+      _recordingStartTime = null;
       emit(RecordingError(message: e.toString()));
     }
   }
