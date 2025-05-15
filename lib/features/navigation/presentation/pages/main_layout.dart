@@ -38,6 +38,13 @@ class _MainLayoutState extends State<MainLayout> {
 
       HotkeyHandler.setBlocs(recordingBloc, transcriptionBloc,
           recordingRepository, transcriptionRepository);
+          
+      // Force reload hotkeys to ensure they're properly registered
+      HotkeyHandler.reloadHotkeys().then((_) {
+        if (kDebugMode) {
+          print('Hotkeys reloaded after blocs initialization');
+        }
+      });
 
       if (kDebugMode) {
         print('HotkeyHandler initialized with blocs and repositories');

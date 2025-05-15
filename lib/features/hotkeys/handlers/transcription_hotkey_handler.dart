@@ -66,6 +66,32 @@ class TranscriptionHotkeyHandler {
       return;
     }
     
+    // Ensure settings box is open
+    if (!Hive.isBoxOpen('settings')) {
+      try {
+        await Hive.openBox('settings');
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error opening settings box: $e');
+        }
+        BotToast.showText(text: 'Error accessing settings');
+        return;
+      }
+    }
+    
+    // Ensure stats box is open
+    if (!Hive.isBoxOpen('stats')) {
+      try {
+        await Hive.openBox('stats');
+        await _statsService.init();
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error opening stats box: $e');
+        }
+        // Continue anyway, as this is not critical
+      }
+    }
+    
     // Check if API key is available
     final apiKey = Hive.box('settings').get('groq_api_key');
     if (apiKey == null || apiKey.isEmpty) {

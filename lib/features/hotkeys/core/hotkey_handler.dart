@@ -115,11 +115,20 @@ class HotkeyHandler {
   /// Lazy loads hotkeys after UI is rendered
   static Future<void> lazyLoadHotkeys() async {
     // Delay to ensure UI is rendered
-    await Future.delayed(const Duration(milliseconds: 500));
-    await HotkeyRegistration.loadAndRegisterStoredHotkeys(
+    await Future.delayed(const Duration(milliseconds: 1000));
+    
+    // First unregister all existing hotkeys to avoid conflicts
+    await hotKeyManager.unregisterAll();
+    
+    // Force reload hotkeys from storage
+    await HotkeyRegistration.reloadAllHotkeys(
       keyDownHandler: keyDownHandler,
       keyUpHandler: keyUpHandler,
     );
+    
+    if (kDebugMode) {
+      print('Hotkeys loaded and registered on app startup');
+    }
   }
   
   /// Reloads all hotkeys to ensure changes take effect immediately

@@ -31,17 +31,25 @@ void main() async {
 
   // Initialize AppStorage wrapper for Hive
   await AppStorage.init();
-
-  // Load and register hotkeys ASAP before UI renders
-  await _loadStoredData();
-
+  
+  // Ensure stats box is open
+  if (!Hive.isBoxOpen('stats')) {
+    await Hive.openBox('stats');
+  }
+  
   // Initialize stats service
   await StatsService().init();
+  
+  // Load and register hotkeys ASAP before UI renders
+  await _loadStoredData();
 
   // Initialize dependency injection
   await di.init();
 
   runApp(const MainApp());
+  
+  // Initialize hotkey manager first
+  await hotKeyManager.unregisterAll();
   
   // Lazy load hotkeys after UI is rendered
   HotkeyHandler.lazyLoadHotkeys();
