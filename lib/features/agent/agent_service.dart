@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:bot_toast/bot_toast.dart';
@@ -10,6 +11,7 @@ import 'package:autoquill_ai/features/recording/domain/repositories/recording_re
 import 'package:autoquill_ai/features/transcription/domain/repositories/transcription_repository.dart';
 import 'package:pasteboard/pasteboard.dart';
 import '../assistant/clipboard_listener_service.dart';
+import '../accessibility/domain/repositories/accessibility_repository.dart';
 import '../../core/utils/sound_player.dart';
 
 /// Service to handle agent mode functionality
@@ -30,6 +32,9 @@ class AgentService {
   // Repositories for recording and transcription
   RecordingRepository? _recordingRepository;
   TranscriptionRepository? _transcriptionRepository;
+  
+  // Accessibility repository for OCR-based text extraction
+  final _accessibilityRepository = AccessibilityRepository();
   
   // Flag to track if recording is in progress
   bool _isRecording = false;
@@ -306,35 +311,94 @@ class AgentService {
       
       // Prepare the message content
       final String content;
+      String? contextText;
+      
+      // Extract visible text from the active application screen using OCR (macOS only)
+      if (Platform.isMacOS) {
+        try {
+          BotToast.showText(text: 'Capturing screen for context...');
+          contextText = await _accessibilityRepository.extractVisibleText();
+          if (kDebugMode) {
+            print('Extracted context from screen: $contextText');
+          }
+          
+          if (contextText.contains('Error:')) {
+            BotToast.showText(
+              text: 'Could not capture screen content. Using only selected text.',
+              duration: const Duration(seconds: 3),
+            );
+          } else {
+            BotToast.showText(
+              text: 'Successfully captured screen content for context.',
+              duration: const Duration(seconds: 2),
+            );
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error extracting visible text: $e');
+          }
+          BotToast.showText(
+            text: 'Error capturing screen content: ${e.toString()}',
+            duration: const Duration(seconds: 3),
+          );
+        }
+      }
+      
       if (selectedText != null) {
         // Context mode - instruction with selected text as context
-        content = 'Instruction: $transcribedText\nContext: $selectedText';
+        if (contextText != null && contextText.isNotEmpty && !contextText.contains('Error:')) {
+          content = 'Instruction: $transcribedText\nSelected Context: $selectedText\nScreen Context: $contextText';
+        } else {
+          content = 'Instruction: $transcribedText\nContext: $selectedText';
+        }
       } else {
-        // Generation mode - just the instruction
-        content = transcribedText;
+        // Generation mode - just the instruction with screen context if available
+        if (contextText != null && contextText.isNotEmpty && !contextText.contains('Error:')) {
+          content = 'Instruction: $transcribedText\nScreen Context: $contextText';
+        } else {
+          content = transcribedText;
+        }
       }
       
       // Prepare the request body for agent mode
+      final List<Map<String, String>> messages = [
+        {
+          'role': 'system',
+          'content': 'You are an intelligent agent assistant capable of performing tasks, answering questions, and providing real-time search results when necessary. CRITICAL: Your response MUST be structured, factual, and to the point. ABSOLUTELY NO internal thoughts, tool output, "thinking steps", or explanations of what you are doing. Do NOT include any preambles, such as "Sure, I can help with that" or "Searching now...". Do NOT describe tools being used. ONLY return the final answer in clean, ready-to-use format. If structured data is appropriate (e.g. JSON, list, table), use that.'
+        },
+        {
+          'role': 'user',
+          'content': 'I will ask you factual questions or request structured data. When responding, DO NOT start with phrases like "Here is", "I found", or "Based on my search". Just respond directly with the result in a clean format.'
+        },
+        {
+          'role': 'assistant',
+          'content': 'Understood. I will provide only the final structured result with no preambles or tool-related text.'
+        }
+      ];
+      
+      // Add context-specific instructions if we have screen context
+      if (contextText != null && contextText.isNotEmpty && !contextText.contains('Error:')) {
+        messages.add({
+          'role': 'user',
+          'content': 'I am providing additional context from what is visible on my screen. Pay special attention to names, dates, emails, and other specific details as they may be relevant to my request. Use this context to inform your response but do not explicitly mention that you are using screen context unless directly relevant to the answer.'
+        });
+        
+        messages.add({
+          'role': 'assistant',
+          'content': 'I understand. I will use the screen context to provide more relevant and accurate responses without explicitly mentioning it.'
+        });
+      }
+      
+      // Add the final user instruction with content
+      messages.add({
+        'role': 'user',
+        'content': 'IMPORTANT: Your response must begin with the final result only. No internal thoughts, search steps, or commentary. Respond to this prompt: $content'
+      });
+      
+      // Prepare the final request body
       final requestBody = {
         'model': selectedModel,
-        'messages': [
-          {
-            'role': 'system',
-            'content': 'You are an intelligent agent assistant capable of performing tasks, answering questions, and providing real-time search results when necessary. CRITICAL: Your response MUST be structured, factual, and to the point. ABSOLUTELY NO internal thoughts, tool output, "thinking steps", or explanations of what you are doing. Do NOT include any preambles, such as "Sure, I can help with that" or "Searching now...". Do NOT describe tools being used. ONLY return the final answer in clean, ready-to-use format. If structured data is appropriate (e.g. JSON, list, table), use that.'
-          },
-          {
-            'role': 'user',
-            'content': 'I will ask you factual questions or request structured data. When responding, DO NOT start with phrases like "Here is", "I found", or "Based on my search". Just respond directly with the result in a clean format.'
-          },
-          {
-            'role': 'assistant',
-            'content': 'Understood. I will provide only the final structured result with no preambles or tool-related text.'
-          },
-          {
-            'role': 'user',
-            'content': 'IMPORTANT: Your response must begin with the final result only. No internal thoughts, search steps, or commentary. Respond to this prompt: $content'
-          },
-        ],
+        'messages': messages,
         'temperature': 0.2,
         'max_tokens': 2000
       };
