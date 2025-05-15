@@ -9,6 +9,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/stats/stats_service.dart';
@@ -24,6 +25,20 @@ import 'core/utils/sound_player.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize window manager to hide title bar
+  await windowManager.ensureInitialized();
+  
+  // Apply window options
+  await windowManager.waitUntilReadyToShow();
+  await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+  await windowManager.setBackgroundColor(Colors.transparent);
+  await windowManager.setTitle('AutoQuill AI');
+  await windowManager.setSize(const Size(900, 650));
+  await windowManager.setMinimumSize(const Size(800, 600));
+  await windowManager.center();
+  await windowManager.show();
+  await windowManager.focus();
 
   // Initialize Hive in Documents directory
   final appDir = await getApplicationDocumentsDirectory();

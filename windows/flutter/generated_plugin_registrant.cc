@@ -12,6 +12,8 @@
 #include <keypress_simulator_windows/keypress_simulator_windows_plugin_c_api.h>
 #include <pasteboard/pasteboard_plugin.h>
 #include <record_windows/record_windows_plugin_c_api.h>
+#include <screen_retriever_windows/screen_retriever_windows_plugin_c_api.h>
+#include <window_manager/window_manager_plugin.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
   ClipboardWatcherPluginRegisterWithRegistrar(
@@ -26,4 +28,8 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("PasteboardPlugin"));
   RecordWindowsPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("RecordWindowsPluginCApi"));
+  ScreenRetrieverWindowsPluginCApiRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("ScreenRetrieverWindowsPluginCApi"));
+  WindowManagerPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("WindowManagerPlugin"));
 }

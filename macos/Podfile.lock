@@ -22,6 +22,10 @@ PODS:
     - FlutterMacOS
   - record_darwin (1.0.0):
     - FlutterMacOS
+  - screen_retriever_macos (0.0.1):
+    - FlutterMacOS
+  - window_manager (0.2.0):
+    - FlutterMacOS
 
 DEPENDENCIES:
   - audio_session (from `Flutter/ephemeral/.symlinks/plugins/audio_session/macos`)
@@ -34,6 +38,8 @@ DEPENDENCIES:
   - pasteboard (from `Flutter/ephemeral/.symlinks/plugins/pasteboard/macos`)
   - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
   - record_darwin (from `Flutter/ephemeral/.symlinks/plugins/record_darwin/macos`)
+  - screen_retriever_macos (from `Flutter/ephemeral/.symlinks/plugins/screen_retriever_macos/macos`)
+  - window_manager (from `Flutter/ephemeral/.symlinks/plugins/window_manager/macos`)
 
 SPEC REPOS:
   trunk:
@@ -60,6 +66,10 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin
   record_darwin:
     :path: Flutter/ephemeral/.symlinks/plugins/record_darwin/macos
+  screen_retriever_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/screen_retriever_macos/macos
+  window_manager:
+    :path: Flutter/ephemeral/.symlinks/plugins/window_manager/macos
 
 SPEC CHECKSUMS:
   audio_session: 728ae3823d914f809c485d390274861a24b0904e
@@ -73,6 +83,8 @@ SPEC CHECKSUMS:
   pasteboard: 9b69dba6fedbb04866be632205d532fe2f6b1d99
   path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
   record_darwin: a0d515a0ef78c440c123ea3ac76184c9927a94d6
+  screen_retriever_macos: 776e0fa5d42c6163d2bf772d22478df4b302b161
+  window_manager: 3a1844359a6295ab1e47659b1a777e36773cd6e8
 
 PODFILE CHECKSUM: 54d867c82ac51cbd61b565781b9fada492027009
 

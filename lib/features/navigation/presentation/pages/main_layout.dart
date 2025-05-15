@@ -9,6 +9,7 @@ import 'package:autoquill_ai/features/transcription/presentation/bloc/transcript
 import 'package:autoquill_ai/features/recording/domain/repositories/recording_repository.dart';
 import 'package:autoquill_ai/features/transcription/domain/repositories/transcription_repository.dart';
 import 'package:autoquill_ai/widgets/hotkey_handler.dart';
+import 'package:window_manager/window_manager.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -25,7 +26,7 @@ class _MainLayoutState extends State<MainLayout> {
     const TranscriptionPage(),
     const SettingsPage(),
   ];
-  
+
   @override
   void initState() {
     super.initState();
@@ -38,7 +39,7 @@ class _MainLayoutState extends State<MainLayout> {
 
       HotkeyHandler.setBlocs(recordingBloc, transcriptionBloc,
           recordingRepository, transcriptionRepository);
-          
+
       // Force reload hotkeys to ensure they're properly registered
       HotkeyHandler.reloadHotkeys().then((_) {
         if (kDebugMode) {
@@ -57,36 +58,81 @@ class _MainLayoutState extends State<MainLayout> {
     return Scaffold(
       body: Row(
         children: [
-          NavigationRail(
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: (int index) {
-              setState(() {
-                _selectedIndex = index;
-              });
-            },
-            labelType: NavigationRailLabelType.selected,
-            destinations: const [
-              NavigationRailDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
-                label: Text('Home'),
+          // Custom draggable area for the entire navigation rail
+          MouseRegion(
+            cursor: SystemMouseCursors.basic,
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onPanStart: (_) async {
+                await windowManager.startDragging();
+              },
+              child: NavigationRail(
+                selectedIndex: _selectedIndex,
+                onDestinationSelected: (int index) {
+                  setState(() {
+                    _selectedIndex = index;
+                  });
+                },
+                labelType: NavigationRailLabelType.selected,
+                leading: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: Column(
+                    children: [
+                      // Spacer for top padding
+                      SizedBox(height: 8),
+                      // App logo
+                      Image.asset(
+                        'assets/icons/with_bg/autoquill_centered_1024_rounded.png',
+                        width: 48,
+                        height: 48,
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
+                destinations: const [
+                  NavigationRailDestination(
+                    icon: Icon(Icons.home_outlined),
+                    selectedIcon: Icon(Icons.home),
+                    label: Text('Home'),
+                  ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.mic_outlined),
+                    selectedIcon: Icon(Icons.mic),
+                    label: Text('Transcription'),
+                  ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.settings_outlined),
+                    selectedIcon: Icon(Icons.settings),
+                    label: Text('Settings'),
+                  ),
+                ],
               ),
-              NavigationRailDestination(
-                icon: Icon(Icons.mic_outlined),
-                selectedIcon: Icon(Icons.mic),
-                label: Text('Transcription'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.settings_outlined),
-                selectedIcon: Icon(Icons.settings),
-                label: Text('Settings'),
-              ),
-            ],
+            ),
           ),
           const VerticalDivider(thickness: 1, width: 1),
           // This is the main content.
           Expanded(
-            child: _pages[_selectedIndex],
+            child: Column(
+              children: [
+                // Draggable area for the top of the content
+                GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onPanStart: (_) async {
+                    await windowManager.startDragging();
+                  },
+                  child: Container(
+                    height: 32,
+                    width: double.infinity,
+                    color: Colors.transparent,
+                  ),
+                ),
+                // Main content
+                Expanded(
+                  child: _pages[_selectedIndex],
+                ),
+              ],
+            ),
           ),
         ],
       ),
