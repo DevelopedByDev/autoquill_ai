@@ -103,6 +103,17 @@ class TranscriptionHotkeyHandler {
       // and hide the overlay after pasting
       await ClipboardService.copyToClipboard(transcriptionText);
       
+      // Update word count in Hive
+      if (transcriptionText.isNotEmpty) {
+        final wordCount = transcriptionText.trim().split(RegExp(r'\s+')).length;
+        final box = Hive.box('settings');
+        final currentCount = box.get('transcription_words_count', defaultValue: 0);
+        final newCount = currentCount + wordCount;
+        
+        // Use synchronous put for immediate update
+        box.put('transcription_words_count', newCount);
+      }
+      
       BotToast.showText(text: 'Transcription copied to clipboard');
     } catch (e) {
       // Hide the overlay on error

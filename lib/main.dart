@@ -11,6 +11,7 @@ import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/stats/stats_service.dart';
 import 'features/settings/presentation/bloc/settings_bloc.dart';
 import 'features/settings/presentation/bloc/settings_event.dart';
 
@@ -33,6 +34,9 @@ void main() async {
 
   // Load and register hotkeys ASAP before UI renders
   await _loadStoredData();
+
+  // Initialize stats service
+  await StatsService().init();
 
   // Initialize dependency injection
   await di.init();

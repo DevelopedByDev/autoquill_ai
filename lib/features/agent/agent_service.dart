@@ -13,6 +13,7 @@ import 'package:pasteboard/pasteboard.dart';
 import '../assistant/clipboard_listener_service.dart';
 import '../accessibility/domain/repositories/accessibility_repository.dart';
 import '../../core/utils/sound_player.dart';
+import '../../core/stats/stats_service.dart';
 
 /// Service to handle agent mode functionality
 class AgentService {
@@ -24,7 +25,23 @@ class AgentService {
   
   AgentService._internal() {
     _clipboardListener.init();
+    // Initialize stats service without awaiting to avoid blocking constructor
+    _initStats();
   }
+  
+  // Initialize stats service asynchronously
+  Future<void> _initStats() async {
+    try {
+      await _statsService.init();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error initializing stats service: $e');
+      }
+    }
+  }
+  
+  // Stats service for tracking word counts
+  final StatsService _statsService = StatsService();
   
   // The clipboard listener service
   final ClipboardListenerService _clipboardListener = ClipboardListenerService();
@@ -433,6 +450,26 @@ class AgentService {
         // Simulate paste command after a short delay
         await Future.delayed(const Duration(milliseconds: 500));
         await _simulatePasteCommand();
+        
+        // Hide the overlay
+        await RecordingOverlayPlatform.hideOverlay();
+        
+        // Now that the overlay is hidden, directly update word counts in Hive
+        if (transcribedText.isNotEmpty) {
+          final transcriptionWordCount = transcribedText.trim().split(RegExp(r'\s+')).length;
+          final box = Hive.box('settings');
+          final currentTranscriptionCount = box.get('transcription_words_count', defaultValue: 0);
+          // Use synchronous put to ensure immediate UI update
+          box.put('transcription_words_count', currentTranscriptionCount + transcriptionWordCount);
+        }
+        
+        if (aiResponse.isNotEmpty) {
+          final generationWordCount = aiResponse.trim().split(RegExp(r'\s+')).length;
+          final box = Hive.box('settings');
+          final currentGenerationCount = box.get('generation_words_count', defaultValue: 0);
+          // Use synchronous put to ensure immediate UI update
+          box.put('generation_words_count', currentGenerationCount + generationWordCount);
+        }
       } else {
         if (kDebugMode) {
           print('API Error: ${response.statusCode} ${response.body}');

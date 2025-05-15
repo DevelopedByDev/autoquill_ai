@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:keypress_simulator/keypress_simulator.dart';
 import '../../../../core/storage/app_storage.dart';
 import '../../../../core/utils/sound_player.dart';
+import '../../../../core/stats/stats_service.dart';
 import '../../domain/repositories/transcription_repository.dart';
 import '../../../recording/data/platform/recording_overlay_platform.dart';
 
@@ -79,8 +80,12 @@ class TranscriptionState extends Equatable {
 class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
   final TranscriptionRepository repository;
   late final StreamSubscription<BoxEvent> _apiKeySubscription;
+  final StatsService _statsService = StatsService();
 
   TranscriptionBloc({required this.repository}) : super(const TranscriptionState()) {
+    // Initialize stats service without awaiting to avoid blocking constructor
+    _initStats();
+    
     // Listen to API key changes
     _apiKeySubscription = Hive.box('settings').watch(key: 'groq_api_key').listen((event) async {
       final apiKey = await AppStorage.getApiKey();
@@ -90,6 +95,17 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
     on<StartTranscription>(_onStartTranscription);
     on<ClearTranscription>(_onClearTranscription);
     on<UpdateApiKey>(_onUpdateApiKey);
+  }
+
+  // Initialize stats service asynchronously
+  Future<void> _initStats() async {
+    try {
+      await _statsService.init();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error initializing stats service: $e');
+      }
+    }
   }
 
   Future<void> _onInitializeTranscription(InitializeTranscription event, Emitter<TranscriptionState> emit) async {
@@ -124,6 +140,20 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
       
       // Copy the transcription text to clipboard
       await _copyToClipboard(transcriptionText);
+      
+      // Hide the overlay
+      await RecordingOverlayPlatform.hideOverlay();
+      
+      // Now that the overlay is hidden, directly update word count in Hive
+      if (transcriptionText.isNotEmpty) {
+        final wordCount = transcriptionText.trim().split(RegExp(r'\s+')).length;
+        final box = Hive.box('settings');
+        final currentCount = box.get('transcription_words_count', defaultValue: 0);
+        final newCount = currentCount + wordCount;
+        
+        // Use synchronous put for immediate update
+        box.put('transcription_words_count', newCount);
+      }
       
       emit(state.copyWith(
         transcriptionText: transcriptionText,
