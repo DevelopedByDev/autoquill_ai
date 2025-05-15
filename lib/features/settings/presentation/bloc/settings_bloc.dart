@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -27,6 +28,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<SaveAssistantModel>(_onSaveAssistantModel);
     on<SaveAgentModel>(_onSaveAgentModel);
     
+    // Theme events
+    on<ToggleThemeMode>(_onToggleThemeMode);
+    
     // Dictionary events
     on<LoadDictionary>(_onLoadDictionary);
     on<AddWordToDictionary>(_onAddWordToDictionary);
@@ -49,11 +53,16 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       final assistantModel = settingsBox.get('assistant-model') ?? 'llama3-70b-8192';
       final agentModel = settingsBox.get('agent-model') ?? 'compound-beta-mini';
       
+      // Load theme mode
+      final themeValue = settingsBox.get('theme_mode');
+      final themeMode = themeValue == 'light' ? ThemeMode.light : ThemeMode.dark;
+      
       emit(state.copyWith(
         apiKey: apiKey,
         transcriptionModel: transcriptionModel,
         assistantModel: assistantModel,
         agentModel: agentModel,
+        themeMode: themeMode,
       ));
     } catch (e) {
       emit(state.copyWith(error: e.toString()));
@@ -293,6 +302,24 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       
       // Update state
       emit(state.copyWith(dictionary: updatedDictionary));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+  
+  // Theme toggle handler
+  Future<void> _onToggleThemeMode(ToggleThemeMode event, Emitter<SettingsState> emit) async {
+    try {
+      final newThemeMode = state.themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+      final settingsBox = Hive.box('settings');
+      
+      // Save theme preference
+      await settingsBox.put('theme_mode', newThemeMode == ThemeMode.dark ? 'dark' : 'light');
+      
+      emit(state.copyWith(
+        themeMode: newThemeMode,
+        error: null,
+      ));
     } catch (e) {
       emit(state.copyWith(error: e.toString()));
     }
