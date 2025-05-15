@@ -1,6 +1,72 @@
 import Cocoa
 import FlutterMacOS
 import AVFoundation
+import Vision
+import CoreGraphics
+
+// Screen OCR utility class for extracting text from screenshots
+class ScreenOCR {
+    static let shared = ScreenOCR()
+    
+    private init() {}
+    
+    func captureScreenAndExtractText(completion: @escaping (String) -> Void) {
+        // Create a temporary file path for the screenshot
+        let tempDir = FileManager.default.temporaryDirectory
+        let screenshotPath = tempDir.appendingPathComponent("autoquill_screenshot.png")
+        
+        // Use the screencapture command line tool
+        let task = Process()
+        task.launchPath = "/usr/sbin/screencapture"
+        task.arguments = ["-x", screenshotPath.path] // -x for silent capture (no sound)
+        
+        do {
+            try task.run()
+            task.waitUntilExit()
+            
+            if task.terminationStatus == 0 && FileManager.default.fileExists(atPath: screenshotPath.path) {
+                // Extract text using OCR
+                self.extractTextFromImage(at: screenshotPath.path, completion: completion)
+            } else {
+                completion("Error: Failed to capture screenshot")
+            }
+        } catch {
+            completion("Error: \(error.localizedDescription)")
+        }
+    }
+    
+    private func extractTextFromImage(at path: String, completion: @escaping (String) -> Void) {
+        let imageURL = URL(fileURLWithPath: path)
+        guard let image = NSImage(contentsOf: imageURL),
+              let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            completion("Error: Could not load image for OCR")
+            return
+        }
+        
+        let requestHandler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        let request = VNRecognizeTextRequest { (request, error) in
+            guard let observations = request.results as? [VNRecognizedTextObservation] else {
+                completion("")
+                return
+            }
+            
+            let text = observations.compactMap {
+                $0.topCandidates(1).first?.string
+            }.joined(separator: "\n")
+            
+            completion(text)
+        }
+        
+        request.recognitionLanguages = ["en-US"]
+        request.recognitionLevel = .accurate
+        
+        do {
+            try requestHandler.perform([request])
+        } catch {
+            completion("OCR Error: \(error.localizedDescription)")
+        }
+    }
+}
 
 // Blinking label for recording indicator
 class BlinkingLabel: NSTextField {
@@ -133,7 +199,13 @@ class RecordingOverlayWindow: NSPanel {
 
         // Neumorphic Glass Background
         let visualEffectView = NSVisualEffectView(frame: NSRect(x: 0, y: 0, width: 180, height: 80))
-        visualEffectView.material = .ultraDark
+        if #available(macOS 10.14, *) {
+            visualEffectView.material = .windowBackground
+            visualEffectView.appearance = NSAppearance(named: .darkAqua)
+        } else {
+            // Fallback for older macOS versions
+            visualEffectView.material = .ultraDark
+        }
         visualEffectView.state = .active
         visualEffectView.wantsLayer = true
         visualEffectView.layer?.cornerRadius = 20
@@ -270,6 +342,10 @@ class MainFlutterWindow: NSWindow {
       case "setTranscriptionCompleted":
         RecordingOverlayWindow.shared.setTranscriptionCompleted()
         result(nil)
+      case "extractVisibleText":
+        ScreenOCR.shared.captureScreenAndExtractText { text in
+          result(text)
+        }
       default:
         result(FlutterMethodNotImplemented)
       }

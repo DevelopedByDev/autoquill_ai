@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:bot_toast/bot_toast.dart';
@@ -10,6 +11,7 @@ import 'package:keypress_simulator/keypress_simulator.dart';
 import 'package:autoquill_ai/features/recording/domain/repositories/recording_repository.dart';
 import 'package:autoquill_ai/features/transcription/domain/repositories/transcription_repository.dart';
 import 'package:pasteboard/pasteboard.dart';
+import '../accessibility/domain/repositories/accessibility_repository.dart';
 import 'clipboard_listener_service.dart';
 
 /// Service to handle assistant mode functionality
@@ -21,20 +23,26 @@ class AssistantService {
   }
   
   AssistantService._internal() {
-    _clipboardListener.init();
+    _clipboardListenerService.init();
   }
   
-  // The clipboard listener service
-  final ClipboardListenerService _clipboardListener = ClipboardListenerService();
+  // Flag to track if clipboard listener is active
+  bool _isListening = false; // Used in handleAssistantHotkey()
   
-  // Repositories for recording and transcription
+  // Clipboard listener service
+  final _clipboardListenerService = ClipboardListenerService();
+  
+  // Repositories
   RecordingRepository? _recordingRepository;
   TranscriptionRepository? _transcriptionRepository;
+  
+  // Accessibility repository for OCR-based text extraction
+  final _accessibilityRepository = AccessibilityRepository();
   
   // Flag to track if recording is in progress
   bool _isRecording = false;
   
-  // Store the selected text from clipboard
+  // Selected text from clipboard
   String? _selectedText;
   
   // Path to the recorded audio file
@@ -77,7 +85,7 @@ class AssistantService {
     await _simulateCopyCommand();
     
     // Start watching for clipboard changes
-    _clipboardListener.startWatching(
+    _clipboardListenerService.startWatching(
       onTextChanged: _handleSelectedText,
       onTimeout: _handleTimeout,
       onEmpty: _handleEmptyClipboard,
@@ -300,6 +308,38 @@ class AssistantService {
       
       // Prepare the message content
       final String content;
+      String? contextText;
+      
+      // Extract visible text from the active application screen using OCR (macOS only)
+      if (Platform.isMacOS) {
+        try {
+          BotToast.showText(text: 'Capturing screen for context...');
+          contextText = await _accessibilityRepository.extractVisibleText();
+          if (kDebugMode) {
+            print('Extracted context from screen: $contextText');
+          }
+          
+          if (contextText.contains('Error:')) {
+            BotToast.showText(
+              text: 'Could not capture screen content. Using only selected text.',
+              duration: const Duration(seconds: 3),
+            );
+          } else {
+            BotToast.showText(
+              text: 'Successfully captured screen content for context.',
+              duration: const Duration(seconds: 2),
+            );
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error extracting visible text: $e');
+          }
+          BotToast.showText(
+            text: 'Error capturing screen content: ${e.toString()}',
+            duration: const Duration(seconds: 3),
+          );
+        }
+      }
       if (selectedText != null) {
         // Edit mode - instruction followed by text to edit
         content = '$transcribedText: $selectedText';
@@ -317,51 +357,85 @@ class AssistantService {
       
       if (selectedText != null) {
         // Edit mode - use system prompt for text editing
+        final List<Map<String, String>> messages = [
+          {
+            'role': 'system',
+            'content': 'You are a text editor that rewrites text based on instructions. CRITICAL: Your response MUST contain ONLY the edited text with ABSOLUTELY NO introductory phrases, NO explanations, NO "Here is the rewritten text", NO comments about what you did, and NO concluding remarks. Do not start with "Here", "I", or any other introductory word. Just give the edited text directly. The user will only see your exact output, so it must be ready to use immediately.'
+          },
+          {
+            'role': 'user',
+            'content': 'I will give you instructions followed by text to edit. The format will be "[INSTRUCTIONS]: [TEXT]". Only return the edited text with no additional comments or explanations. Do not start with "Here", "I", or any other introductory word or phrase.'
+          },
+          {
+            'role': 'assistant',
+            'content': 'I understand. I will only return the edited text with no additional comments or explanations.'
+          }
+        ];
+        
+        // Add context from screen if available
+        if (contextText != null && contextText.isNotEmpty && !contextText.contains('Error:')) {
+          messages.add({
+            'role': 'user',
+            'content': 'Here is some additional context from what is visible on my screen. Use this to inform your edits if relevant:\n\n$contextText. If there are names, dates, emails, pay extra attention as they may be relevant to the instructions.'
+          });
+          
+          messages.add({
+            'role': 'assistant',
+            'content': 'I understand the context from your screen. I will use it to inform my edits if relevant.'
+          });
+        }
+        
+        // Add the final user instruction with content
+        messages.add({
+          'role': 'user',
+          'content': 'IMPORTANT: Your response must start with the edited text directly. Do not include any preamble like "Here is" or "I have". $content'
+        });
+        
         requestBody = {
           'model': selectedModel,
-          'messages': [
-            {
-              'role': 'system',
-              'content': 'You are a text editor that rewrites text based on instructions. CRITICAL: Your response MUST contain ONLY the edited text with ABSOLUTELY NO introductory phrases, NO explanations, NO "Here is the rewritten text", NO comments about what you did, and NO concluding remarks. Do not start with "Here", "I", or any other introductory word. Just give the edited text directly. The user will only see your exact output, so it must be ready to use immediately.'
-            },
-            {
-              'role': 'user',
-              'content': 'I will give you instructions followed by text to edit. The format will be "[INSTRUCTIONS]: [TEXT]". Only return the edited text with no additional comments or explanations. Do not start with "Here", "I", or any other introductory word or phrase.'
-            },
-            {
-              'role': 'assistant',
-              'content': 'I understand. I will only return the edited text with no additional comments or explanations.'
-            },
-            {
-              'role': 'user',
-              'content': 'IMPORTANT: Your response must start with the edited text directly. Do not include any preamble like "Here is" or "I have". $content'
-            }, 
-          ],
+          'messages': messages,
           'temperature': 0.2, // Even lower temperature for more predictable output
           'max_tokens': 2000 // Ensure we have enough tokens for the response
         };
       } else {
         // Generation mode - use system prompt for text generation
+        final List<Map<String, String>> messages = [
+          {
+            'role': 'system',
+            'content': 'You are a helpful text generation assistant. CRITICAL: Your response MUST contain ONLY the generated text with ABSOLUTELY NO introductory phrases, NO explanations, NO "Here is the text", NO comments about what you did, and NO concluding remarks. Do not start with "Here", "I", or any other introductory word. Just give the generated text directly. The user will only see your exact output, so it must be ready to use immediately.'
+          },
+          {
+            'role': 'user',
+            'content': 'I will give you instructions for generating text. Only return the generated text with no additional comments or explanations. Do not start with "Here", "I", or any other introductory word or phrase.'
+          },
+          {
+            'role': 'assistant',
+            'content': 'I understand. I will only return the generated text with no additional comments or explanations.'
+          }
+        ];
+        
+        // Add context from screen if available
+        if (contextText != null && contextText.isNotEmpty && !contextText.contains('Error:')) {
+          messages.add({
+            'role': 'user',
+            'content': 'Here is some additional context from what is visible on my screen. Use this to inform your response if relevant:\n\n$contextText. If there are names, dates, emails, pay extra attention as they may be relevant to the instructions.'
+          });
+          
+          messages.add({
+            'role': 'assistant',
+            'content': 'I understand the context from your screen. I will use it to inform my response if relevant.'
+          });
+        }
+        
+        // Add the final user instruction with content
+        messages.add({
+          'role': 'user',
+          'content': 'IMPORTANT: Your response must start with the generated text directly. Do not include any preamble like "Here is" or "I have". $content'
+        });
+        
         requestBody = {
           'model': selectedModel,
-          'messages': [
-            {
-              'role': 'system',
-              'content': 'You are a helpful text generation assistant. CRITICAL: Your response MUST contain ONLY the generated text with ABSOLUTELY NO introductory phrases, NO explanations, NO "Here is the text", NO comments about what you did, and NO concluding remarks. Do not start with "Here", "I", or any other introductory word. Just give the generated text directly. The user will only see your exact output, so it must be ready to use immediately.'
-            },
-            {
-              'role': 'user',
-              'content': 'I will give you instructions for generating text. Only return the generated text with no additional comments or explanations. Do not start with "Here", "I", or any other introductory word or phrase.'
-            },
-            {
-              'role': 'assistant',
-              'content': 'I understand. I will only return the generated text with no additional comments or explanations.'
-            },
-            {
-              'role': 'user',
-              'content': 'IMPORTANT: Your response must start with the generated text directly. Do not include any preamble like "Here is" or "I have". $content'
-            }, 
-          ],
+          'messages': messages,
           'temperature': 0.2, // Even lower temperature for more predictable output
           'max_tokens': 2000 // Ensure we have enough tokens for the response
         };
@@ -418,6 +492,6 @@ class AssistantService {
   
   /// Dispose of the service
   void dispose() {
-    _clipboardListener.dispose();
+    _clipboardListenerService.dispose();
   }
 }
