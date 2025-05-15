@@ -10,6 +10,10 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'core/theme/app_theme.dart';
+import 'features/settings/presentation/bloc/settings_bloc.dart';
+import 'features/settings/presentation/bloc/settings_event.dart';
+
 import 'core/di/injection_container.dart' as di;
 import 'core/storage/app_storage.dart';
 import 'features/recording/presentation/bloc/recording_bloc.dart';
@@ -86,18 +90,22 @@ class MainApp extends StatelessWidget {
           const SingleActivator(LogicalKeyboardKey.keyA, alt: true):
               ExampleIntent(),
         },
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'AutoQuill AI',
-          builder: BotToastInit(),
-          navigatorObservers: [BotToastNavigatorObserver()],
-          theme: ThemeData(
-            primarySwatch: Colors.blue,
-            fontFamily: 'SF Pro Display',
-            scaffoldBackgroundColor: Colors.white,
-            useMaterial3: true,
-          ),
-          home: MultiRepositoryProvider(
+        child: BlocProvider(
+          create: (_) => SettingsBloc()..add(LoadSettings()),
+          child: Builder(
+            builder: (context) {
+              // Access the SettingsBloc from the current context
+              final settingsState = context.watch<SettingsBloc>().state;
+              
+              return MaterialApp(
+                debugShowCheckedModeBanner: false,
+                title: 'AutoQuill AI',
+                builder: BotToastInit(),
+                navigatorObservers: [BotToastNavigatorObserver()],
+                theme: shadcnLightTheme,
+                darkTheme: shadcnDarkTheme,
+                themeMode: settingsState.themeMode,
+                home: MultiRepositoryProvider(
             providers: [
               RepositoryProvider<TranscriptionRepository>(
                 create: (_) => di.sl<TranscriptionRepository>(),
@@ -121,6 +129,9 @@ class MainApp extends StatelessWidget {
               ],
               child: const MainLayout(),
             ),
+          ),
+              );
+            },
           ),
         ),
       ),

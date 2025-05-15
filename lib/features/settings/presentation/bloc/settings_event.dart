@@ -99,3 +99,6 @@ class RemoveWordFromDictionary extends SettingsEvent {
   @override
   List<Object?> get props => [word];
 }
+
+class ToggleThemeMode extends SettingsEvent {}
+
