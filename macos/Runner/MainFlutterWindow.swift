@@ -176,9 +176,13 @@ class RecordingOverlayWindow: NSPanel {
     static let shared = RecordingOverlayWindow()
     private let blinkingLabel = BlinkingLabel(frame: NSRect(x: 10, y: 20, width: 160, height: 40))
 
+    // Define window dimensions as class properties
+    private let windowWidth: CGFloat = 180
+    private let windowHeight: CGFloat = 80
+    
     private init() {
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: 180, height: 80),
+            contentRect: NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -192,13 +196,14 @@ class RecordingOverlayWindow: NSPanel {
         self.isMovableByWindowBackground = false
 
         if let screenFrame = NSScreen.main?.visibleFrame {
-            let xPos = screenFrame.width - 220
-            let yPos = screenFrame.height - 100
+            let xPos = screenFrame.origin.x + (screenFrame.width - windowWidth) / 2
+            let yPos = screenFrame.origin.y + 20  // 20 points from bottom of the visible area
+
             self.setFrameOrigin(NSPoint(x: xPos, y: yPos))
         }
 
         // Neumorphic Glass Background
-        let visualEffectView = NSVisualEffectView(frame: NSRect(x: 0, y: 0, width: 180, height: 80))
+        let visualEffectView = NSVisualEffectView(frame: NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight))
         if #available(macOS 10.14, *) {
             visualEffectView.material = .windowBackground
             visualEffectView.appearance = NSAppearance(named: .darkAqua)
