@@ -26,7 +26,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     // Model selection events
     on<SaveTranscriptionModel>(_onSaveTranscriptionModel);
     on<SaveAssistantModel>(_onSaveAssistantModel);
-    on<SaveAgentModel>(_onSaveAgentModel);
     
     // Theme events
     on<ToggleThemeMode>(_onToggleThemeMode);
@@ -51,7 +50,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       final settingsBox = Hive.box('settings');
       final transcriptionModel = settingsBox.get('transcription-model') ?? 'whisper-large-v3';
       final assistantModel = settingsBox.get('assistant-model') ?? 'llama3-70b-8192';
-      final agentModel = settingsBox.get('agent-model') ?? 'compound-beta-mini';
       
       // Load theme mode
       final themeValue = settingsBox.get('theme_mode');
@@ -61,7 +59,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         apiKey: apiKey,
         transcriptionModel: transcriptionModel,
         assistantModel: assistantModel,
-        agentModel: agentModel,
         themeMode: themeMode,
       ));
     } catch (e) {
@@ -200,17 +197,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         hotkeys['assistant_hotkey'] = assistantHotkey;
       }
       
-      // Load agent hotkey
-      final agentHotkey = settingsBox.get('agent_hotkey');
-      if (agentHotkey != null) {
-        hotkeys['agent_hotkey'] = agentHotkey;
-      }
-      
-      // Load text hotkey
-      final textHotkey = settingsBox.get('text_hotkey');
-      if (textHotkey != null) {
-        hotkeys['text_hotkey'] = textHotkey;
-      }
+
       
       emit(state.copyWith(storedHotkeys: hotkeys));
       
@@ -242,15 +229,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     }
   }
   
-  Future<void> _onSaveAgentModel(SaveAgentModel event, Emitter<SettingsState> emit) async {
-    try {
-      final settingsBox = Hive.box('settings');
-      await settingsBox.put('agent-model', event.model);
-      emit(state.copyWith(agentModel: event.model));
-    } catch (e) {
-      emit(state.copyWith(error: e.toString()));
-    }
-  }
+
   
   // Dictionary management methods
   Future<void> _onLoadDictionary(LoadDictionary event, Emitter<SettingsState> emit) async {

@@ -86,8 +86,6 @@ class HotkeyRegistration {
       final settingsBox = Hive.box('settings');
       final transcriptionHotkey = settingsBox.get('transcription_hotkey');
       final assistantHotkey = settingsBox.get('assistant_hotkey');
-      final agentHotkey = settingsBox.get('agent_hotkey');
-      final textHotkey = settingsBox.get('text_hotkey');
       
       // Convert hotkeys and store in cache (fast operation)
       if (transcriptionHotkey != null) {
@@ -112,30 +110,6 @@ class HotkeyRegistration {
           identifier: 'assistant_hotkey',
         );
         _hotkeyCache['assistant_hotkey'] = updatedHotkey;
-      }
-      
-      if (agentHotkey != null) {
-        final hotkey = hotKeyConverter(agentHotkey);
-        // Explicitly set the identifier
-        final updatedHotkey = HotKey(
-          key: hotkey.key,
-          modifiers: hotkey.modifiers,
-          scope: hotkey.scope,
-          identifier: 'agent_hotkey',
-        );
-        _hotkeyCache['agent_hotkey'] = updatedHotkey;
-      }
-      
-      if (textHotkey != null) {
-        final hotkey = hotKeyConverter(textHotkey);
-        // Explicitly set the identifier
-        final updatedHotkey = HotKey(
-          key: hotkey.key,
-          modifiers: hotkey.modifiers,
-          scope: hotkey.scope,
-          identifier: 'text_hotkey',
-        );
-        _hotkeyCache['text_hotkey'] = updatedHotkey;
       }
       
       _hotkeysLoaded = true;

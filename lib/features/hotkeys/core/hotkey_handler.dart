@@ -7,12 +7,9 @@ import 'package:autoquill_ai/features/recording/domain/repositories/recording_re
 import 'package:autoquill_ai/features/transcription/presentation/bloc/transcription_bloc.dart';
 import 'package:autoquill_ai/features/transcription/domain/repositories/transcription_repository.dart';
 import 'package:autoquill_ai/features/assistant/assistant_service.dart';
-import 'package:autoquill_ai/features/agent/agent_service.dart';
 
 import '../handlers/transcription_hotkey_handler.dart';
 import '../handlers/assistant_hotkey_handler.dart';
-import '../handlers/agent_hotkey_handler.dart';
-import '../handlers/text_hotkey_handler.dart';
 import '../utils/hotkey_registration.dart';
 
 /// A centralized class for handling keyboard hotkeys throughout the application
@@ -23,8 +20,6 @@ class HotkeyHandler {
   
   // Assistant service for handling assistant mode
   static final AssistantService _assistantService = AssistantService();
-  // Agent service for handling agent mode
-  static final AgentService _agentService = AgentService();
   
   // Track active hotkeys to prevent duplicate events
   static final Set<String> _activeHotkeys = {};
@@ -35,14 +30,12 @@ class HotkeyHandler {
     _recordingBloc = recordingBloc;
     _transcriptionBloc = transcriptionBloc;
     
-    // Initialize the assistant and agent services with repositories
+    // Initialize the assistant service with repositories
     _assistantService.setRepositories(recordingRepository, transcriptionRepository);
-    _agentService.setRepositories(recordingRepository, transcriptionRepository);
     
     // Initialize the handlers with repositories
     TranscriptionHotkeyHandler.initialize(recordingRepository, transcriptionRepository);
     AssistantHotkeyHandler.initialize(_assistantService);
-    AgentHotkeyHandler.initialize(_agentService);
   }
 
   /// Handles keyDown events for any registered hotkey
@@ -78,16 +71,7 @@ class HotkeyHandler {
         print("Assistant hotkey detected, handling...");
       }
       AssistantHotkeyHandler.handleHotkey();
-    } else if (hotKey.identifier == 'agent_hotkey') {
-      if (kDebugMode) {
-        print("Agent hotkey detected, handling...");
-      }
-      AgentHotkeyHandler.handleHotkey();
-    } else if (hotKey.identifier == 'text_hotkey') {
-      if (kDebugMode) {
-        print("Text hotkey detected, handling...");
-      }
-      TextHotkeyHandler.handleHotkey();
+
     } else if (kDebugMode) {
       print("Unknown hotkey: '${hotKey.identifier}'");
     }

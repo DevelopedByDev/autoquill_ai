@@ -74,13 +74,7 @@ class SaveAssistantModel extends SettingsEvent {
   List<Object?> get props => [model];
 }
 
-class SaveAgentModel extends SettingsEvent {
-  final String model;
-  const SaveAgentModel(this.model);
 
-  @override
-  List<Object?> get props => [model];
-}
 
 class LoadDictionary extends SettingsEvent {}
 

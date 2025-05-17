@@ -25,8 +25,6 @@ class ModelsSection extends StatelessWidget {
             _buildTranscriptionModelDropdown(context, state),
             const SizedBox(height: 16),
             _buildAssistantModelDropdown(context, state),
-            const SizedBox(height: 16),
-            _buildAgentModelDropdown(context, state),
           ],
         );
       }
@@ -147,87 +145,6 @@ class ModelsSection extends StatelessWidget {
                 DropdownMenuItem(
                   value: 'llama3-70b-8192',
                   child: const Text('llama3-70b-8192'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAgentModelDropdown(BuildContext context, SettingsState state) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            const Text('Agent model'),
-            const Spacer(),
-            DropdownButton<String>(
-              value: state.agentModel,
-              onChanged: (String? newValue) {
-                if (newValue != null) {
-                  context.read<SettingsBloc>().add(
-                        SaveAgentModel(newValue),
-                      );
-                }
-              },
-              items: [
-                DropdownMenuItem(
-                  value: 'compound-beta-mini',
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('compound-beta-mini'),
-                      Text(
-                        'search only',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                DropdownMenuItem(
-                  value: 'compound-beta',
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('compound-beta'),
-                      Text(
-                        'search + code execution',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                DropdownMenuItem(
-                  value: 'meta-llama/llama-4-scout-17b-16e-instruct',
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('compound-beta + llama 4 17b-16e-instruct'),
-                      Text(
-                        'search + code execution + screen context',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ],
             ),

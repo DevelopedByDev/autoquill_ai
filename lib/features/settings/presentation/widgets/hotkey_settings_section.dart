@@ -25,13 +25,9 @@ class HotkeySettingsSection extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            _buildHotkeyRow(context, 'Text mode', 'text_hotkey', state),
-            const SizedBox(height: 16),
             _buildHotkeyRow(context, 'Transcription mode', 'transcription_hotkey', state),
             const SizedBox(height: 16),
             _buildHotkeyRow(context, 'Assistant mode', 'assistant_hotkey', state),
-            const SizedBox(height: 16),
-            _buildHotkeyRow(context, 'Agent mode', 'agent_hotkey', state),
           ],
         );
       }

@@ -9,7 +9,7 @@ class SettingsState extends Equatable {
   
   // Hotkey recording state
   final bool isRecordingHotkey;
-  final String? recordingFor; // 'transcription_hotkey', 'assistant_hotkey', 'agent_hotkey', or 'text_hotkey'
+  final String? recordingFor; // 'transcription_hotkey' or 'assistant_hotkey'
   final HotKey? currentRecordedHotkey;
   
   // Stored hotkeys
@@ -18,7 +18,6 @@ class SettingsState extends Equatable {
   // Model selections
   final String? transcriptionModel; // whisper-large-v3, whisper-large-v3-turbo, or distil-whisper-large-v3-en
   final String? assistantModel; // llama-3.3-70b-versatile, gemma2-9b-it, or llama3-70b-8192
-  final String? agentModel; // compound-beta-mini
   
   // Theme mode
   final ThemeMode themeMode;
@@ -36,7 +35,6 @@ class SettingsState extends Equatable {
     this.storedHotkeys = const {},
     this.transcriptionModel = 'whisper-large-v3',
     this.assistantModel = 'llama3-70b-8192',
-    this.agentModel = 'compound-beta-mini',
     this.themeMode = ThemeMode.dark,
     this.dictionary = const [],
   });
@@ -51,7 +49,6 @@ class SettingsState extends Equatable {
     Map<String, dynamic>? storedHotkeys,
     String? transcriptionModel,
     String? assistantModel,
-    String? agentModel,
     ThemeMode? themeMode,
     List<String>? dictionary,
   }) {
@@ -65,7 +62,6 @@ class SettingsState extends Equatable {
       storedHotkeys: storedHotkeys ?? this.storedHotkeys,
       transcriptionModel: transcriptionModel ?? this.transcriptionModel,
       assistantModel: assistantModel ?? this.assistantModel,
-      agentModel: agentModel ?? this.agentModel,
       themeMode: themeMode ?? this.themeMode,
       dictionary: dictionary ?? this.dictionary,
     );
@@ -78,7 +74,6 @@ class SettingsState extends Equatable {
         error,
         transcriptionModel,
         assistantModel,
-        agentModel,
         themeMode,
         dictionary,
         isRecordingHotkey,

@@ -58,6 +58,9 @@ void main() async {
   // Load and register hotkeys ASAP before UI renders
   await _loadStoredData();
 
+  // Clean up removed features (text mode and agent mode)
+  await _cleanupRemovedFeatures();
+
   // Initialize dependency injection
   await di.init();
 
@@ -79,6 +82,35 @@ Future<void> _loadStoredData() async {
 
   // Only prepare hotkeys quickly, actual registration will happen after UI is rendered
   await HotkeyHandler.prepareHotkeys();
+}
+
+/// Clean up settings for removed features (text mode and agent mode)
+Future<void> _cleanupRemovedFeatures() async {
+  try {
+    final settingsBox = Hive.box('settings');
+    
+    // Remove text mode and agent mode hotkeys
+    if (settingsBox.containsKey('text_hotkey')) {
+      await settingsBox.delete('text_hotkey');
+    }
+    
+    if (settingsBox.containsKey('agent_hotkey')) {
+      await settingsBox.delete('agent_hotkey');
+    }
+    
+    // Remove agent model setting
+    if (settingsBox.containsKey('agent-model')) {
+      await settingsBox.delete('agent-model');
+    }
+    
+    if (kDebugMode) {
+      print('Cleaned up removed features settings');
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      print('Error cleaning up removed features: $e');
+    }
+  }
 }
 
 /// Observer for app lifecycle events to clean up resources
