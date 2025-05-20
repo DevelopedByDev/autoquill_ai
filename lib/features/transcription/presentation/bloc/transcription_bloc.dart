@@ -1,13 +1,14 @@
 import 'dart:async';
-import 'dart:io';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:pasteboard/pasteboard.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:keypress_simulator/keypress_simulator.dart';
+
+import '../../../../core/storage/transcription_storage.dart';
 
 import '../../../../core/storage/app_storage.dart';
 import '../../../../core/utils/sound_player.dart';
@@ -221,13 +222,9 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
       await Future.delayed(const Duration(milliseconds: 200));
       await _simulatePasteCommand();
       
-      // After pasting, save as a file in the app documents directory for backup
+      // After pasting, save as a file in the dedicated transcriptions directory for backup
       try {
-        final appDir = await getApplicationDocumentsDirectory();
-        final timestamp = DateTime.now().millisecondsSinceEpoch;
-        final filePath = '${appDir.path}/transcription_$timestamp.txt';
-        final file = File(filePath);
-        await file.writeAsString(text);
+        final filePath = await TranscriptionStorage.saveTranscription(text);
         
         if (kDebugMode) {
           print('Transcription saved to file: $filePath');
@@ -243,6 +240,7 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
       }
     }
   }
+  
   
   /// Simulate paste command (Meta + V)
   Future<void> _simulatePasteCommand() async {

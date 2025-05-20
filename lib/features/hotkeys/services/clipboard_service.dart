@@ -1,8 +1,7 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:pasteboard/pasteboard.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:keypress_simulator/keypress_simulator.dart';
+import '../../../core/storage/transcription_storage.dart';
 import 'package:flutter/services.dart';
 import '../../../features/recording/data/platform/recording_overlay_platform.dart';
 import '../../../core/utils/sound_player.dart';
@@ -29,13 +28,9 @@ class ClipboardService {
       await Future.delayed(const Duration(milliseconds: 200));
       await _simulatePasteCommand();
       
-      // After pasting, save as a file in the app documents directory for backup
+      // After pasting, save as a file in the dedicated transcriptions directory for backup
       try {
-        final appDir = await getApplicationDocumentsDirectory();
-        final timestamp = DateTime.now().millisecondsSinceEpoch;
-        final filePath = '${appDir.path}/transcription_$timestamp.txt';
-        final file = File(filePath);
-        await file.writeAsString(trimmedText);
+        final filePath = await TranscriptionStorage.saveTranscription(trimmedText);
         
         if (kDebugMode) {
           print('Transcription saved to file: $filePath');
@@ -53,6 +48,7 @@ class ClipboardService {
       await RecordingOverlayPlatform.hideOverlay();
     }
   }
+  
   
   /// Simulate paste command (Meta + V)
   static Future<void> _simulatePasteCommand() async {
