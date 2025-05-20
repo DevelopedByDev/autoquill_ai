@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:autoquill_ai/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:autoquill_ai/features/settings/presentation/bloc/settings_state.dart';
-import 'package:autoquill_ai/features/settings/presentation/widgets/hotkey_settings_section.dart';
-import 'package:autoquill_ai/features/settings/presentation/widgets/models_section.dart';
+import 'package:autoquill_ai/features/settings/presentation/widgets/transcription_hotkey_settings_section.dart';
+import 'package:autoquill_ai/features/settings/presentation/widgets/transcription_models_section.dart';
 
 class TranscriptionSettingsPage extends StatelessWidget {
   const TranscriptionSettingsPage({super.key});
@@ -24,12 +24,12 @@ class TranscriptionSettingsPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Hotkey Settings Section
-              const HotkeySettingsSection(),
+              // Transcription Hotkey Settings Section
+              const TranscriptionHotkeySettingsSection(),
               const SizedBox(height: 32),
               
-              // Models Section
-              const ModelsSection(),
+              // Transcription Models Section
+              const TranscriptionModelsSection(),
             ],
           ),
         );

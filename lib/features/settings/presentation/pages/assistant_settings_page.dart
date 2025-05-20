@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:autoquill_ai/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:autoquill_ai/features/settings/presentation/bloc/settings_state.dart';
+import 'package:autoquill_ai/features/settings/presentation/widgets/assistant_hotkey_settings_section.dart';
+import 'package:autoquill_ai/features/settings/presentation/widgets/assistant_models_section.dart';
 
 class AssistantSettingsPage extends StatelessWidget {
   const AssistantSettingsPage({super.key});
@@ -17,17 +19,23 @@ class AssistantSettingsPage extends StatelessWidget {
         }
       },
       builder: (context, state) {
-        return const SingleChildScrollView(
-          padding: EdgeInsets.all(16.0),
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Assistant Settings',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 16),
-              Text('Assistant settings will be available in a future update.'),
+              const SizedBox(height: 16),
+              
+              // Assistant Hotkey Settings Section
+              const AssistantHotkeySettingsSection(),
+              const SizedBox(height: 32),
+              
+              // Assistant Models Section
+              const AssistantModelsSection(),
             ],
           ),
         );
