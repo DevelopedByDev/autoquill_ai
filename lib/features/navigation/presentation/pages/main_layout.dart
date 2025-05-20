@@ -75,7 +75,7 @@ class _MainLayoutState extends State<MainLayout> {
                 },
                 labelType: NavigationRailLabelType.selected,
                 leading: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  padding: const EdgeInsets.only(top: 24.0, bottom: 6.0),
                   child: Column(
                     children: [
                       // Spacer for top padding

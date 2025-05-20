@@ -95,7 +95,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.fromLTRB(24.0, 8.0, 24.0, 0.0),
       child: Column(  
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

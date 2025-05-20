@@ -19,6 +19,7 @@ abstract class RecordingDataSource {
 class RecordingDataSourceImpl implements RecordingDataSource {
   final AudioRecorder recorder;
   String? _currentRecordingPath;
+  // ignore: unused_field
   bool _isRecording = false;
   bool _isInitialized = false;
   
