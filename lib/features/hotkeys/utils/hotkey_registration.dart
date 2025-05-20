@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
+import 'package:autoquill_ai/core/settings/settings_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'package:autoquill_ai/core/storage/app_storage.dart';
@@ -10,9 +11,6 @@ import '../utils/hotkey_converter.dart';
 class HotkeyRegistration {
   // Cache for converted hotkeys to avoid repeated conversions
   static final Map<String, HotKey> _hotkeyCache = {};
-  
-  // Flag to track if hotkeys have been loaded
-  static bool _hotkeysLoaded = false;
   
   /// Registers a hotkey with the system
   static Future<void> registerHotKey(
@@ -78,41 +76,96 @@ class HotkeyRegistration {
   /// Prepares hotkeys for lazy loading
   /// This method quickly reads hotkeys from storage without registering them
   static Future<void> prepareHotkeys() async {
-    if (_hotkeysLoaded) return;
+    // Clear the cache to ensure we have the latest settings
+    _hotkeyCache.clear();
     
     final stopwatch = Stopwatch()..start();
     
     try {
       final settingsBox = Hive.box('settings');
-      final transcriptionHotkey = settingsBox.get('transcription_hotkey');
-      final assistantHotkey = settingsBox.get('assistant_hotkey');
+      
+      if (kDebugMode) {
+        print('Checking for hotkeys in settings box...');
+        print('Settings box keys: ${settingsBox.keys.toList()}');
+      }
+      
+      // Try multiple ways to get the hotkeys to ensure we find them
+      dynamic transcriptionHotkey = settingsBox.get('transcription_hotkey');
+      dynamic assistantHotkey = settingsBox.get('assistant_hotkey');
+      
+      // If hotkeys are not found, try the settings service
+      if (transcriptionHotkey == null || assistantHotkey == null) {
+        final settingsService = SettingsService();
+        if (transcriptionHotkey == null) {
+          final hotkeyMap = settingsService.getTranscriptionHotkey();
+          if (hotkeyMap != null) {
+            transcriptionHotkey = hotkeyMap;
+            if (kDebugMode) {
+              print('Loaded transcription hotkey from settings service: $transcriptionHotkey');
+            }
+          }
+        }
+        
+        if (assistantHotkey == null) {
+          final hotkeyMap = settingsService.getAssistantHotkey();
+          if (hotkeyMap != null) {
+            assistantHotkey = hotkeyMap;
+            if (kDebugMode) {
+              print('Loaded assistant hotkey from settings service: $assistantHotkey');
+            }
+          }
+        }
+      }
+      
+      if (kDebugMode) {
+        print('Transcription hotkey from settings: $transcriptionHotkey');
+        print('Assistant hotkey from settings: $assistantHotkey');
+      }
       
       // Convert hotkeys and store in cache (fast operation)
       if (transcriptionHotkey != null) {
-        final hotkey = hotKeyConverter(transcriptionHotkey);
-        // Explicitly set the identifier
-        final updatedHotkey = HotKey(
-          key: hotkey.key,
-          modifiers: hotkey.modifiers,
-          scope: hotkey.scope,
-          identifier: 'transcription_hotkey',
-        );
-        _hotkeyCache['transcription_hotkey'] = updatedHotkey;
+        try {
+          final hotkey = hotKeyConverter(transcriptionHotkey);
+          // Explicitly set the identifier
+          final updatedHotkey = HotKey(
+            key: hotkey.key,
+            modifiers: hotkey.modifiers,
+            scope: hotkey.scope,
+            identifier: 'transcription_hotkey',
+          );
+          _hotkeyCache['transcription_hotkey'] = updatedHotkey;
+          
+          if (kDebugMode) {
+            print('Successfully cached transcription hotkey: ${updatedHotkey.toJson()}');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error converting transcription hotkey: $e');
+          }
+        }
       }
       
       if (assistantHotkey != null) {
-        final hotkey = hotKeyConverter(assistantHotkey);
-        // Explicitly set the identifier
-        final updatedHotkey = HotKey(
-          key: hotkey.key,
-          modifiers: hotkey.modifiers,
-          scope: hotkey.scope,
-          identifier: 'assistant_hotkey',
-        );
-        _hotkeyCache['assistant_hotkey'] = updatedHotkey;
+        try {
+          final hotkey = hotKeyConverter(assistantHotkey);
+          // Explicitly set the identifier
+          final updatedHotkey = HotKey(
+            key: hotkey.key,
+            modifiers: hotkey.modifiers,
+            scope: hotkey.scope,
+            identifier: 'assistant_hotkey',
+          );
+          _hotkeyCache['assistant_hotkey'] = updatedHotkey;
+          
+          if (kDebugMode) {
+            print('Successfully cached assistant hotkey: ${updatedHotkey.toJson()}');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error converting assistant hotkey: $e');
+          }
+        }
       }
-      
-      _hotkeysLoaded = true;
       
       if (kDebugMode) {
         print('Prepared hotkeys in ${stopwatch.elapsedMilliseconds}ms');
@@ -187,40 +240,85 @@ class HotkeyRegistration {
     }
   }
   
-  /// Reloads all hotkeys from storage and registers them with the system
-  /// This ensures that any changes to hotkeys take effect immediately
+  /// Reloads all hotkeys from storage and registers them
+  /// This is used when hotkeys are changed in settings
   static Future<void> reloadAllHotkeys({
     required Function(HotKey) keyDownHandler,
     required Function(HotKey) keyUpHandler,
   }) async {
-    final stopwatch = Stopwatch()..start();
-    
     try {
-      if (kDebugMode) {
-        print('Reloading all hotkeys to apply changes immediately');
-      }
+      // First unregister all existing hotkeys to avoid conflicts
+      await hotKeyManager.unregisterAll();
       
-      // Reset the loaded flag to force a fresh load from storage
-      _hotkeysLoaded = false;
+      // Prepare hotkeys from storage
+      await prepareHotkeys();
       
-      // Clear the cache to ensure we get fresh data
-      _hotkeyCache.clear();
+      // Register hotkeys from cache
+      await _registerHotkeyFromCache(
+        'transcription_hotkey',
+        keyDownHandler,
+        keyUpHandler,
+      );
       
-      // Load and register all hotkeys again
-      await loadAndRegisterStoredHotkeys(
-        keyDownHandler: keyDownHandler,
-        keyUpHandler: keyUpHandler,
+      await _registerHotkeyFromCache(
+        'assistant_hotkey',
+        keyDownHandler,
+        keyUpHandler,
       );
       
       if (kDebugMode) {
-        print('Hotkeys reloaded successfully');
+        print('All hotkeys reloaded and registered');
       }
     } catch (e) {
       if (kDebugMode) {
         print('Error reloading hotkeys: $e');
       }
-    } finally {
-      stopwatch.stop();
+    }
+  }
+  
+  /// Ensures hotkeys are properly loaded after onboarding
+  /// This is called when the app starts after onboarding is completed
+  static Future<void> ensureHotkeysLoadedAfterOnboarding() async {
+    try {
+      if (kDebugMode) {
+        print('Ensuring hotkeys are properly loaded after onboarding');
+      }
+      
+      final settingsBox = Hive.box('settings');
+      final settingsService = SettingsService();
+      
+      // Check if transcription hotkey exists in Hive
+      if (settingsBox.get('transcription_hotkey') == null) {
+        // Try to get it from the settings service
+        final hotkeyMap = settingsService.getTranscriptionHotkey();
+        if (hotkeyMap != null) {
+          // Save it to Hive for consistency
+          await settingsBox.put('transcription_hotkey', hotkeyMap);
+          if (kDebugMode) {
+            print('Saved transcription hotkey to Hive from settings service');
+          }
+        }
+      }
+      
+      // Check if assistant hotkey exists in Hive
+      if (settingsBox.get('assistant_hotkey') == null) {
+        // Try to get it from the settings service
+        final hotkeyMap = settingsService.getAssistantHotkey();
+        if (hotkeyMap != null) {
+          // Save it to Hive for consistency
+          await settingsBox.put('assistant_hotkey', hotkeyMap);
+          if (kDebugMode) {
+            print('Saved assistant hotkey to Hive from settings service');
+          }
+        }
+      }
+      
+      // Clear the cache to ensure hotkeys are reloaded
+      _hotkeyCache.clear();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error ensuring hotkeys are loaded after onboarding: $e');
+      }
     }
   }
 }

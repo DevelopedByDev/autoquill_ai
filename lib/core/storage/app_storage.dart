@@ -3,6 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 class AppStorage {
   static const String _settingsBoxName = 'settings';
   static const String _groqKey = 'groq_api_key';
+  static const String _isOnboardingCompletedKey = 'is_onboarding_completed';
 
   static late Box<dynamic> _settingsBox;
 
@@ -37,5 +38,13 @@ class AppStorage {
 
   static Future<void> deleteHotkey(String setting) async {
     await _settingsBox.delete(setting);
+  }
+  
+  static Future<void> setOnboardingCompleted(bool completed) async {
+    await _settingsBox.put(_isOnboardingCompletedKey, completed);
+  }
+  
+  static bool isOnboardingCompleted() {
+    return _settingsBox.get(_isOnboardingCompletedKey, defaultValue: false) as bool;
   }
 }

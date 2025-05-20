@@ -1,6 +1,7 @@
 import 'package:autoquill_ai/features/transcription/presentation/bloc/transcription_bloc.dart';
 import 'package:autoquill_ai/features/recording/domain/repositories/recording_repository.dart';
 import 'package:autoquill_ai/features/navigation/presentation/pages/main_layout.dart';
+import 'package:autoquill_ai/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +14,7 @@ import 'package:window_manager/window_manager.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/stats/stats_service.dart';
+import 'core/settings/settings_service.dart';
 import 'features/settings/presentation/bloc/settings_bloc.dart';
 import 'features/settings/presentation/bloc/settings_event.dart';
 
@@ -22,6 +24,7 @@ import 'features/recording/presentation/bloc/recording_bloc.dart';
 import 'features/transcription/domain/repositories/transcription_repository.dart';
 import 'widgets/hotkey_handler.dart';
 import 'core/utils/sound_player.dart';
+import 'features/hotkeys/utils/hotkey_registration.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -140,6 +143,9 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Initialize the settings service
+    final settingsService = SettingsService();
+    
     return Actions(
       actions: <Type, Action<Intent>>{
         ExampleIntent: ExampleAction(),
@@ -153,18 +159,54 @@ class MainApp extends StatelessWidget {
           create: (_) => SettingsBloc()..add(LoadSettings()),
           child: Builder(
             builder: (context) {
-              // Access the SettingsBloc from the current context
-              final settingsState = context.watch<SettingsBloc>().state;
-              
-              return MaterialApp(
-                debugShowCheckedModeBanner: false,
-                title: 'AutoQuill AI',
-                builder: BotToastInit(),
-                navigatorObservers: [BotToastNavigatorObserver()],
-                theme: shadcnLightTheme,
-                darkTheme: shadcnDarkTheme,
-                themeMode: settingsState.themeMode,
-                home: MultiRepositoryProvider(
+              return ValueListenableBuilder<Box<dynamic>>(
+                valueListenable: settingsService.themeListenable,
+                builder: (context, box, _) {
+                  // Get theme mode from the settings service
+                  final themeMode = settingsService.getThemeMode();
+                  
+                  // Also update the SettingsBloc state if it's different
+                  final settingsState = context.watch<SettingsBloc>().state;
+                  if (settingsState.themeMode != themeMode) {
+                    // This ensures the bloc state stays in sync with the settings
+                    context.read<SettingsBloc>().add(LoadSettings());
+                  }
+                  
+                  return MaterialApp(
+                    debugShowCheckedModeBanner: false,
+                    title: 'AutoQuill AI',
+                    builder: BotToastInit(),
+                    navigatorObservers: [BotToastNavigatorObserver()],
+                    theme: shadcnLightTheme,
+                    darkTheme: shadcnDarkTheme,
+                    themeMode: themeMode,
+                    initialRoute: '/',
+                    routes: {
+                      '/': (context) => _buildHomeWidget(),
+                    },
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildHomeWidget() {
+    // Check if onboarding is completed
+    final bool isOnboardingCompleted = AppStorage.isOnboardingCompleted();
+    
+    if (isOnboardingCompleted) {
+      // If onboarding is completed, ensure hotkeys are properly loaded
+      // This is important to do before showing the main app
+      HotkeyRegistration.ensureHotkeysLoadedAfterOnboarding();
+      
+      // If onboarding is completed, show the main app with all required providers
+      return Builder(
+        builder: (context) {
+          return MultiRepositoryProvider(
             providers: [
               RepositoryProvider<TranscriptionRepository>(
                 create: (_) => di.sl<TranscriptionRepository>(),
@@ -182,18 +224,22 @@ class MainApp extends StatelessWidget {
                 ),
                 BlocProvider(
                   create: (context) => TranscriptionBloc(
-                    repository: context.read(),
+                    repository: context.read<TranscriptionRepository>(),
                   )..add(InitializeTranscription()),
+                ),
+                // Ensure SettingsBloc is available in the main layout
+                BlocProvider(
+                  create: (_) => SettingsBloc()..add(LoadSettings()),
                 ),
               ],
               child: const MainLayout(),
             ),
-          ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
+          );
+        },
+      );
+    } else {
+      // If onboarding is not completed, show the onboarding flow
+      return const OnboardingPage();
+    }
   }
 }

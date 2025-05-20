@@ -32,23 +32,32 @@ class _MainLayoutState extends State<MainLayout> {
     super.initState();
     // Initialize the blocs and repositories in the HotkeyHandler after the first frame is rendered
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final recordingBloc = context.read<RecordingBloc>();
-      final transcriptionBloc = context.read<TranscriptionBloc>();
-      final recordingRepository = context.read<RecordingRepository>();
-      final transcriptionRepository = context.read<TranscriptionRepository>();
+      // Make sure we can access all the required providers
+      if (!mounted) return;
+      
+      try {
+        final recordingBloc = context.read<RecordingBloc>();
+        final transcriptionBloc = context.read<TranscriptionBloc>();
+        final recordingRepository = context.read<RecordingRepository>();
+        final transcriptionRepository = context.read<TranscriptionRepository>();
 
-      HotkeyHandler.setBlocs(recordingBloc, transcriptionBloc,
-          recordingRepository, transcriptionRepository);
+        HotkeyHandler.setBlocs(recordingBloc, transcriptionBloc,
+            recordingRepository, transcriptionRepository);
 
-      // Force reload hotkeys to ensure they're properly registered
-      HotkeyHandler.reloadHotkeys().then((_) {
+        // Force reload hotkeys to ensure they're properly registered
+        HotkeyHandler.reloadHotkeys().then((_) {
+          if (kDebugMode) {
+            print('Hotkeys reloaded after blocs initialization');
+          }
+        });
+
         if (kDebugMode) {
-          print('Hotkeys reloaded after blocs initialization');
+          print('HotkeyHandler initialized with blocs and repositories');
         }
-      });
-
-      if (kDebugMode) {
-        print('HotkeyHandler initialized with blocs and repositories');
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error initializing HotkeyHandler: $e');
+        }
       }
     });
   }

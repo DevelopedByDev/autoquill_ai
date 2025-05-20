@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../../../../core/settings/settings_service.dart';
 import '../../../../core/storage/app_storage.dart';
 import '../../../../widgets/hotkey_handler.dart';
 import 'settings_event.dart';
@@ -38,6 +39,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   Future<void> _onLoadSettings(LoadSettings event, Emitter<SettingsState> emit) async {
     try {
+      final settingsService = SettingsService();
       final apiKey = await AppStorage.getApiKey();
       
       // Load stored hotkeys
@@ -46,14 +48,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       // Load dictionary
       add(LoadDictionary());
       
-      // Load model selections from Hive
-      final settingsBox = Hive.box('settings');
-      final transcriptionModel = settingsBox.get('transcription-model') ?? 'whisper-large-v3';
-      final assistantModel = settingsBox.get('assistant-model') ?? 'llama3-70b-8192';
-      
-      // Load theme mode
-      final themeValue = settingsBox.get('theme_mode');
-      final themeMode = themeValue == 'light' ? ThemeMode.light : ThemeMode.dark;
+      // Load settings from the centralized service
+      final transcriptionModel = settingsService.getTranscriptionModel();
+      final assistantModel = settingsService.getAssistantModel();
+      final themeMode = settingsService.getThemeMode();
       
       emit(state.copyWith(
         apiKey: apiKey,
@@ -289,11 +287,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   // Theme toggle handler
   Future<void> _onToggleThemeMode(ToggleThemeMode event, Emitter<SettingsState> emit) async {
     try {
+      final settingsService = SettingsService();
       final newThemeMode = state.themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
-      final settingsBox = Hive.box('settings');
       
-      // Save theme preference
-      await settingsBox.put('theme_mode', newThemeMode == ThemeMode.dark ? 'dark' : 'light');
+      // Save theme preference using the centralized service
+      await settingsService.setThemeMode(newThemeMode);
       
       emit(state.copyWith(
         themeMode: newThemeMode,

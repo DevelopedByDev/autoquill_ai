@@ -15,7 +15,6 @@ class _TranscriptionPageState extends State<TranscriptionPage> {
 
   @override
   Widget build(BuildContext context) {
-    // We don't need to create a new TranscriptionBloc here, as it's already provided in main.dart
     return BlocConsumer<TranscriptionBloc, TranscriptionState>(
       listener: (context, state) {
         if (state.error != null) {
