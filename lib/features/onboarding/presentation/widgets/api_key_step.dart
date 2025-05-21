@@ -76,10 +76,44 @@ class _ApiKeyStepState extends State<ApiKeyStep> {
                       obscureText: _obscureText,
                       decoration: InputDecoration(
                         hintText: 'Enter your Groq API key',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                        hintStyle: TextStyle(
+                          color: Theme.of(context).hintColor.withValues(alpha: 0.7),
                         ),
-                        prefixIcon: const Icon(Icons.vpn_key),
+                        filled: true,
+                        fillColor: Theme.of(context).colorScheme.surface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).dividerColor,
+                            width: 1.0,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).dividerColor,
+                            width: 1.0,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1.5,
+                          ),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.error,
+                            width: 1.0,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                        prefixIcon: Icon(
+                          Icons.vpn_key,
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                        ),
                         suffixIcon: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -87,6 +121,7 @@ class _ApiKeyStepState extends State<ApiKeyStep> {
                             IconButton(
                               icon: Icon(
                                 _obscureText ? Icons.visibility_off : Icons.visibility,
+                                color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.7),
                               ),
                               onPressed: () {
                                 setState(() {
@@ -97,7 +132,10 @@ class _ApiKeyStepState extends State<ApiKeyStep> {
                             // Clear button
                             if (_apiKeyController.text.isNotEmpty)
                               IconButton(
-                                icon: const Icon(Icons.clear),
+                                icon: Icon(
+                                  Icons.clear,
+                                  color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.7),
+                                ),
                                 onPressed: () {
                                   _apiKeyController.clear();
                                   context.read<OnboardingBloc>().add(
@@ -113,6 +151,10 @@ class _ApiKeyStepState extends State<ApiKeyStep> {
                             : null,
                         // Show loading indicator
                         suffixIconConstraints: const BoxConstraints(minWidth: 100),
+                      ),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                       onChanged: (value) {
                         context.read<OnboardingBloc>().add(
@@ -130,27 +172,33 @@ class _ApiKeyStepState extends State<ApiKeyStep> {
                     
                     // Validate button
                     const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: state.apiKeyStatus != ApiKeyValidationStatus.validating &&
-                                  _apiKeyController.text.isNotEmpty
-                            ? () {
-                                context.read<OnboardingBloc>().add(
-                                  ValidateApiKey(apiKey: _apiKeyController.text),
-                                );
-                              }
-                            : null,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                    Center(
+                      child: SizedBox(
+                        width: 160,
+                        child: ElevatedButton(
+                          onPressed: state.apiKeyStatus != ApiKeyValidationStatus.validating &&
+                                    _apiKeyController.text.isNotEmpty
+                              ? () {
+                                  context.read<OnboardingBloc>().add(
+                                    ValidateApiKey(apiKey: _apiKeyController.text),
+                                  );
+                                }
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: state.apiKeyStatus == ApiKeyValidationStatus.validating
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Text('Validate Key'),
                         ),
-                        child: state.apiKeyStatus == ApiKeyValidationStatus.validating
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Text('Validate Key'),
                       ),
                     ),
                   ],
@@ -204,24 +252,32 @@ class _ApiKeyStepState extends State<ApiKeyStep> {
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.open_in_new),
-                      label: const Text('Go to Groq.com'),
-                      onPressed: () async {
-                        final Uri url = Uri.parse('https://console.groq.com/keys');
-                        try {
-                          await url_launcher.launchUrl(url);
-                        } catch (e) {
-                          // Handle error if URL can't be launched
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Could not open URL')),
-                            );
+                  Center(
+                    child: SizedBox(
+                      width: 160,
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.open_in_new),
+                        label: const Text('groq.com'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onPressed: () async {
+                          final Uri url = Uri.parse('https://console.groq.com/keys');
+                          try {
+                            await url_launcher.launchUrl(url);
+                          } catch (e) {
+                            // Handle error if URL can't be launched
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Could not open URL')),
+                              );
+                            }
                           }
-                        }
-                      },
+                        },
+                      ),
                     ),
                   ),
                 ],

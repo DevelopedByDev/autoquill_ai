@@ -37,7 +37,7 @@ void main() async {
   await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
   await windowManager.setBackgroundColor(Colors.transparent);
   await windowManager.setTitle('AutoQuill AI');
-  await windowManager.setSize(const Size(900, 650));
+  await windowManager.setSize(const Size(800, 850));
   await windowManager.setMinimumSize(const Size(800, 600));
   await windowManager.center();
   await windowManager.show();

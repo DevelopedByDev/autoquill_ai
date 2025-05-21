@@ -237,20 +237,50 @@ class HotkeysStep extends StatelessWidget {
           
           // Current hotkey display
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
+              Container(
+                width: 220,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  border: Border.all(
+                    color: hotkey != null 
+                        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)
+                        : Colors.grey,
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      hotkey != null
-                          ? _formatHotkey(hotkey)
-                          : 'None configured',
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 3,
+                      offset: const Offset(0, 1),
                     ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.keyboard,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        hotkey != null
+                            ? _formatHotkey(hotkey)
+                            : 'None configured',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: hotkey != null 
+                              ? Theme.of(context).colorScheme.onSurface 
+                              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -261,8 +291,10 @@ class HotkeysStep extends StatelessWidget {
           
           // Action buttons
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Expanded(
+              SizedBox(
+                width: 180,
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.keyboard),
                   label: const Text('Record Hotkey'),
@@ -274,16 +306,23 @@ class HotkeysStep extends StatelessWidget {
                   },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               IconButton(
                 onPressed: hotkey != null ? onTestHotkey : null,
                 icon: const Icon(Icons.play_arrow),
                 tooltip: 'Test Hotkey',
                 style: IconButton.styleFrom(
                   backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ],

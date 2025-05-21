@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class OnboardingPage extends StatefulWidget {
-  const OnboardingPage({Key? key}) : super(key: key);
+  const OnboardingPage({super.key});
 
   @override
   State<OnboardingPage> createState() => _OnboardingPageState();
@@ -116,38 +116,51 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           children: [
                             // Back button
                             if (state.currentStep != OnboardingStep.welcome)
-                              TextButton(
-                                onPressed: () {
-                                  context.read<OnboardingBloc>().add(NavigateToPreviousStep());
-                                },
-                                child: const Text('Back'),
+                              SizedBox(
+                                width: 100,
+                                child: TextButton(
+                                  onPressed: () {
+                                    context.read<OnboardingBloc>().add(NavigateToPreviousStep());
+                                  },
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: const Text('Back'),
+                                ),
                               )
                             else
-                              const SizedBox(width: 80),
+                              const SizedBox(width: 100),
                             
                             // Next/Continue button
-                            ElevatedButton(
-                              onPressed: _canProceed(state)
-                                ? () {
-                                    if (state.currentStep == OnboardingStep.preferences) {
-                                      context.read<OnboardingBloc>().add(CompleteOnboarding());
-                                    } else {
-                                      context.read<OnboardingBloc>().add(NavigateToNextStep());
+                            SizedBox(
+                              width: 120,
+                              child: ElevatedButton(
+                                onPressed: _canProceed(state)
+                                  ? () {
+                                      if (state.currentStep == OnboardingStep.preferences) {
+                                        context.read<OnboardingBloc>().add(CompleteOnboarding());
+                                      } else {
+                                        context.read<OnboardingBloc>().add(NavigateToNextStep());
+                                      }
                                     }
-                                  }
-                                : null,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context).colorScheme.primary,
-                                foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24.0,
-                                  vertical: 12.0,
+                                  : null,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+                                  elevation: 2,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
-                              ),
-                              child: Text(
-                                state.currentStep == OnboardingStep.preferences
-                                    ? 'Finish'
-                                    : 'Next',
+                                child: Text(
+                                  state.currentStep == OnboardingStep.preferences
+                                      ? 'Finish'
+                                      : 'Next',
+                                ),
                               ),
                             ),
                           ],

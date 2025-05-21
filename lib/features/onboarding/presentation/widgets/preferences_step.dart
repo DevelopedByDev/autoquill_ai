@@ -136,13 +136,43 @@ class PreferencesStep extends StatelessWidget {
                       DropdownButtonFormField<String>(
                         value: state.transcriptionModel,
                         decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Theme.of(context).colorScheme.surface,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(
+                              color: Theme.of(context).dividerColor,
+                              width: 1.0,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(
+                              color: Theme.of(context).dividerColor,
+                              width: 1.0,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 1.5,
+                            ),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
-                            vertical: 12,
+                            vertical: 16,
                           ),
+                        ),
+                        icon: Icon(
+                          Icons.arrow_drop_down,
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                        ),
+                        dropdownColor: Theme.of(context).colorScheme.surface,
+                        borderRadius: BorderRadius.circular(10),
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                         items: const [
                           DropdownMenuItem(

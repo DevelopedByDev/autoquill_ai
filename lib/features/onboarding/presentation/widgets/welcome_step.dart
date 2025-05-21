@@ -39,7 +39,17 @@ class WelcomeStep extends StatelessWidget {
             
             // Description
             Text(
-              'Your fast AI transcription and assistant app',
+              'Your personal AI scribe and assistant',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            
+            // Description
+            Text(
+              'Insanely fast, super secure and free forever',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
               ),
