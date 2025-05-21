@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class PreferencesStep extends StatelessWidget {
-  const PreferencesStep({Key? key}) : super(key: key);
+  const PreferencesStep({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +29,7 @@ class PreferencesStep extends StatelessWidget {
             Text(
               'Customize AutoQuill AI to work the way you want',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
+                color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
             ),
@@ -177,7 +177,7 @@ class PreferencesStep extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isSelected
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
               : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(

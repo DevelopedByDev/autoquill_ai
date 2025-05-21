@@ -21,7 +21,7 @@ class CompletedStep extends StatelessWidget {
                   width: 120,
                   height: 120,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -46,7 +46,7 @@ class CompletedStep extends StatelessWidget {
                 Text(
                   'AutoQuill AI is ready to help you transcribe and assist',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
+                    color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -126,7 +126,7 @@ class CompletedStep extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -150,7 +150,7 @@ class CompletedStep extends StatelessWidget {
                 Text(
                   'Press $hotkeyText',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
+                    color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
                   ),
                 ),
               ],

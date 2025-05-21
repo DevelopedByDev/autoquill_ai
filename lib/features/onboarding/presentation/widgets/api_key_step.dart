@@ -44,7 +44,7 @@ class _ApiKeyStepState extends State<ApiKeyStep> {
             Text(
               'Enter your Groq API key to power AutoQuill AI',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
+                color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
             ),
