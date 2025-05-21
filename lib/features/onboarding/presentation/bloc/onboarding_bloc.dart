@@ -23,7 +23,7 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     on<CompleteOnboarding>(_onCompleteOnboarding);
     on<NavigateToNextStep>(_onNavigateToNextStep);
     on<NavigateToPreviousStep>(_onNavigateToPreviousStep);
-    on<SkipOnboarding>(_onSkipOnboarding);
+    // SkipOnboarding event removed as skipping is no longer allowed
   }
 
   void _onInitializeOnboarding(
@@ -231,29 +231,7 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     emit(state.copyWith(currentStep: previousStep));
   }
 
-  Future<void> _onSkipOnboarding(
-    SkipOnboarding event,
-    Emitter<OnboardingState> emit,
-  ) async {
-    try {
-      // Save default settings
-      await _saveOnboardingSettings();
-      
-      // Mark onboarding as completed
-      await AppStorage.setOnboardingCompleted(true);
-      
-      // Add a delay to ensure all settings are properly saved before navigation
-      await Future.delayed(const Duration(milliseconds: 500));
-      
-      emit(state.copyWith(currentStep: OnboardingStep.completed));
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error skipping onboarding: $e');
-      }
-      // Still try to complete onboarding even if there was an error
-      emit(state.copyWith(currentStep: OnboardingStep.completed));
-    }
-  }
+  // _onSkipOnboarding method removed as skipping is no longer allowed
 
   Future<void> _saveOnboardingSettings() async {
     // Use the settings service for all settings

@@ -68,34 +68,23 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                    Theme.of(context).colorScheme.background,
+                    Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                    Theme.of(context).colorScheme.surface,
                   ],
                 ),
               ),
               child: SafeArea(
                 child: Column(
                   children: [
-                    // Skip button at the top right
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: TextButton(
-                          onPressed: () {
-                            context.read<OnboardingBloc>().add(SkipOnboarding());
-                          },
-                          child: const Text('Skip'),
-                        ),
-                      ),
-                    ),
+                    // Add sufficient padding at the top to avoid window control buttons
+                    const SizedBox(height: 40),
                     
                     // Progress indicator
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24.0),
                       child: LinearProgressIndicator(
                         value: (state.currentStep.index) / (OnboardingStep.completed.index - 1),
-                        backgroundColor: Colors.grey.withOpacity(0.3),
+                        backgroundColor: Colors.grey.withValues(alpha: 0.3),
                         valueColor: AlwaysStoppedAnimation<Color>(
                           Theme.of(context).colorScheme.primary,
                         ),

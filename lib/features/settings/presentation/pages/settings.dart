@@ -52,9 +52,6 @@ class _SettingsPageState extends State<SettingsPage> {
       },
       builder: (context, state) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Settings'),
-          ),
           body: Row(
             children: [
               // Navigation Rail

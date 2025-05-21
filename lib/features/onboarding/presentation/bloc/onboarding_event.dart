@@ -82,4 +82,4 @@ class NavigateToNextStep extends OnboardingEvent {}
 
 class NavigateToPreviousStep extends OnboardingEvent {}
 
-class SkipOnboarding extends OnboardingEvent {}
+// SkipOnboarding event removed as skipping is no longer allowed

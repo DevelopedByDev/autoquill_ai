@@ -200,7 +200,7 @@ class HotkeysStep extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -224,7 +224,7 @@ class HotkeysStep extends StatelessWidget {
                     Text(
                       description,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
+                        color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -283,7 +283,7 @@ class HotkeysStep extends StatelessWidget {
                 icon: const Icon(Icons.play_arrow),
                 tooltip: 'Test Hotkey',
                 style: IconButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                 ),
               ),
             ],
