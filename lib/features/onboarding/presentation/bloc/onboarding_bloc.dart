@@ -12,7 +12,7 @@ import 'package:http/http.dart' as http;
 class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
   OnboardingBloc() : super(const OnboardingState()) {
     on<InitializeOnboarding>(_onInitializeOnboarding);
-    on<UpdateSelectedTools>(_onUpdateSelectedTools);
+    // UpdateSelectedTools event removed as both tools are always enabled
     on<UpdateApiKey>(_onUpdateApiKey);
     on<ValidateApiKey>(_onValidateApiKey);
     on<UpdateTranscriptionHotkey>(_onUpdateTranscriptionHotkey);
@@ -49,15 +49,7 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     ));
   }
 
-  void _onUpdateSelectedTools(
-    UpdateSelectedTools event,
-    Emitter<OnboardingState> emit,
-  ) {
-    emit(state.copyWith(
-      transcriptionEnabled: event.transcriptionEnabled,
-      assistantEnabled: event.assistantEnabled,
-    ));
-  }
+  // _onUpdateSelectedTools removed as both tools are always enabled
 
   void _onUpdateApiKey(
     UpdateApiKey event,
@@ -189,9 +181,6 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
 
     switch (currentStep) {
       case OnboardingStep.welcome:
-        nextStep = OnboardingStep.chooseTools;
-        break;
-      case OnboardingStep.chooseTools:
         nextStep = OnboardingStep.apiKey;
         break;
       case OnboardingStep.apiKey:
@@ -225,11 +214,8 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
       case OnboardingStep.welcome:
         // Already at the first step
         return;
-      case OnboardingStep.chooseTools:
-        previousStep = OnboardingStep.welcome;
-        break;
       case OnboardingStep.apiKey:
-        previousStep = OnboardingStep.chooseTools;
+        previousStep = OnboardingStep.welcome;
         break;
       case OnboardingStep.hotkeys:
         previousStep = OnboardingStep.apiKey;
@@ -281,7 +267,8 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     }
 
     // Save hotkeys - use direct Hive access to ensure they're saved correctly
-    if (state.transcriptionEnabled && state.transcriptionHotkey != null) {
+    // Both transcription and assistant are always enabled now
+    if (state.transcriptionHotkey != null) {
       // Save using both methods to ensure compatibility
       await settingsService.setTranscriptionHotkey(state.transcriptionHotkey!);
       
@@ -294,7 +281,7 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
       }
     }
     
-    if (state.assistantEnabled && state.assistantHotkey != null) {
+    if (state.assistantHotkey != null) {
       // Save using both methods to ensure compatibility
       await settingsService.setAssistantHotkey(state.assistantHotkey!);
       

@@ -4,7 +4,7 @@ import 'package:autoquill_ai/features/onboarding/presentation/bloc/onboarding_bl
 import 'package:autoquill_ai/features/onboarding/presentation/bloc/onboarding_event.dart';
 import 'package:autoquill_ai/features/onboarding/presentation/bloc/onboarding_state.dart';
 import 'package:autoquill_ai/features/onboarding/presentation/widgets/api_key_step.dart';
-import 'package:autoquill_ai/features/onboarding/presentation/widgets/choose_tools_step.dart';
+// Choose Tools step removed
 import 'package:autoquill_ai/features/onboarding/presentation/widgets/completed_step.dart';
 import 'package:autoquill_ai/features/onboarding/presentation/widgets/hotkeys_step.dart';
 import 'package:autoquill_ai/features/onboarding/presentation/widgets/preferences_step.dart';
@@ -109,7 +109,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         physics: const NeverScrollableScrollPhysics(),
                         children: const [
                           WelcomeStep(),
-                          ChooseToolsStep(),
+                          // ChooseToolsStep removed
                           ApiKeyStep(),
                           HotkeysStep(),
                           PreferencesStep(),
@@ -178,8 +178,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     switch (state.currentStep) {
       case OnboardingStep.welcome:
         return true;
-      case OnboardingStep.chooseTools:
-        return state.canProceedFromToolSelection;
+      // Choose Tools step removed
       case OnboardingStep.apiKey:
         return state.canProceedFromApiKey;
       case OnboardingStep.hotkeys:

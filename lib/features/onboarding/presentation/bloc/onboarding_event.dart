@@ -11,18 +11,7 @@ abstract class OnboardingEvent extends Equatable {
 
 class InitializeOnboarding extends OnboardingEvent {}
 
-class UpdateSelectedTools extends OnboardingEvent {
-  final bool transcriptionEnabled;
-  final bool assistantEnabled;
-
-  const UpdateSelectedTools({
-    required this.transcriptionEnabled,
-    required this.assistantEnabled,
-  });
-
-  @override
-  List<Object?> get props => [transcriptionEnabled, assistantEnabled];
-}
+// UpdateSelectedTools event removed - both tools are always enabled
 
 class UpdateApiKey extends OnboardingEvent {
   final String apiKey;

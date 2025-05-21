@@ -4,7 +4,6 @@ import 'package:hotkey_manager/hotkey_manager.dart';
 
 enum OnboardingStep {
   welcome,
-  chooseTools,
   apiKey,
   hotkeys,
   preferences,
@@ -69,7 +68,8 @@ class OnboardingState extends Equatable {
     );
   }
 
-  bool get canProceedFromToolSelection => transcriptionEnabled || assistantEnabled;
+  // Both tools are always enabled now
+  // No need for tool selection validation
   
   bool get canProceedFromApiKey => apiKeyStatus == ApiKeyValidationStatus.valid;
   
