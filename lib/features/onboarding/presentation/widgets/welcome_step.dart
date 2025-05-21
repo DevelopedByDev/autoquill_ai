@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class WelcomeStep extends StatelessWidget {
-  const WelcomeStep({Key? key}) : super(key: key);
+  const WelcomeStep({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +16,7 @@ class WelcomeStep extends StatelessWidget {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Icon(
@@ -41,7 +41,7 @@ class WelcomeStep extends StatelessWidget {
             Text(
               'Your fast AI transcription and assistant app',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
+                color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
             ),
@@ -87,7 +87,7 @@ class WelcomeStep extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
@@ -110,7 +110,7 @@ class WelcomeStep extends StatelessWidget {
               Text(
                 description,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
+                  color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
                 ),
               ),
             ],
