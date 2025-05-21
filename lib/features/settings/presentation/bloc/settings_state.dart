@@ -24,6 +24,9 @@ class SettingsState extends Equatable {
   
   // Dictionary of words that are harder for models to spell
   final List<String> dictionary;
+  
+  // Screenshot toggle for assistant mode
+  final bool assistantScreenshotEnabled;
 
   const SettingsState({
     this.apiKey,
@@ -37,6 +40,7 @@ class SettingsState extends Equatable {
     this.assistantModel = 'llama3-70b-8192',
     this.themeMode = ThemeMode.dark,
     this.dictionary = const [],
+    this.assistantScreenshotEnabled = true,
   });
 
   SettingsState copyWith({
@@ -51,6 +55,7 @@ class SettingsState extends Equatable {
     String? assistantModel,
     ThemeMode? themeMode,
     List<String>? dictionary,
+    bool? assistantScreenshotEnabled,
   }) {
     return SettingsState(
       apiKey: apiKey ?? this.apiKey,
@@ -64,6 +69,7 @@ class SettingsState extends Equatable {
       assistantModel: assistantModel ?? this.assistantModel,
       themeMode: themeMode ?? this.themeMode,
       dictionary: dictionary ?? this.dictionary,
+      assistantScreenshotEnabled: assistantScreenshotEnabled ?? this.assistantScreenshotEnabled,
     );
   }
 
@@ -80,5 +86,6 @@ class SettingsState extends Equatable {
         recordingFor,
         currentRecordedHotkey,
         storedHotkeys,
+        assistantScreenshotEnabled,
       ];
 }

@@ -96,3 +96,5 @@ class RemoveWordFromDictionary extends SettingsEvent {
 
 class ToggleThemeMode extends SettingsEvent {}
 
+class ToggleAssistantScreenshot extends SettingsEvent {}
+

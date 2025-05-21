@@ -354,8 +354,11 @@ class AssistantService {
       final String content;
       String? contextText;
       
-      // Extract visible text from the active application screen using OCR (macOS only)
-      if (Platform.isMacOS) {
+      // Check if screenshot feature is enabled
+      final screenshotEnabled = Hive.box('settings').get('assistant_screenshot_enabled', defaultValue: true) as bool;
+      
+      // Extract visible text from the active application screen using OCR (macOS only) if enabled
+      if (Platform.isMacOS && screenshotEnabled) {
         try {
           BotToast.showText(text: 'Capturing screen for context...');
           contextText = await _accessibilityRepository.extractVisibleText();

@@ -31,6 +31,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     // Theme events
     on<ToggleThemeMode>(_onToggleThemeMode);
     
+    // Assistant screenshot toggle event
+    on<ToggleAssistantScreenshot>(_onToggleAssistantScreenshot);
+    
     // Dictionary events
     on<LoadDictionary>(_onLoadDictionary);
     on<AddWordToDictionary>(_onAddWordToDictionary);
@@ -53,11 +56,15 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       final assistantModel = settingsService.getAssistantModel();
       final themeMode = settingsService.getThemeMode();
       
+      // Load assistant screenshot setting
+      final assistantScreenshotEnabled = Hive.box('settings').get('assistant_screenshot_enabled', defaultValue: true) as bool;
+      
       emit(state.copyWith(
         apiKey: apiKey,
         transcriptionModel: transcriptionModel,
         assistantModel: assistantModel,
         themeMode: themeMode,
+        assistantScreenshotEnabled: assistantScreenshotEnabled,
       ));
     } catch (e) {
       emit(state.copyWith(error: e.toString()));
@@ -295,6 +302,24 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       
       emit(state.copyWith(
         themeMode: newThemeMode,
+        error: null,
+      ));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+  
+  // Toggle assistant screenshot handler
+  Future<void> _onToggleAssistantScreenshot(ToggleAssistantScreenshot event, Emitter<SettingsState> emit) async {
+    try {
+      final newValue = !state.assistantScreenshotEnabled;
+      
+      // Save the setting to Hive
+      final settingsBox = Hive.box('settings');
+      await settingsBox.put('assistant_screenshot_enabled', newValue);
+      
+      emit(state.copyWith(
+        assistantScreenshotEnabled: newValue,
         error: null,
       ));
     } catch (e) {

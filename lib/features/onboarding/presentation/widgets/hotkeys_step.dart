@@ -94,7 +94,7 @@ class HotkeysStep extends StatelessWidget {
                   return const SizedBox.shrink();
                 }
                 
-                return _buildHotkeyCard(
+                final hotkeyCard = _buildHotkeyCard(
                   context,
                   icon: Icons.chat_bubble_outline,
                   title: 'Assistant Hotkey',
@@ -115,6 +115,51 @@ class HotkeysStep extends StatelessWidget {
                     );
                   },
                 );
+                
+                // Add screenshot toggle if assistant is enabled
+                if (state.assistantEnabled) {
+                  final screenshotToggle = Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Theme.of(context).dividerColor,
+                      ),
+                    ),
+                    child: BlocBuilder<OnboardingBloc, OnboardingState>(
+                      buildWhen: (previous, current) => 
+                        previous.assistantScreenshotEnabled != current.assistantScreenshotEnabled,
+                      builder: (context, screenshotState) {
+                        return SwitchListTile(
+                          title: const Text('Auto-capture screenshot'),
+                          subtitle: const Text(
+                            'Automatically take a screenshot when assistant is activated to provide visual context',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                          value: screenshotState.assistantScreenshotEnabled,
+                          onChanged: (value) {
+                            context.read<OnboardingBloc>().add(
+                              UpdateAssistantScreenshotPreference(enabled: value),
+                            );
+                          },
+                          dense: true,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                        );
+                      },
+                    ),
+                  );
+                  
+                  return Column(
+                    children: [
+                      hotkeyCard,
+                      const SizedBox(height: 16),
+                      screenshotToggle,
+                    ],
+                  );
+                }
+                
+                return hotkeyCard;
               },
             ),
             

@@ -76,6 +76,15 @@ class UpdateTranscriptionModel extends OnboardingEvent {
   List<Object?> get props => [modelName];
 }
 
+class UpdateAssistantScreenshotPreference extends OnboardingEvent {
+  final bool enabled;
+
+  const UpdateAssistantScreenshotPreference({required this.enabled});
+
+  @override
+  List<Object?> get props => [enabled];
+}
+
 class CompleteOnboarding extends OnboardingEvent {}
 
 class NavigateToNextStep extends OnboardingEvent {}

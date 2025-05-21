@@ -28,6 +28,7 @@ class OnboardingState extends Equatable {
   final ThemeMode themeMode;
   final bool autoCopyEnabled;
   final String transcriptionModel;
+  final bool assistantScreenshotEnabled;
 
   const OnboardingState({
     this.currentStep = OnboardingStep.welcome,
@@ -40,6 +41,7 @@ class OnboardingState extends Equatable {
     this.themeMode = ThemeMode.system,
     this.autoCopyEnabled = true,
     this.transcriptionModel = 'whisper-large-v3',
+    this.assistantScreenshotEnabled = true,
   });
 
   OnboardingState copyWith({
@@ -53,6 +55,7 @@ class OnboardingState extends Equatable {
     ThemeMode? themeMode,
     bool? autoCopyEnabled,
     String? transcriptionModel,
+    bool? assistantScreenshotEnabled,
   }) {
     return OnboardingState(
       currentStep: currentStep ?? this.currentStep,
@@ -65,6 +68,7 @@ class OnboardingState extends Equatable {
       themeMode: themeMode ?? this.themeMode,
       autoCopyEnabled: autoCopyEnabled ?? this.autoCopyEnabled,
       transcriptionModel: transcriptionModel ?? this.transcriptionModel,
+      assistantScreenshotEnabled: assistantScreenshotEnabled ?? this.assistantScreenshotEnabled,
     );
   }
 
@@ -91,5 +95,6 @@ class OnboardingState extends Equatable {
     themeMode,
     autoCopyEnabled,
     transcriptionModel,
+    assistantScreenshotEnabled,
   ];
 }

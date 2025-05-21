@@ -20,6 +20,7 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     on<UpdateThemePreference>(_onUpdateThemePreference);
     on<UpdateAutoCopyPreference>(_onUpdateAutoCopyPreference);
     on<UpdateTranscriptionModel>(_onUpdateTranscriptionModel);
+    on<UpdateAssistantScreenshotPreference>(_onUpdateAssistantScreenshotPreference);
     on<CompleteOnboarding>(_onCompleteOnboarding);
     on<NavigateToNextStep>(_onNavigateToNextStep);
     on<NavigateToPreviousStep>(_onNavigateToPreviousStep);
@@ -146,6 +147,13 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     Emitter<OnboardingState> emit,
   ) {
     emit(state.copyWith(transcriptionModel: event.modelName));
+  }
+
+  void _onUpdateAssistantScreenshotPreference(
+    UpdateAssistantScreenshotPreference event,
+    Emitter<OnboardingState> emit,
+  ) {
+    emit(state.copyWith(assistantScreenshotEnabled: event.enabled));
   }
 
   Future<void> _onCompleteOnboarding(
@@ -283,6 +291,9 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     // Save transcription model
     await settingsService.setTranscriptionModel(state.transcriptionModel);
     await AppStorage.settingsBox.put('transcription-model', state.transcriptionModel);
+    
+    // Save assistant screenshot preference
+    await AppStorage.settingsBox.put('assistant_screenshot_enabled', state.assistantScreenshotEnabled);
     
     // Add a longer delay to ensure all settings are written before navigation
     await Future.delayed(const Duration(milliseconds: 500));
