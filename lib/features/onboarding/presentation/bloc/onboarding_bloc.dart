@@ -32,14 +32,14 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
   ) {
     // Set default hotkeys
     final defaultTranscriptionHotkey = HotKey(
-      key: LogicalKeyboardKey.space,
-      modifiers: [HotKeyModifier.alt],
+      key: LogicalKeyboardKey.keyZ,
+      modifiers: [HotKeyModifier.alt, HotKeyModifier.shift],
       scope: HotKeyScope.system,
     );
     
     final defaultAssistantHotkey = HotKey(
-      key: LogicalKeyboardKey.keyA,
-      modifiers: [HotKeyModifier.alt],
+      key: LogicalKeyboardKey.keyS,
+      modifiers: [HotKeyModifier.alt, HotKeyModifier.shift],
       scope: HotKeyScope.system,
     );
 
