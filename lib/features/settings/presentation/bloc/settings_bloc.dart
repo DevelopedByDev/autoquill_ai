@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import '../../../../core/constants/language_codes.dart';
 
 import '../../../../core/settings/settings_service.dart';
 import '../../../../core/storage/app_storage.dart';
@@ -10,6 +11,7 @@ import 'settings_event.dart';
 import 'settings_state.dart';
 
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
+  final _box = Hive.box('settings');
   SettingsBloc() : super(const SettingsState()) {
     on<LoadSettings>(_onLoadSettings);
     on<SaveApiKey>(_onSaveApiKey);
@@ -38,6 +40,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<LoadDictionary>(_onLoadDictionary);
     on<AddWordToDictionary>(_onAddWordToDictionary);
     on<RemoveWordFromDictionary>(_onRemoveWordFromDictionary);
+    
+    // Language selection event
+    on<SaveLanguage>(_onSaveLanguage);
   }
 
   Future<void> _onLoadSettings(LoadSettings event, Emitter<SettingsState> emit) async {
@@ -57,7 +62,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       final themeMode = settingsService.getThemeMode();
       
       // Load assistant screenshot setting
-      final assistantScreenshotEnabled = Hive.box('settings').get('assistant_screenshot_enabled', defaultValue: true) as bool;
+      final assistantScreenshotEnabled = _box.get('assistant_screenshot_enabled', defaultValue: true) as bool;
+      
+      // Load selected language
+      final savedLanguageCode = _box.get('selected_language_code', defaultValue: '') as String;
+      final savedLanguageName = _box.get('selected_language_name', defaultValue: 'Auto-detect') as String;
       
       emit(state.copyWith(
         apiKey: apiKey,
@@ -65,6 +74,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         assistantModel: assistantModel,
         themeMode: themeMode,
         assistantScreenshotEnabled: assistantScreenshotEnabled,
+        selectedLanguage: LanguageCode(name: savedLanguageName, code: savedLanguageCode),
       ));
     } catch (e) {
       emit(state.copyWith(error: e.toString()));
@@ -97,6 +107,16 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   void _onToggleApiKeyVisibility(ToggleApiKeyVisibility event, Emitter<SettingsState> emit) {
     emit(state.copyWith(isApiKeyVisible: !state.isApiKeyVisible));
+  }
+  
+  Future<void> _onSaveLanguage(SaveLanguage event, Emitter<SettingsState> emit) async {
+    try {
+      await _box.put('selected_language_code', event.language.code);
+      await _box.put('selected_language_name', event.language.name);
+      emit(state.copyWith(selectedLanguage: event.language));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
   }
   
   // Hotkey management methods

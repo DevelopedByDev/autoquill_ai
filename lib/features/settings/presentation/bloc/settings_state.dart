@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
+import 'package:autoquill_ai/core/constants/language_codes.dart';
 
 class SettingsState extends Equatable {
   final String? apiKey;
@@ -27,6 +28,7 @@ class SettingsState extends Equatable {
   
   // Screenshot toggle for assistant mode
   final bool assistantScreenshotEnabled;
+  final LanguageCode selectedLanguage;
 
   const SettingsState({
     this.apiKey,
@@ -41,6 +43,7 @@ class SettingsState extends Equatable {
     this.themeMode = ThemeMode.dark,
     this.dictionary = const [],
     this.assistantScreenshotEnabled = true,
+    this.selectedLanguage = const LanguageCode(name: 'Auto-detect', code: ''),
   });
 
   SettingsState copyWith({
@@ -56,6 +59,7 @@ class SettingsState extends Equatable {
     ThemeMode? themeMode,
     List<String>? dictionary,
     bool? assistantScreenshotEnabled,
+    LanguageCode? selectedLanguage,
   }) {
     return SettingsState(
       apiKey: apiKey ?? this.apiKey,
@@ -70,6 +74,7 @@ class SettingsState extends Equatable {
       themeMode: themeMode ?? this.themeMode,
       dictionary: dictionary ?? this.dictionary,
       assistantScreenshotEnabled: assistantScreenshotEnabled ?? this.assistantScreenshotEnabled,
+      selectedLanguage: selectedLanguage ?? this.selectedLanguage,
     );
   }
 
@@ -87,5 +92,6 @@ class SettingsState extends Equatable {
         currentRecordedHotkey,
         storedHotkeys,
         assistantScreenshotEnabled,
+        selectedLanguage,
       ];
 }

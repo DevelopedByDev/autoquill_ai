@@ -36,9 +36,10 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
       throw Exception('Invalid audio file format');
     }
 
-    // Get the selected transcription model from settings, default to whisper-large-v3 if not set
+    // Get the selected transcription model and language from settings
     final settingsBox = Hive.box('settings');
     final selectedModel = settingsBox.get('transcription-model') ?? 'whisper-large-v3';
+    final selectedLanguageCode = settingsBox.get('selected_language_code') ?? '';
     
     // Get dictionary words from settings
     final List<dynamic>? storedDictionary = settingsBox.get('dictionary');
@@ -64,6 +65,11 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
       ..fields['model'] = selectedModel
       ..fields['temperature'] = '0'
       ..fields['response_format'] = 'verbose_json';
+      
+    // Add language code if a specific language is selected (not auto-detect)
+    if (selectedLanguageCode.isNotEmpty) {
+      request.fields['language'] = selectedLanguageCode;
+    }
       
     // Add prompt if dictionary words exist
     if (prompt != null && prompt.isNotEmpty) {

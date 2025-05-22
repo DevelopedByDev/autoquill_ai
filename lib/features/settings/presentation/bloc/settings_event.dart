@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
+import 'package:autoquill_ai/core/constants/language_codes.dart';
 
 abstract class SettingsEvent extends Equatable {
   const SettingsEvent();
@@ -97,4 +98,12 @@ class RemoveWordFromDictionary extends SettingsEvent {
 class ToggleThemeMode extends SettingsEvent {}
 
 class ToggleAssistantScreenshot extends SettingsEvent {}
+
+class SaveLanguage extends SettingsEvent {
+  final LanguageCode language;
+  const SaveLanguage(this.language);
+
+  @override
+  List<Object?> get props => [language];
+}
 
