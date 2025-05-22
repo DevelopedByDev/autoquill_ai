@@ -22,6 +22,8 @@ PODS:
     - FlutterMacOS
   - record_darwin (1.0.0):
     - FlutterMacOS
+  - screen_capturer_macos (0.0.1):
+    - FlutterMacOS
   - screen_retriever_macos (0.0.1):
     - FlutterMacOS
   - url_launcher_macos (0.0.1):
@@ -40,6 +42,7 @@ DEPENDENCIES:
   - pasteboard (from `Flutter/ephemeral/.symlinks/plugins/pasteboard/macos`)
   - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
   - record_darwin (from `Flutter/ephemeral/.symlinks/plugins/record_darwin/macos`)
+  - screen_capturer_macos (from `Flutter/ephemeral/.symlinks/plugins/screen_capturer_macos/macos`)
   - screen_retriever_macos (from `Flutter/ephemeral/.symlinks/plugins/screen_retriever_macos/macos`)
   - url_launcher_macos (from `Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos`)
   - window_manager (from `Flutter/ephemeral/.symlinks/plugins/window_manager/macos`)
@@ -69,6 +72,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin
   record_darwin:
     :path: Flutter/ephemeral/.symlinks/plugins/record_darwin/macos
+  screen_capturer_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/screen_capturer_macos/macos
   screen_retriever_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/screen_retriever_macos/macos
   url_launcher_macos:
@@ -88,6 +93,7 @@ SPEC CHECKSUMS:
   pasteboard: 9b69dba6fedbb04866be632205d532fe2f6b1d99
   path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
   record_darwin: a0d515a0ef78c440c123ea3ac76184c9927a94d6
+  screen_capturer_macos: e91a66e1eeefd5e4fe068bb1bffc053cc34b63b8
   screen_retriever_macos: 776e0fa5d42c6163d2bf772d22478df4b302b161
   url_launcher_macos: c82c93949963e55b228a30115bd219499a6fe404
   window_manager: 3a1844359a6295ab1e47659b1a777e36773cd6e8

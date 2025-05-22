@@ -9,6 +9,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   keypress_simulator_windows
   pasteboard
   record_windows
+  screen_capturer_windows
   screen_retriever_windows
   url_launcher_windows
   window_manager

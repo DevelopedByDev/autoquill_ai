@@ -1,21 +1,7 @@
-import 'package:flutter/services.dart';
-import 'dart:io';
+// This file is kept as a placeholder but its functionality has been replaced by the screen_capturer package
+// The native OCR implementation has been removed in favor of sending screenshots directly to Groq API
 
-/// Platform-specific implementation for accessibility features
+/// This class is no longer used but kept for reference
 class AccessibilityPlatform {
-  static const MethodChannel _channel = MethodChannel('com.autoquill.recording_overlay');
-  
-  /// Extracts visible text from the active application screen using OCR (macOS only)
-  static Future<String> extractVisibleText() async {
-    if (!Platform.isMacOS) {
-      return 'Text extraction is only supported on macOS';
-    }
-    
-    try {
-      final String result = await _channel.invokeMethod('extractVisibleText');
-      return result;
-    } on PlatformException catch (e) {
-      return 'Failed to extract text: ${e.message}';
-    }
-  }
+  // No functionality - implementation moved to AccessibilityRepository using screen_capturer package
 }

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:bot_toast/bot_toast.dart';
@@ -352,37 +351,53 @@ class AssistantService {
       
       // Prepare the message content
       final String content;
-      String? contextText;
       
       // Check if screenshot feature is enabled
       final screenshotEnabled = Hive.box('settings').get('assistant_screenshot_enabled', defaultValue: true) as bool;
       
-      // Extract visible text from the active application screen using OCR (macOS only) if enabled
-      if (Platform.isMacOS && screenshotEnabled) {
+      // Variables for screenshot handling
+      String? screenshotPath;
+      String? screenshotBase64;
+      
+      // Capture screenshot if enabled
+      if (screenshotEnabled) {
         try {
           BotToast.showText(text: 'Capturing screen for context...');
-          contextText = await _accessibilityRepository.extractVisibleText();
-          if (kDebugMode) {
-            print('Extracted context from screen: $contextText');
-          }
           
-          if (contextText.contains('Error:')) {
+          // Capture screenshot using the new cross-platform implementation
+          screenshotPath = await _accessibilityRepository.captureScreenshot();
+          
+          if (screenshotPath == null) {
             BotToast.showText(
-              text: 'Could not capture screen content. Using only selected text.',
+              text: 'Could not capture screenshot. Using only text input.',
               duration: const Duration(seconds: 3),
             );
           } else {
-            BotToast.showText(
-              text: 'Successfully captured screen content for context.',
-              duration: const Duration(seconds: 2),
-            );
+            // Convert screenshot to base64
+            screenshotBase64 = await _accessibilityRepository.imageToBase64(screenshotPath);
+            
+            if (screenshotBase64 == null) {
+              BotToast.showText(
+                text: 'Could not process screenshot. Using only text input.',
+                duration: const Duration(seconds: 3),
+              );
+            } else {
+              BotToast.showText(
+                text: 'Successfully captured screenshot for context.',
+                duration: const Duration(seconds: 2),
+              );
+              
+              if (kDebugMode) {
+                print('Screenshot captured and encoded: $screenshotPath');
+              }
+            }
           }
         } catch (e) {
           if (kDebugMode) {
-            print('Error extracting visible text: $e');
+            print('Error capturing screenshot: $e');
           }
           BotToast.showText(
-            text: 'Error capturing screen content: ${e.toString()}',
+            text: 'Error capturing screenshot: ${e.toString()}',
             duration: const Duration(seconds: 3),
           );
         }
@@ -395,97 +410,106 @@ class AssistantService {
         content = transcribedText;
       }
       
+      // Get the selected assistant model from settings
+      final settingsBox = Hive.box('settings');
+      final selectedModel = settingsBox.get('assistant-model') ?? 'meta-llama/llama-4-scout-17b-16e-instruct';
+      
       // Prepare the request body
       final Map<String, dynamic> requestBody;
       
-      // Get the selected assistant model from settings
-      final settingsBox = Hive.box('settings');
-      final selectedModel = settingsBox.get('assistant-model') ?? 'llama3-70b-8192';
-      
-      if (selectedText != null) {
-        // Edit mode - use system prompt for text editing
-        final List<Map<String, String>> messages = [
+      // Check if we have a screenshot to include in the request
+      if (screenshotBase64 != null) {
+        // Using multimodal API format with image
+        final List<Map<String, dynamic>> messages = [
           {
             'role': 'system',
-            'content': 'You are a text editor that rewrites text based on instructions. CRITICAL: Your response MUST contain ONLY the edited text with ABSOLUTELY NO introductory phrases, NO explanations, NO "Here is the rewritten text", NO comments about what you did, and NO concluding remarks. Do not start with "Here", "I", or any other introductory word. Just give the edited text directly. The user will only see your exact output, so it must be ready to use immediately.'
+            'content': selectedText != null
+                ? 'You are a text editor that rewrites text based on instructions and visual context. Your response MUST contain ONLY the edited text with NO introductory phrases or explanations.'
+                : 'You are a helpful text generation assistant that uses visual context to inform your responses. Your response MUST contain ONLY the generated text with NO introductory phrases or explanations.'
           },
           {
             'role': 'user',
-            'content': 'I will give you instructions followed by text to edit. The format will be "[INSTRUCTIONS]: [TEXT]". Only return the edited text with no additional comments or explanations. Do not start with "Here", "I", or any other introductory word or phrase.'
-          },
-          {
-            'role': 'assistant',
-            'content': 'I understand. I will only return the edited text with no additional comments or explanations.'
+            'content': [
+              {
+                'type': 'text',
+                'text': selectedText != null
+                    ? 'I will give you instructions followed by text to edit. The format will be "[INSTRUCTIONS]: [TEXT]". The screenshot shows what is on my screen for context. Only return the edited text with no additional comments or explanations. Here is my request: $content'
+                    : 'I need you to generate text based on the following instructions. The screenshot shows what is on my screen for context. Only return the generated text with no additional comments or explanations. Here is my request: $content'
+              },
+              {
+                'type': 'image_url',
+                'image_url': {
+                  'url': 'data:image/png;base64,$screenshotBase64'
+                }
+              }
+            ]
           }
         ];
-        
-        // Add context from screen if available
-        if (contextText != null && contextText.isNotEmpty && !contextText.contains('Error:')) {
-          messages.add({
-            'role': 'user',
-            'content': 'Here is some additional context from what is visible on my screen. Use this to inform your edits if relevant:\n\n$contextText. If there are names, dates, emails, pay extra attention as they may be relevant to the instructions.'
-          });
-          
-          messages.add({
-            'role': 'assistant',
-            'content': 'I understand the context from your screen. I will use it to inform my edits if relevant.'
-          });
-        }
-        
-        // Add the final user instruction with content
-        messages.add({
-          'role': 'user',
-          'content': 'IMPORTANT: Your response must start with the edited text directly. Do not include any preamble like "Here is" or "I have". $content'
-        });
         
         requestBody = {
           'model': selectedModel,
           'messages': messages,
-          'temperature': 0.2, // Even lower temperature for more predictable output
-          'max_tokens': 2000 // Ensure we have enough tokens for the response
+          'temperature': 0.2,
+          'max_completion_tokens': 2000,
+          'stream': false
         };
       } else {
-        // Generation mode - use system prompt for text generation
-        final List<Map<String, String>> messages = [
-          {
-            'role': 'system',
-            'content': 'You are a helpful text generation assistant. CRITICAL: Your response MUST contain ONLY the generated text with ABSOLUTELY NO introductory phrases, NO explanations, NO "Here is the text", NO comments about what you did, and NO concluding remarks. Do not start with "Here", "I", or any other introductory word. Just give the generated text directly. The user will only see your exact output, so it must be ready to use immediately.'
-          },
-          {
-            'role': 'user',
-            'content': 'I will give you instructions for generating text. Only return the generated text with no additional comments or explanations. Do not start with "Here", "I", or any other introductory word or phrase.'
-          },
-          {
-            'role': 'assistant',
-            'content': 'I understand. I will only return the generated text with no additional comments or explanations.'
-          }
-        ];
-        
-        // Add context from screen if available
-        if (contextText != null && contextText.isNotEmpty && !contextText.contains('Error:')) {
-          messages.add({
-            'role': 'user',
-            'content': 'Here is some additional context from what is visible on my screen. Use this to inform your response if relevant:\n\n$contextText. If there are names, dates, emails, pay extra attention as they may be relevant to the instructions.'
-          });
+        // Text-only API format (no image)
+        if (selectedText != null) {
+          // Edit mode - use system prompt for text editing
+          final List<Map<String, dynamic>> messages = [
+            {
+              'role': 'system',
+              'content': 'You are a text editor that rewrites text based on instructions. CRITICAL: Your response MUST contain ONLY the edited text with ABSOLUTELY NO introductory phrases, NO explanations, NO "Here is the rewritten text", NO comments about what you did, and NO concluding remarks. Do not start with "Here", "I", or any other introductory word. Just give the edited text directly. The user will only see your exact output, so it must be ready to use immediately.'
+            },
+            {
+              'role': 'user',
+              'content': 'I will give you instructions followed by text to edit. The format will be "[INSTRUCTIONS]: [TEXT]". Only return the edited text with no additional comments or explanations. Do not start with "Here", "I", or any other introductory word or phrase.'
+            },
+            {
+              'role': 'assistant',
+              'content': 'I understand. I will only return the edited text with no additional comments or explanations.'
+            },
+            {
+              'role': 'user',
+              'content': 'IMPORTANT: Your response must start with the edited text directly. Do not include any preamble like "Here is" or "I have". $content'
+            }
+          ];
           
-          messages.add({
-            'role': 'assistant',
-            'content': 'I understand the context from your screen. I will use it to inform my response if relevant.'
-          });
+          requestBody = {
+            'model': selectedModel,
+            'messages': messages,
+            'temperature': 0.2,
+            'max_tokens': 2000
+          };
+        } else {
+          // Generation mode - use system prompt for text generation
+          final List<Map<String, dynamic>> messages = [
+            {
+              'role': 'system',
+              'content': 'You are a helpful text generation assistant. CRITICAL: Your response MUST contain ONLY the generated text with ABSOLUTELY NO introductory phrases, NO explanations, NO "Here is the text", NO comments about what you did, and NO concluding remarks. Do not start with "Here", "I", or any other introductory word. Just give the generated text directly. The user will only see your exact output, so it must be ready to use immediately.'
+            },
+            {
+              'role': 'user',
+              'content': 'I will give you instructions for generating text. Only return the generated text with no additional comments or explanations. Do not start with "Here", "I", or any other introductory word or phrase.'
+            },
+            {
+              'role': 'assistant',
+              'content': 'I understand. I will only return the generated text with no additional comments or explanations.'
+            },
+            {
+              'role': 'user',
+              'content': 'IMPORTANT: Your response must start with the generated text directly. Do not include any preamble like "Here is" or "I have". $content'
+            }
+          ];
+          
+          requestBody = {
+            'model': selectedModel,
+            'messages': messages,
+            'temperature': 0.2,
+            'max_tokens': 2000
+          };
         }
-        
-        // Add the final user instruction with content
-        messages.add({
-          'role': 'user',
-          'content': 'IMPORTANT: Your response must start with the generated text directly. Do not include any preamble like "Here is" or "I have". $content'
-        });
-        
-        requestBody = {
-          'model': selectedModel,
-          'messages': messages,
-          'temperature': 0.2, // Even lower temperature for more predictable output
-          'max_tokens': 2000 // Ensure we have enough tokens for the response
-        };
       }
       
       // Encode the final body

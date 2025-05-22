@@ -592,6 +592,46 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.28.0"
+  screen_capturer:
+    dependency: "direct main"
+    description:
+      name: screen_capturer
+      sha256: "6607812bac01f2d3d98cad0808f5efbaa5824445998dc8567de5f05f24b45b95"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.3"
+  screen_capturer_linux:
+    dependency: transitive
+    description:
+      name: screen_capturer_linux
+      sha256: "3c87aeffcb6f744dd6f7d257c916e6caf23f06e85a976c2f319f9d4398151821"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.3"
+  screen_capturer_macos:
+    dependency: transitive
+    description:
+      name: screen_capturer_macos
+      sha256: "92b67dfbae3263d2228e2438b74dc9aae8cdc9ccacca152f0f8e8531ed5aff8b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.2"
+  screen_capturer_platform_interface:
+    dependency: transitive
+    description:
+      name: screen_capturer_platform_interface
+      sha256: f53d3b955bb413cf4f9bd928c501297a3eb490a72b6a147c8384d4cd5feb872a
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.2"
+  screen_capturer_windows:
+    dependency: transitive
+    description:
+      name: screen_capturer_windows
+      sha256: "141542ff0ce1dae0df9c6625182c480c973c20282dc85f866fbc9215dcbbe04f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.2"
   screen_retriever:
     dependency: transitive
     description:
@@ -632,6 +672,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.0"
+  shell_executor:
+    dependency: transitive
+    description:
+      name: shell_executor
+      sha256: "9c024546fc96470a6b96be9902f0bc05347a017a7638ed8d93c77e8d77eb3c3c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.6"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -805,6 +853,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
+  win32:
+    dependency: transitive
+    description:
+      name: win32
+      sha256: "329edf97fdd893e0f1e3b9e88d6a0e627128cc17cc316a8d67fda8f1451178ba"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.13.0"
   window_manager:
     dependency: "direct main"
     description:
