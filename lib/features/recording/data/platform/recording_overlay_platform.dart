@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../../presentation/bloc/recording_bloc.dart';
 
@@ -14,7 +15,9 @@ class RecordingOverlayPlatform {
   static Future<void> showOverlay() async {
     // If a recording is already in progress, don't start another one
     if (isRecordingInProgress) {
-      print('Recording already in progress, ignoring request to show overlay');
+      if (kDebugMode) {
+        print('Recording already in progress, ignoring request to show overlay');
+      }
       return;
     }
     
@@ -27,7 +30,9 @@ class RecordingOverlayPlatform {
       
       await _channel.invokeMethod('showOverlay');
     } on PlatformException catch (e) {
-      print('Failed to show overlay: ${e.message}');
+      if (kDebugMode) {
+        print('Failed to show overlay: ${e.message}');
+      }
       isRecordingInProgress = false;
     }
   }
@@ -36,7 +41,9 @@ class RecordingOverlayPlatform {
   static Future<void> showOverlayWithMode(String mode) async {
     // If a recording is already in progress, don't start another one
     if (isRecordingInProgress) {
-      print('Recording already in progress, ignoring request to show overlay for $mode mode');
+      if (kDebugMode) {
+        print('Recording already in progress, ignoring request to show overlay for $mode mode');
+      }
       return;
     }
     
@@ -49,7 +56,9 @@ class RecordingOverlayPlatform {
       
       await _channel.invokeMethod('showOverlayWithMode', {'mode': mode});
     } on PlatformException catch (e) {
-      print('Failed to show overlay with mode: ${e.message}');
+      if (kDebugMode) {
+        print('Failed to show overlay with mode: ${e.message}');
+      }
       isRecordingInProgress = false;
     }
   }
@@ -63,7 +72,9 @@ class RecordingOverlayPlatform {
   static void _setupMethodHandler() {
     _channel.setMethodCallHandler((call) async {
       if (_recordingBloc == null) {
-        print('RecordingBloc not set, cannot handle overlay button actions');
+        if (kDebugMode) {
+          print('RecordingBloc not set, cannot handle overlay button actions');
+        }
         return;
       }
       
@@ -96,7 +107,9 @@ class RecordingOverlayPlatform {
       // Reset the recording in progress flag
       isRecordingInProgress = false;
     } on PlatformException catch (e) {
-      print('Failed to hide overlay: ${e.message}');
+      if (kDebugMode) {
+        print('Failed to hide overlay: ${e.message}');
+      }
       // Reset the flag even if there's an error
       isRecordingInProgress = false;
     }
@@ -107,7 +120,9 @@ class RecordingOverlayPlatform {
     try {
       await _channel.invokeMethod('setRecordingStopped');
     } on PlatformException catch (e) {
-      print('Failed to set recording stopped state: ${e.message}');
+      if (kDebugMode) {
+        print('Failed to set recording stopped state: ${e.message}');
+      }
     }
   }
   
@@ -116,7 +131,9 @@ class RecordingOverlayPlatform {
     try {
       await _channel.invokeMethod('setProcessingAudio');
     } on PlatformException catch (e) {
-      print('Failed to set processing audio state: ${e.message}');
+      if (kDebugMode) {
+        print('Failed to set processing audio state: ${e.message}');
+      }
     }
   }
   
@@ -125,7 +142,9 @@ class RecordingOverlayPlatform {
     try {
       await _channel.invokeMethod('setTranscriptionCompleted');
     } on PlatformException catch (e) {
-      print('Failed to set transcription completed state: ${e.message}');
+      if (kDebugMode) {
+        print('Failed to set transcription completed state: ${e.message}');
+      }
     }
   }
   
@@ -134,7 +153,9 @@ class RecordingOverlayPlatform {
     try {
       await _channel.invokeMethod('updateAudioLevel', {'level': level});
     } on PlatformException catch (e) {
-      print('Failed to update audio level: ${e.message}');
+      if (kDebugMode) {
+        print('Failed to update audio level: ${e.message}');
+      }
     }
   }
   
@@ -150,7 +171,9 @@ class RecordingOverlayPlatform {
         final level = await audioLevelProvider();
         await updateAudioLevel(level);
       } catch (e) {
-        print('Error getting audio level: $e');
+        if (kDebugMode) {
+          print('Error getting audio level: $e');
+        }
       }
     });
   }

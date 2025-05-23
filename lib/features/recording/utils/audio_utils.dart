@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
+
 /// Utility class for audio file operations
 class AudioUtils {
   /// Validates that an audio file exists and has content
@@ -11,14 +13,18 @@ class AudioUtils {
       
       // Check if file exists
       if (!await file.exists()) {
-        print('Audio file does not exist: $path');
+        if (kDebugMode) {
+          print('Audio file does not exist: $path');
+        }
         return false;
       }
       
       // Check if file has content
       final fileSize = await file.length();
       if (fileSize < 100) { // Arbitrary minimum size for a valid audio file
-        print('Audio file is too small to be valid: $fileSize bytes');
+        if (kDebugMode) {
+          print('Audio file is too small to be valid: $fileSize bytes');
+        }
         return false;
       }
       
@@ -26,7 +32,9 @@ class AudioUtils {
       if (path.toLowerCase().endsWith('.wav')) {
         final bytes = await file.openRead(0, 12).toList();
         if (bytes.isEmpty) {
-          print('Could not read file header');
+          if (kDebugMode) {
+            print('Could not read file header');
+          }
           return false;
         }
         
@@ -38,14 +46,18 @@ class AudioUtils {
             (header[0] != 82 || header[1] != 73 || header[2] != 70 || header[3] != 70) ||
             // Check for 'WAVE' in ASCII
             (header[8] != 87 || header[9] != 65 || header[10] != 86 || header[11] != 69)) {
-          print('Invalid WAV file header');
+          if (kDebugMode) {
+            print('Invalid WAV file header');
+          }
           return false;
         }
       }
       
       return true;
     } catch (e) {
-      print('Error validating audio file: $e');
+      if (kDebugMode) {
+        print('Error validating audio file: $e');
+      }
       return false;
     }
   }
@@ -68,12 +80,16 @@ class AudioUtils {
     final currentDuration = await estimateAudioDuration(originalPath);
     
     if (currentDuration >= minDuration) {
-      print('Audio already meets minimum duration: ${currentDuration.inSeconds}s');
+      if (kDebugMode) {
+        print('Audio already meets minimum duration: ${currentDuration.inSeconds}s');
+      }
       return originalPath;
     }
 
     final silenceDuration = minDuration - currentDuration;
-    print('Padding audio with ${silenceDuration.inSeconds}s of silence');
+    if (kDebugMode) {
+      print('Padding audio with ${silenceDuration.inSeconds}s of silence');
+    }
     
     // Create a new file path for the padded audio
     final originalFile = File(originalPath);
@@ -102,7 +118,9 @@ class AudioUtils {
     try {
       await File(silencePath).delete();
     } catch (e) {
-      print('Error deleting temporary silence file: $e');
+      if (kDebugMode) {
+        print('Error deleting temporary silence file: $e');
+      }
     }
     
     return paddedFile.path;
@@ -159,7 +177,9 @@ class AudioUtils {
       try {
         return await _mergeWavFiles(file1Path, file2Path, outputPath);
       } catch (e) {
-        print('Error merging WAV files: $e');
+        if (kDebugMode) {
+          print('Error merging WAV files: $e');
+        }
         // If merging fails, use the original file as fallback
         final file1 = File(file1Path);
         if (await file1.exists() && await file1.length() > 1000) {
@@ -169,7 +189,9 @@ class AudioUtils {
     }
     
     // Fallback to just copying the original file
-    print('Using original file as fallback');
+    if (kDebugMode) {
+      print('Using original file as fallback');
+    }
     return await File(file1Path).copy(outputPath);
   }
   

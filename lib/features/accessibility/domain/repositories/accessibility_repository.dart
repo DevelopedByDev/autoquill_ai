@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screen_capturer/screen_capturer.dart';
 
@@ -21,7 +22,9 @@ class AccessibilityRepository {
       // Return the path to the captured image
       return capturedData.imagePath;
     } catch (e) {
-      print('Error capturing screenshot: $e');
+      if (kDebugMode) {
+        print('Error capturing screenshot: $e');
+      }
       return null;
     }
   }
@@ -32,7 +35,9 @@ class AccessibilityRepository {
       final bytes = await File(imagePath).readAsBytes();
       return base64Encode(bytes);
     } catch (e) {
-      print('Error converting image to base64: $e');
+      if (kDebugMode) {
+        print('Error converting image to base64: $e');
+      }
       return null;
     }
   }

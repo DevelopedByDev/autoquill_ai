@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/repositories/recording_repository.dart';
@@ -79,7 +80,9 @@ class RecordingBloc extends Bloc<RecordingEvent, RecordingState> {
     try {
       await _statsService.init();
     } catch (e) {
-      print('Error initializing stats service: $e');
+      if (kDebugMode) {
+        print('Error initializing stats service: $e');
+      }
     }
   }
 

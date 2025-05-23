@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:record/record.dart';
 import '../platform/recording_overlay_platform.dart';
 import '../../utils/audio_utils.dart';
@@ -40,7 +41,9 @@ class RecordingDataSourceImpl implements RecordingDataSource {
       // Ensure we have permissions
       final hasPermission = await recorder.hasPermission();
       if (!hasPermission) {
-        print('Requesting microphone permission during initialization');
+        if (kDebugMode) {
+          print('Requesting microphone permission during initialization');
+        }
         // This will prompt the user for permission if needed
         await recorder.hasPermission();
       }
@@ -57,9 +60,13 @@ class RecordingDataSourceImpl implements RecordingDataSource {
       await testFile.delete();
       
       _isInitialized = true;
-      print('Recording system initialized successfully');
+      if (kDebugMode) {
+        print('Recording system initialized successfully');
+      }
     } catch (e) {
-      print('Error initializing recording system: $e');
+      if (kDebugMode) {
+        print('Error initializing recording system: $e');
+      }
       // We'll try again when needed
     }
   }
@@ -85,7 +92,9 @@ class RecordingDataSourceImpl implements RecordingDataSource {
 
   @override
   Future<void> startRecording() async {
-    print('Recording started');
+    if (kDebugMode) {
+      print('Recording started');
+    }
     
     // Ensure the recording system is initialized
     if (!_isInitialized) {
@@ -98,7 +107,9 @@ class RecordingDataSourceImpl implements RecordingDataSource {
     
     // Get a unique path for this recording
     _currentRecordingPath = await _getRecordingPath();
-    print('Recording to: $_currentRecordingPath');
+    if (kDebugMode) {
+      print('Recording to: $_currentRecordingPath');
+    }
     
     final config = RecordConfig(
       encoder: AudioEncoder.wav,  // Using WAV format as recommended by Groq API
@@ -111,7 +122,9 @@ class RecordingDataSourceImpl implements RecordingDataSource {
     
     // Store the recording start time
     _recordingStartTime = DateTime.now();
-    print('Recording started at: $_recordingStartTime');
+    if (kDebugMode) {
+      print('Recording started at: $_recordingStartTime');
+    }
     
     // Show the recording overlay
     await RecordingOverlayPlatform.showOverlay();
@@ -141,7 +154,9 @@ class RecordingDataSourceImpl implements RecordingDataSource {
 
   @override
   Future<String> stopRecording() async {
-    print('Recording stopped');
+    if (kDebugMode) {
+      print('Recording stopped');
+    }
     final recordingEndTime = DateTime.now();
     
     // Stop the recording immediately to capture only what the user intended
@@ -157,10 +172,14 @@ class RecordingDataSourceImpl implements RecordingDataSource {
     String finalPath = path;
     if (_recordingStartTime != null) {
       final recordingDuration = recordingEndTime.difference(_recordingStartTime!).inMilliseconds / 1000.0;
-      print('Recording duration: $recordingDuration seconds');
+      if (kDebugMode) {
+        print('Recording duration: $recordingDuration seconds');
+      }
       
       if (recordingDuration < _minimumRecordingDuration) {
-        print('Recording too short, padding with silence to reach $_minimumRecordingDuration seconds');
+        if (kDebugMode) {
+          print('Recording too short, padding with silence to reach $_minimumRecordingDuration seconds');
+        }
         
         try {
           // Pad the recording with silence to reach the minimum duration
@@ -168,19 +187,27 @@ class RecordingDataSourceImpl implements RecordingDataSource {
             path, 
             Duration(seconds: _minimumRecordingDuration)
           );
-          print('Successfully padded recording with silence: $finalPath');
+          if (kDebugMode) {
+            print('Successfully padded recording with silence: $finalPath');
+          }
           
           // Delete the original file if it's different from the padded one
           if (finalPath != path) {
             try {
               await File(path).delete();
-              print('Deleted original short recording file');
+              if (kDebugMode) {
+                print('Deleted original short recording file');
+              }
             } catch (e) {
-              print('Error deleting original recording file: $e');
+              if (kDebugMode) {
+                print('Error deleting original recording file: $e');
+              }
             }
           }
         } catch (e) {
-          print('Error padding recording with silence: $e');
+          if (kDebugMode) {
+            print('Error padding recording with silence: $e');
+          }
           // If padding fails, we'll use the original recording
           finalPath = path;
         }
