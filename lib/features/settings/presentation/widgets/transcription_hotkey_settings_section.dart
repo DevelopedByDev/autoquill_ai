@@ -26,6 +26,8 @@ class TranscriptionHotkeySettingsSection extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _buildHotkeyRow(context, 'Transcription mode', 'transcription_hotkey', state),
+            const SizedBox(height: 16),
+            _buildPushToTalkSection(context, state),
           ],
         );
       }
@@ -95,6 +97,85 @@ class TranscriptionHotkeySettingsSection extends StatelessWidget {
         return RecordHotKeyDialog(
           onHotKeyRecorded: (newHotKey) {
             context.read<SettingsBloc>().add(SaveHotkey(newHotKey));
+          },
+        );
+      },
+    );
+  }
+  
+  Widget _buildPushToTalkSection(BuildContext context, SettingsState state) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Push-to-Talk',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Switch(
+                  value: state.pushToTalkEnabled,
+                  onChanged: (value) {
+                    context.read<SettingsBloc>().add(TogglePushToTalk());
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Hold down the hotkey to record, release to transcribe',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Push-to-Talk Hotkey'),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildHotkeyDisplay(context, 'push_to_talk_hotkey', state),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: state.pushToTalkEnabled ? () {
+                        _showPushToTalkHotkeyDialog(context);
+                      } : null,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: state.pushToTalkEnabled ? () {
+                        context.read<SettingsBloc>().add(DeletePushToTalkHotkey());
+                      } : null,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Future<void> _showPushToTalkHotkeyDialog(BuildContext context) async {
+    context.read<SettingsBloc>().add(StartPushToTalkHotkeyRecording());
+    
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return RecordHotKeyDialog(
+          onHotKeyRecorded: (newHotKey) {
+            context.read<SettingsBloc>().add(SavePushToTalkHotkey(newHotKey));
           },
         );
       },

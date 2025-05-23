@@ -10,6 +10,7 @@ import 'package:autoquill_ai/features/assistant/assistant_service.dart';
 
 import '../handlers/transcription_hotkey_handler.dart';
 import '../handlers/assistant_hotkey_handler.dart';
+import '../handlers/push_to_talk_handler.dart';
 import '../utils/hotkey_registration.dart';
 
 /// A centralized class for handling keyboard hotkeys throughout the application
@@ -36,11 +37,27 @@ class HotkeyHandler {
     // Initialize the handlers with repositories
     TranscriptionHotkeyHandler.initialize(recordingRepository, transcriptionRepository);
     AssistantHotkeyHandler.initialize(_assistantService);
+    PushToTalkHandler.initialize(recordingRepository, transcriptionRepository);
   }
 
   /// Handles keyDown events for any registered hotkey
   static void keyDownHandler(HotKey hotKey) {
-    // Check if this hotkey is already being processed to avoid duplicates
+    // Debug information about the hotkey
+    if (kDebugMode) {
+      print("Hotkey identifier: '${hotKey.identifier}'");
+      print("Blocs initialized: ${_recordingBloc != null && _transcriptionBloc != null}");
+    }
+    
+    // Special handling for push-to-talk hotkey (don't check for duplicates)
+    if (hotKey.identifier == 'push_to_talk_hotkey') {
+      if (kDebugMode) {
+        print("Push-to-talk hotkey keyDown detected, handling...");
+      }
+      PushToTalkHandler.handleKeyDown();
+      return;
+    }
+    
+    // For other hotkeys, check if this hotkey is already being processed to avoid duplicates
     String hotkeyId = '${hotKey.hashCode}';
     
     // If this hotkey is already active, ignore this event
@@ -54,12 +71,6 @@ class HotkeyHandler {
     // Mark this hotkey as active
     _activeHotkeys.add(hotkeyId);
     
-    // Debug information about the hotkey
-    if (kDebugMode) {
-      print("Hotkey identifier: '${hotKey.identifier}'");
-      print("Blocs initialized: ${_recordingBloc != null && _transcriptionBloc != null}");
-    }
-    
     // Handle hotkeys based on identifier
     if (hotKey.identifier == 'transcription_hotkey') {
       if (kDebugMode) {
@@ -71,7 +82,6 @@ class HotkeyHandler {
         print("Assistant hotkey detected, handling...");
       }
       AssistantHotkeyHandler.handleHotkey();
-
     } else if (kDebugMode) {
       print("Unknown hotkey: '${hotKey.identifier}'");
     }
@@ -85,6 +95,14 @@ class HotkeyHandler {
 
   /// Handles keyUp events for any registered hotkey
   static void keyUpHandler(HotKey hotKey) {
+    // Special handling for push-to-talk hotkey
+    if (hotKey.identifier == 'push_to_talk_hotkey') {
+      if (kDebugMode) {
+        print("Push-to-talk hotkey keyUp detected, handling...");
+      }
+      PushToTalkHandler.handleKeyUp();
+    }
+    
     // Remove this hotkey from active set on key up
     String hotkeyId = '${hotKey.hashCode}';
     _activeHotkeys.remove(hotkeyId);

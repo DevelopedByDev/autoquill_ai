@@ -29,6 +29,9 @@ class SettingsState extends Equatable {
   // Screenshot toggle for assistant mode
   final bool assistantScreenshotEnabled;
   final LanguageCode selectedLanguage;
+  
+  // Push-to-talk settings
+  final bool pushToTalkEnabled;
 
   const SettingsState({
     this.apiKey,
@@ -44,6 +47,7 @@ class SettingsState extends Equatable {
     this.dictionary = const [],
     this.assistantScreenshotEnabled = true,
     this.selectedLanguage = const LanguageCode(name: 'Auto-detect', code: ''),
+    this.pushToTalkEnabled = true,
   });
 
   SettingsState copyWith({
@@ -60,6 +64,7 @@ class SettingsState extends Equatable {
     List<String>? dictionary,
     bool? assistantScreenshotEnabled,
     LanguageCode? selectedLanguage,
+    bool? pushToTalkEnabled,
   }) {
     return SettingsState(
       apiKey: apiKey ?? this.apiKey,
@@ -75,6 +80,7 @@ class SettingsState extends Equatable {
       dictionary: dictionary ?? this.dictionary,
       assistantScreenshotEnabled: assistantScreenshotEnabled ?? this.assistantScreenshotEnabled,
       selectedLanguage: selectedLanguage ?? this.selectedLanguage,
+      pushToTalkEnabled: pushToTalkEnabled ?? this.pushToTalkEnabled,
     );
   }
 
@@ -91,6 +97,7 @@ class SettingsState extends Equatable {
         recordingFor,
         currentRecordedHotkey,
         storedHotkeys,
+        pushToTalkEnabled,
         assistantScreenshotEnabled,
         selectedLanguage,
       ];

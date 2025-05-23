@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
@@ -92,6 +93,7 @@ class HotkeyRegistration {
       // Try multiple ways to get the hotkeys to ensure we find them
       dynamic transcriptionHotkey = settingsBox.get('transcription_hotkey');
       dynamic assistantHotkey = settingsBox.get('assistant_hotkey');
+      dynamic pushToTalkHotkey = settingsBox.get('push_to_talk_hotkey');
       
       // If hotkeys are not found, try the settings service
       if (transcriptionHotkey == null || assistantHotkey == null) {
@@ -120,6 +122,7 @@ class HotkeyRegistration {
       if (kDebugMode) {
         print('Transcription hotkey from settings: $transcriptionHotkey');
         print('Assistant hotkey from settings: $assistantHotkey');
+        print('Push-to-talk hotkey from settings: $pushToTalkHotkey');
       }
       
       // Convert hotkeys and store in cache (fast operation)
@@ -163,6 +166,28 @@ class HotkeyRegistration {
         } catch (e) {
           if (kDebugMode) {
             print('Error converting assistant hotkey: $e');
+          }
+        }
+      }
+      
+      if (pushToTalkHotkey != null) {
+        try {
+          final hotkey = hotKeyConverter(pushToTalkHotkey);
+          // Explicitly set the identifier
+          final updatedHotkey = HotKey(
+            key: hotkey.key,
+            modifiers: hotkey.modifiers,
+            scope: hotkey.scope,
+            identifier: 'push_to_talk_hotkey',
+          );
+          _hotkeyCache['push_to_talk_hotkey'] = updatedHotkey;
+          
+          if (kDebugMode) {
+            print('Successfully cached push-to-talk hotkey: ${updatedHotkey.toJson()}');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error converting push-to-talk hotkey: $e');
           }
         }
       }
@@ -266,6 +291,17 @@ class HotkeyRegistration {
         keyUpHandler,
       );
       
+      await _registerHotkeyFromCache(
+        'push_to_talk_hotkey',
+        keyDownHandler,
+        keyUpHandler,
+      );
+      
+      // If push-to-talk hotkey is not set, register the default one
+      if (!_hotkeyCache.containsKey('push_to_talk_hotkey')) {
+        await _registerDefaultPushToTalkHotkey(keyDownHandler, keyUpHandler);
+      }
+      
       if (kDebugMode) {
         print('All hotkeys reloaded and registered');
       }
@@ -313,11 +349,107 @@ class HotkeyRegistration {
         }
       }
       
+      // Check if push-to-talk hotkey exists in Hive
+      if (settingsBox.get('push_to_talk_hotkey') == null) {
+        // Create default push-to-talk hotkey
+        await _saveDefaultPushToTalkHotkey();
+        if (kDebugMode) {
+          print('Created default push-to-talk hotkey');
+        }
+      }
+      
       // Clear the cache to ensure hotkeys are reloaded
       _hotkeyCache.clear();
     } catch (e) {
       if (kDebugMode) {
         print('Error ensuring hotkeys are loaded after onboarding: $e');
+      }
+    }
+  }
+  
+  /// Register the default push-to-talk hotkey
+  static Future<void> _registerDefaultPushToTalkHotkey(
+    Function(HotKey) keyDownHandler,
+    Function(HotKey) keyUpHandler
+  ) async {
+    try {
+      // Create the default push-to-talk hotkey
+      final defaultHotkey = await _createDefaultPushToTalkHotkey();
+      
+      // Register the hotkey
+      await hotKeyManager.register(
+        defaultHotkey,
+        keyDownHandler: keyDownHandler,
+        keyUpHandler: keyUpHandler,
+      );
+      
+      // Save to cache
+      _hotkeyCache['push_to_talk_hotkey'] = defaultHotkey;
+      
+      if (kDebugMode) {
+        print('Registered default push-to-talk hotkey: ${defaultHotkey.toJson()}');
+      }
+      
+      // Save to settings
+      await _saveDefaultPushToTalkHotkey();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error registering default push-to-talk hotkey: $e');
+      }
+    }
+  }
+  
+  /// Create the default push-to-talk hotkey based on platform
+  static Future<HotKey> _createDefaultPushToTalkHotkey() async {
+    // Default modifiers based on platform
+    final modifiers = <HotKeyModifier>[HotKeyModifier.control];
+    
+    // On macOS, use Option instead of Alt
+    if (Platform.isMacOS) {
+      modifiers.add(HotKeyModifier.alt);
+    } else {
+      modifiers.add(HotKeyModifier.alt);
+    }
+    
+    // Create the hotkey with Space key
+    return HotKey(
+      key: LogicalKeyboardKey.space,
+      modifiers: modifiers,
+      scope: HotKeyScope.system,
+      identifier: 'push_to_talk_hotkey',
+    );
+  }
+  
+  /// Save the default push-to-talk hotkey to settings
+  static Future<void> _saveDefaultPushToTalkHotkey() async {
+    try {
+      final defaultHotkey = await _createDefaultPushToTalkHotkey();
+      
+      // Convert to storable format
+      final keyData = {
+        'identifier': defaultHotkey.identifier,
+        'key': {
+          'keyId': defaultHotkey.key is LogicalKeyboardKey
+              ? (defaultHotkey.key as LogicalKeyboardKey).keyId
+              : null,
+          'usageCode': defaultHotkey.key is PhysicalKeyboardKey
+              ? (defaultHotkey.key as PhysicalKeyboardKey).usbHidUsage
+              : null,
+        },
+        'modifiers': defaultHotkey.modifiers?.map((m) => m.name).toList() ?? <String>[],
+        'scope': defaultHotkey.scope.name,
+      };
+      
+      // Save to Hive
+      final settingsBox = Hive.box('settings');
+      await settingsBox.put('push_to_talk_hotkey', keyData);
+      
+      if (kDebugMode) {
+        print('Saved default push-to-talk hotkey to settings');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error saving default push-to-talk hotkey: $e');
       }
     }
   }

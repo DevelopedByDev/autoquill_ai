@@ -43,6 +43,12 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     
     // Language selection event
     on<SaveLanguage>(_onSaveLanguage);
+    
+    // Push-to-talk events
+    on<TogglePushToTalk>(_onTogglePushToTalk);
+    on<StartPushToTalkHotkeyRecording>(_onStartPushToTalkHotkeyRecording);
+    on<SavePushToTalkHotkey>(_onSavePushToTalkHotkey);
+    on<DeletePushToTalkHotkey>(_onDeletePushToTalkHotkey);
   }
 
   Future<void> _onLoadSettings(LoadSettings event, Emitter<SettingsState> emit) async {
@@ -64,6 +70,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       // Load assistant screenshot setting
       final assistantScreenshotEnabled = _box.get('assistant_screenshot_enabled', defaultValue: true) as bool;
       
+      // Load push-to-talk setting
+      final pushToTalkEnabled = _box.get('push_to_talk_enabled', defaultValue: true) as bool;
+      
       // Load selected language
       final savedLanguageCode = _box.get('selected_language_code', defaultValue: '') as String;
       final savedLanguageName = _box.get('selected_language_name', defaultValue: 'Auto-detect') as String;
@@ -74,6 +83,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         assistantModel: assistantModel,
         themeMode: themeMode,
         assistantScreenshotEnabled: assistantScreenshotEnabled,
+        pushToTalkEnabled: pushToTalkEnabled,
         selectedLanguage: LanguageCode(name: savedLanguageName, code: savedLanguageCode),
       ));
     } catch (e) {
@@ -222,7 +232,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         hotkeys['assistant_hotkey'] = assistantHotkey;
       }
       
-
+      // Load push-to-talk hotkey
+      final pushToTalkHotkey = settingsBox.get('push_to_talk_hotkey');
+      if (pushToTalkHotkey != null) {
+        hotkeys['push_to_talk_hotkey'] = pushToTalkHotkey;
+      }
       
       emit(state.copyWith(storedHotkeys: hotkeys));
       
@@ -340,6 +354,96 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       
       emit(state.copyWith(
         assistantScreenshotEnabled: newValue,
+        error: null,
+      ));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+  
+  // Push-to-talk handlers
+  Future<void> _onTogglePushToTalk(TogglePushToTalk event, Emitter<SettingsState> emit) async {
+    try {
+      final newValue = !state.pushToTalkEnabled;
+      
+      // Save the setting to Hive
+      final settingsBox = Hive.box('settings');
+      await settingsBox.put('push_to_talk_enabled', newValue);
+      
+      emit(state.copyWith(
+        pushToTalkEnabled: newValue,
+        error: null,
+      ));
+      
+      // Reload all hotkeys to ensure changes take effect immediately
+      await HotkeyHandler.reloadHotkeys();
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+  
+  void _onStartPushToTalkHotkeyRecording(StartPushToTalkHotkeyRecording event, Emitter<SettingsState> emit) {
+    emit(state.copyWith(
+      isRecordingHotkey: true,
+      recordingFor: 'push_to_talk_hotkey',
+      currentRecordedHotkey: null,
+    ));
+  }
+  
+  Future<void> _onSavePushToTalkHotkey(SavePushToTalkHotkey event, Emitter<SettingsState> emit) async {
+    try {
+      // Register the hotkey with the system
+      await HotkeyHandler.registerHotKey(event.hotkey, 'push_to_talk_hotkey');
+      
+      // Update the stored hotkeys in state
+      final updatedHotkeys = Map<String, dynamic>.from(state.storedHotkeys);
+      
+      // Convert hotkey to storable format
+      final keyData = {
+        'identifier': event.hotkey.identifier,
+        'key': {
+          'keyId': event.hotkey.key is LogicalKeyboardKey
+              ? (event.hotkey.key as LogicalKeyboardKey).keyId
+              : null,
+          'usageCode': event.hotkey.key is PhysicalKeyboardKey
+              ? (event.hotkey.key as PhysicalKeyboardKey).usbHidUsage
+              : null,
+        },
+        'modifiers': event.hotkey.modifiers?.map((m) => m.name).toList() ?? <String>[],
+        'scope': event.hotkey.scope.name,
+      };
+      
+      updatedHotkeys['push_to_talk_hotkey'] = keyData;
+      
+      // Reload all hotkeys to ensure the new hotkey is active immediately
+      await HotkeyHandler.reloadHotkeys();
+      
+      emit(state.copyWith(
+        isRecordingHotkey: false,
+        recordingFor: null,
+        currentRecordedHotkey: null,
+        storedHotkeys: updatedHotkeys,
+        error: null,
+      ));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+  
+  Future<void> _onDeletePushToTalkHotkey(DeletePushToTalkHotkey event, Emitter<SettingsState> emit) async {
+    try {
+      // Unregister the hotkey from the system
+      await HotkeyHandler.unregisterHotKey('push_to_talk_hotkey');
+      
+      // Update the stored hotkeys in state
+      final updatedHotkeys = Map<String, dynamic>.from(state.storedHotkeys);
+      updatedHotkeys.remove('push_to_talk_hotkey');
+      
+      // Reload all hotkeys to ensure changes take effect immediately
+      await HotkeyHandler.reloadHotkeys();
+      
+      emit(state.copyWith(
+        storedHotkeys: updatedHotkeys,
         error: null,
       ));
     } catch (e) {

@@ -107,3 +107,17 @@ class SaveLanguage extends SettingsEvent {
   List<Object?> get props => [language];
 }
 
+class TogglePushToTalk extends SettingsEvent {}
+
+class StartPushToTalkHotkeyRecording extends SettingsEvent {}
+
+class SavePushToTalkHotkey extends SettingsEvent {
+  final HotKey hotkey;
+  const SavePushToTalkHotkey(this.hotkey);
+
+  @override
+  List<Object?> get props => [hotkey];
+}
+
+class DeletePushToTalkHotkey extends SettingsEvent {}
+
