@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
+import 'package:autoquill_ai/widgets/hotkey_display.dart';
 
 import '../../../../widgets/record_hotkey_dialog.dart';
 import '../bloc/onboarding_bloc.dart';
@@ -121,7 +122,7 @@ class HotkeysStep extends StatelessWidget {
                   final screenshotToggle = Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
+                      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: Theme.of(context).dividerColor,
@@ -304,28 +305,13 @@ class HotkeysStep extends StatelessWidget {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.keyboard,
-                        size: 18,
-                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        hotkey != null
-                            ? _formatHotkey(hotkey)
-                            : 'None configured',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          color: hotkey != null 
-                              ? Theme.of(context).colorScheme.onSurface 
-                              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                    ],
+                  child: HotkeyDisplay.forPlatform(
+                    hotkey: hotkey,
+                    textColor: Theme.of(context).colorScheme.onSurface,
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    borderColor: hotkey != null 
+                        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)
+                        : Colors.grey,
                   ),
                 ),
               ),
@@ -397,26 +383,7 @@ class HotkeysStep extends StatelessWidget {
   
   // Removed unused method
 
-  String _formatHotkey(HotKey hotkey) {
-    // Create a simple text representation of the hotkey
-    String keyText = '';
-    if (hotkey.modifiers?.contains(HotKeyModifier.alt) ?? false) {
-      keyText += 'Alt+';
-    }
-    if (hotkey.modifiers?.contains(HotKeyModifier.control) ?? false) {
-      keyText += 'Ctrl+';
-    }
-    if (hotkey.modifiers?.contains(HotKeyModifier.shift) ?? false) {
-      keyText += 'Shift+';
-    }
-    if (hotkey.modifiers?.contains(HotKeyModifier.meta) ?? false) {
-      keyText += 'Cmd+';
-    }
-    
-    keyText += hotkey.key.keyLabel;
-    
-    return keyText;
-  }
+  // Removed _formatHotkey method as it's now handled by the HotkeyDisplay widget
 }
 
 // Using RecordHotKeyDialog from the app settings

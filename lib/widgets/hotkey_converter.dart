@@ -16,15 +16,21 @@ HotKey hotKeyConverter(dynamic data) {
   }
   final keyData = Map<Object?, Object?>.from(keyMap as Map);
   final keyboardKey = const KeyboardKeyConverter().fromJson(keyData);
+  
+  // Get modifiers
+  List<HotKeyModifier> modifiers = [];
+  if (hotkeyData['modifiers'] != null) {
+    final modifiersList = hotkeyData['modifiers'] as List<dynamic>;
+    modifiers = modifiersList.map((m) => HotKeyModifier.values.firstWhere(
+          (mod) => mod.name == m,
+          orElse: () => HotKeyModifier.control,
+        )).toList();
+  }
+  
   return HotKey(
     identifier: identifier,
     key: keyboardKey,
-    modifiers: (hotkeyData['modifiers'] as List<dynamic>?)
-        ?.map((m) => HotKeyModifier.values.firstWhere(
-              (mod) => mod.name == m,
-              orElse: () => HotKeyModifier.control,
-            ))
-        .toList() ?? <HotKeyModifier>[],
+    modifiers: modifiers,
     scope: HotKeyScope.values.firstWhere(
       (s) => s.name == hotkeyData['scope'],
       orElse: () => HotKeyScope.system,

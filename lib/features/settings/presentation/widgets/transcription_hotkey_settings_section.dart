@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:autoquill_ai/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:autoquill_ai/features/settings/presentation/bloc/settings_event.dart';
 import 'package:autoquill_ai/features/settings/presentation/bloc/settings_state.dart';
 import 'package:autoquill_ai/widgets/hotkey_converter.dart';
+import 'package:autoquill_ai/widgets/hotkey_display.dart';
 import 'package:autoquill_ai/widgets/record_hotkey_dialog.dart';
 
 class TranscriptionHotkeySettingsSection extends StatelessWidget {
@@ -47,16 +47,7 @@ class TranscriptionHotkeySettingsSection extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: _buildHotkeyDisplay(hotkeyKey, state),
-                  ),
-                ),
+                _buildHotkeyDisplay(context, hotkeyKey, state),
                 const SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(Icons.edit),
@@ -78,31 +69,20 @@ class TranscriptionHotkeySettingsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildHotkeyDisplay(String hotkeyKey, SettingsState state) {
+  Widget _buildHotkeyDisplay(BuildContext context, String hotkeyKey, SettingsState state) {
     final hotkeyData = state.storedHotkeys[hotkeyKey];
-    if (hotkeyData == null) {
-      return const Text('None configured');
-    }
-    final hotKey = hotKeyConverter(hotkeyData);
+    final hotKey = hotkeyData != null ? hotKeyConverter(hotkeyData) : null;
     
-    // Create a simple text representation of the hotkey
-    String keyText = '';
-    if (hotKey.modifiers?.contains(HotKeyModifier.alt) ?? false) {
-      keyText += 'Alt+';
-    }
-    if (hotKey.modifiers?.contains(HotKeyModifier.control) ?? false) {
-      keyText += 'Ctrl+';
-    }
-    if (hotKey.modifiers?.contains(HotKeyModifier.shift) ?? false) {
-      keyText += 'Shift+';
-    }
-    if (hotKey.modifiers?.contains(HotKeyModifier.meta) ?? false) {
-      keyText += 'Cmd+';
-    }
-    
-    keyText += hotKey.key.keyLabel;
-    
-    return Text(keyText);
+    return HotkeyDisplay.forPlatform(
+      hotkey: hotKey,
+      showIcon: false,
+      fontSize: 14.0,
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      borderColor: hotKey != null 
+          ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)
+          : Colors.grey,
+    );
   }
 
   Future<void> _showRecordHotkeyDialog(BuildContext context, String mode) async {
