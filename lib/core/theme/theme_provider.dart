@@ -16,8 +16,8 @@ class ThemeProvider extends ChangeNotifier {
   bool get isDarkMode => _themeMode == ThemeMode.dark;
   
   ThemeData get currentTheme => _themeMode == ThemeMode.dark 
-      ? shadcnDarkTheme 
-      : shadcnLightTheme;
+      ? minimalistDarkTheme 
+      : minimalistLightTheme;
   
   void _loadThemeFromStorage() {
     final box = Hive.box('settings');

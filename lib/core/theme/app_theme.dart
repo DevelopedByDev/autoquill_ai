@@ -1,111 +1,442 @@
 import 'package:flutter/material.dart';
+import 'design_tokens.dart';
 
-// Shadcn-inspired dark theme
-final ThemeData shadcnDarkTheme = ThemeData(
+// Minimalist dark theme
+final ThemeData minimalistDarkTheme = ThemeData(
   brightness: Brightness.dark,
   useMaterial3: true,
   fontFamily: 'Inter',
-  scaffoldBackgroundColor: const Color(0xFF09090B),
+  scaffoldBackgroundColor: DesignTokens.pureBlack,
   colorScheme: const ColorScheme.dark(
-    primary: Color(0xFF3B82F6),      // blue-500
-    onPrimary: Colors.white,
-    secondary: Color(0xFFF97316),    // orange-500
-    onSecondary: Colors.black,
-    background: Color(0xFF09090B),
-    onBackground: Colors.white,
-    surface: Color(0xFF18181B),
-    onSurface: Colors.white,
-    error: Color(0xFFEF4444),
-    onError: Colors.white,
+    primary: DesignTokens.vibrantCoral,
+    onPrimary: DesignTokens.trueWhite,
+    secondary: DesignTokens.vibrantCoral,
+    onSecondary: DesignTokens.trueWhite,
+    background: DesignTokens.pureBlack,
+    onBackground: DesignTokens.trueWhite,
+    surface: DesignTokens.darkSurface,
+    onSurface: DesignTokens.trueWhite,
+    error: DesignTokens.vibrantCoral,
+    onError: DesignTokens.trueWhite,
   ),
-  cardColor: const Color(0xFF18181B),
-  dividerColor: const Color(0xFF27272A),
+  cardColor: DesignTokens.darkSurface,
+  dividerColor: DesignTokens.darkDivider,
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
-    fillColor: const Color(0xFF18181B),
+    fillColor: DesignTokens.darkSurface,
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: Color(0xFF27272A)),
+      borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
+      borderSide: BorderSide.none,
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
+      borderSide: BorderSide.none,
     ),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 2),
+      borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
+      borderSide: BorderSide(color: DesignTokens.vibrantCoral, width: DesignTokens.borderWidthMedium),
     ),
-    labelStyle: const TextStyle(color: Color(0xFFA1A1AA)), // muted text
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: DesignTokens.spaceSM,
+      vertical: DesignTokens.spaceSM,
+    ),
+    labelStyle: TextStyle(
+      color: Color.fromRGBO(255, 255, 255, DesignTokens.opacitySubtle),
+      fontSize: DesignTokens.bodyMedium,
+      fontWeight: DesignTokens.fontWeightRegular,
+    ),
+    hintStyle: TextStyle(
+      color: Color.fromRGBO(255, 255, 255, DesignTokens.opacityDisabled),
+      fontSize: DesignTokens.bodyMedium,
+      fontWeight: DesignTokens.fontWeightRegular,
+    ),
   ),
   textTheme: const TextTheme(
-    displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w600, color: Colors.white),
-    titleLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.w500, color: Colors.white),
-    bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: Colors.white),
-    bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: Color(0xFFA1A1AA)),
-    labelLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, letterSpacing: 1.25, color: Colors.white),
+    displayLarge: TextStyle(
+      fontSize: DesignTokens.headlineLarge,
+      fontWeight: DesignTokens.fontWeightBold,
+      color: DesignTokens.trueWhite,
+      height: DesignTokens.headlineHeight,
+    ),
+    displayMedium: TextStyle(
+      fontSize: DesignTokens.headlineMedium,
+      fontWeight: DesignTokens.fontWeightBold,
+      color: DesignTokens.trueWhite,
+      height: DesignTokens.headlineHeight,
+    ),
+    displaySmall: TextStyle(
+      fontSize: DesignTokens.headlineSmall,
+      fontWeight: DesignTokens.fontWeightBold,
+      color: DesignTokens.trueWhite,
+      height: DesignTokens.headlineHeight,
+    ),
+    bodyLarge: TextStyle(
+      fontSize: DesignTokens.bodyLarge,
+      fontWeight: DesignTokens.fontWeightRegular,
+      color: DesignTokens.trueWhite,
+      height: DesignTokens.bodyHeight,
+    ),
+    bodyMedium: TextStyle(
+      fontSize: DesignTokens.bodyMedium,
+      fontWeight: DesignTokens.fontWeightRegular,
+      color: DesignTokens.trueWhite,
+      height: DesignTokens.bodyHeight,
+    ),
+    labelLarge: TextStyle(
+      fontSize: DesignTokens.bodyMedium,
+      fontWeight: DesignTokens.fontWeightMedium,
+      color: DesignTokens.trueWhite,
+      height: DesignTokens.captionHeight,
+    ),
+    labelMedium: TextStyle(
+      fontSize: DesignTokens.captionSize,
+      fontWeight: DesignTokens.fontWeightLight,
+      color: DesignTokens.softGray,
+      height: DesignTokens.captionHeight,
+    ),
+  ),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: DesignTokens.vibrantCoral,
+      foregroundColor: DesignTokens.trueWhite,
+      elevation: DesignTokens.elevationNone,
+      padding: const EdgeInsets.symmetric(
+        horizontal: DesignTokens.spaceMD,
+        vertical: DesignTokens.spaceSM,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
+      ),
+      textStyle: const TextStyle(
+        fontSize: DesignTokens.bodyMedium,
+        fontWeight: DesignTokens.fontWeightMedium,
+      ),
+    ),
+  ),
+  textButtonTheme: TextButtonThemeData(
+    style: TextButton.styleFrom(
+      foregroundColor: DesignTokens.vibrantCoral,
+      padding: const EdgeInsets.symmetric(
+        horizontal: DesignTokens.spaceSM,
+        vertical: DesignTokens.spaceXS,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
+      ),
+      textStyle: const TextStyle(
+        fontSize: DesignTokens.bodyMedium,
+        fontWeight: DesignTokens.fontWeightMedium,
+      ),
+    ),
+  ),
+  outlinedButtonTheme: OutlinedButtonThemeData(
+    style: OutlinedButton.styleFrom(
+      foregroundColor: DesignTokens.trueWhite,
+      side: const BorderSide(color: DesignTokens.darkDivider, width: DesignTokens.borderWidthThin),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DesignTokens.spaceMD,
+        vertical: DesignTokens.spaceSM,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
+      ),
+      textStyle: const TextStyle(
+        fontSize: DesignTokens.bodyMedium,
+        fontWeight: DesignTokens.fontWeightMedium,
+      ),
+    ),
+  ),
+  cardTheme: CardTheme(
+    color: DesignTokens.darkSurface,
+    elevation: DesignTokens.elevationNone,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
+    ),
+    margin: EdgeInsets.zero,
   ),
   dialogTheme: DialogTheme(
-    backgroundColor: const Color(0xFF18181B),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    titleTextStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),
-    contentTextStyle: const TextStyle(fontSize: 16, color: Colors.white),
+    backgroundColor: DesignTokens.darkSurface,
+    elevation: DesignTokens.elevationNone,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
+    ),
+    titleTextStyle: const TextStyle(
+      fontSize: DesignTokens.headlineSmall,
+      fontWeight: DesignTokens.fontWeightBold,
+      color: DesignTokens.trueWhite,
+    ),
+    contentTextStyle: const TextStyle(
+      fontSize: DesignTokens.bodyMedium,
+      fontWeight: DesignTokens.fontWeightRegular,
+      color: DesignTokens.trueWhite,
+    ),
   ),
-  iconTheme: const IconThemeData(color: Color(0xFFA1A1AA)),
+  appBarTheme: const AppBarTheme(
+    backgroundColor: DesignTokens.pureBlack,
+    foregroundColor: DesignTokens.trueWhite,
+    elevation: DesignTokens.elevationNone,
+    centerTitle: false,
+    titleTextStyle: TextStyle(
+      fontSize: DesignTokens.headlineSmall,
+      fontWeight: DesignTokens.fontWeightBold,
+      color: DesignTokens.trueWhite,
+    ),
+  ),
+  switchTheme: SwitchThemeData(
+    thumbColor: MaterialStateProperty.resolveWith((states) {
+      if (states.contains(MaterialState.selected)) {
+        return DesignTokens.vibrantCoral;
+      }
+      return DesignTokens.darkDivider;
+    }),
+    trackColor: MaterialStateProperty.resolveWith((states) {
+      if (states.contains(MaterialState.selected)) {
+        return Color.fromRGBO(245, 80, 54, DesignTokens.opacityFaint);
+      }
+      return DesignTokens.darkSurface;
+    }),
+  ),
+  checkboxTheme: CheckboxThemeData(
+    fillColor: MaterialStateProperty.resolveWith((states) {
+      if (states.contains(MaterialState.selected)) {
+        return DesignTokens.vibrantCoral;
+      }
+      return DesignTokens.darkSurface;
+    }),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(DesignTokens.radiusSM / 2),
+    ),
+  ),
+  iconTheme: const IconThemeData(
+    color: DesignTokens.trueWhite,
+    size: 24,
+  ),
   snackBarTheme: SnackBarThemeData(
-    backgroundColor: const Color(0xFF1F2937),
-    contentTextStyle: const TextStyle(color: Colors.white),
+    backgroundColor: DesignTokens.darkSurface,
+    contentTextStyle: const TextStyle(color: DesignTokens.trueWhite),
     behavior: SnackBarBehavior.floating,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
+    ),
   ),
 );
 
-// Shadcn-inspired light theme
-final ThemeData shadcnLightTheme = ThemeData(
+// Minimalist light theme
+final ThemeData minimalistLightTheme = ThemeData(
   brightness: Brightness.light,
   useMaterial3: true,
   fontFamily: 'Inter',
-  scaffoldBackgroundColor: Colors.white,
+  scaffoldBackgroundColor: DesignTokens.trueWhite,
   colorScheme: const ColorScheme.light(
-    primary: Color(0xFF1D4ED8),      // blue-700
-    onPrimary: Colors.white,
-    secondary: Color(0xFFEA580C),    // orange-600
-    onSecondary: Colors.white,
-    background: Colors.white,
-    onBackground: Colors.black,
-    surface: Color(0xFFF9FAFB),
-    onSurface: Colors.black,
-    error: Color(0xFFB91C1C),
-    onError: Colors.white,
+    primary: DesignTokens.vibrantCoral,
+    onPrimary: DesignTokens.trueWhite,
+    secondary: DesignTokens.vibrantCoral,
+    onSecondary: DesignTokens.trueWhite,
+    background: DesignTokens.trueWhite,
+    onBackground: DesignTokens.pureBlack,
+    surface: DesignTokens.softGray,
+    onSurface: DesignTokens.pureBlack,
+    error: DesignTokens.vibrantCoral,
+    onError: DesignTokens.trueWhite,
   ),
-  cardColor: const Color(0xFFF9FAFB),
-  dividerColor: const Color(0xFFE4E4E7),
+  cardColor: DesignTokens.softGray,
+  dividerColor: DesignTokens.softGray,
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
-    fillColor: const Color(0xFFF4F4F5),
+    fillColor: DesignTokens.softGray,
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: Color(0xFFE4E4E7)),
+      borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
+      borderSide: BorderSide.none,
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
+      borderSide: BorderSide.none,
     ),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: Color(0xFF1D4ED8), width: 2),
+      borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
+      borderSide: const BorderSide(color: DesignTokens.vibrantCoral, width: DesignTokens.borderWidthMedium),
     ),
-    labelStyle: const TextStyle(color: Color(0xFF52525B)), // muted text
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: DesignTokens.spaceSM,
+      vertical: DesignTokens.spaceSM,
+    ),
+    labelStyle: TextStyle(
+      color: Color.fromRGBO(0, 0, 0, DesignTokens.opacitySubtle),
+      fontSize: DesignTokens.bodyMedium,
+      fontWeight: DesignTokens.fontWeightRegular,
+    ),
+    hintStyle: TextStyle(
+      color: Color.fromRGBO(0, 0, 0, DesignTokens.opacityDisabled),
+      fontSize: DesignTokens.bodyMedium,
+      fontWeight: DesignTokens.fontWeightRegular,
+    ),
   ),
   textTheme: const TextTheme(
-    displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w600, color: Colors.black),
-    titleLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.w500, color: Colors.black),
-    bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: Colors.black),
-    bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: Color(0xFF52525B)),
-    labelLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, letterSpacing: 1.25, color: Colors.black),
+    displayLarge: TextStyle(
+      fontSize: DesignTokens.headlineLarge,
+      fontWeight: DesignTokens.fontWeightBold,
+      color: DesignTokens.pureBlack,
+      height: DesignTokens.headlineHeight,
+    ),
+    displayMedium: TextStyle(
+      fontSize: DesignTokens.headlineMedium,
+      fontWeight: DesignTokens.fontWeightBold,
+      color: DesignTokens.pureBlack,
+      height: DesignTokens.headlineHeight,
+    ),
+    displaySmall: TextStyle(
+      fontSize: DesignTokens.headlineSmall,
+      fontWeight: DesignTokens.fontWeightBold,
+      color: DesignTokens.pureBlack,
+      height: DesignTokens.headlineHeight,
+    ),
+    bodyLarge: TextStyle(
+      fontSize: DesignTokens.bodyLarge,
+      fontWeight: DesignTokens.fontWeightRegular,
+      color: DesignTokens.pureBlack,
+      height: DesignTokens.bodyHeight,
+    ),
+    bodyMedium: TextStyle(
+      fontSize: DesignTokens.bodyMedium,
+      fontWeight: DesignTokens.fontWeightRegular,
+      color: DesignTokens.pureBlack,
+      height: DesignTokens.bodyHeight,
+    ),
+    labelLarge: TextStyle(
+      fontSize: DesignTokens.bodyMedium,
+      fontWeight: DesignTokens.fontWeightMedium,
+      color: DesignTokens.pureBlack,
+      height: DesignTokens.captionHeight,
+    ),
+    labelMedium: TextStyle(
+      fontSize: DesignTokens.captionSize,
+      fontWeight: DesignTokens.fontWeightLight,
+      color: Color.fromRGBO(0, 0, 0, DesignTokens.opacitySubtle),
+      height: DesignTokens.captionHeight,
+    ),
+  ),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: DesignTokens.vibrantCoral,
+      foregroundColor: DesignTokens.trueWhite,
+      elevation: DesignTokens.elevationNone,
+      padding: const EdgeInsets.symmetric(
+        horizontal: DesignTokens.spaceMD,
+        vertical: DesignTokens.spaceSM,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
+      ),
+      textStyle: const TextStyle(
+        fontSize: DesignTokens.bodyMedium,
+        fontWeight: DesignTokens.fontWeightMedium,
+      ),
+    ),
+  ),
+  textButtonTheme: TextButtonThemeData(
+    style: TextButton.styleFrom(
+      foregroundColor: DesignTokens.vibrantCoral,
+      padding: const EdgeInsets.symmetric(
+        horizontal: DesignTokens.spaceSM,
+        vertical: DesignTokens.spaceXS,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
+      ),
+      textStyle: const TextStyle(
+        fontSize: DesignTokens.bodyMedium,
+        fontWeight: DesignTokens.fontWeightMedium,
+      ),
+    ),
+  ),
+  outlinedButtonTheme: OutlinedButtonThemeData(
+    style: OutlinedButton.styleFrom(
+      foregroundColor: DesignTokens.pureBlack,
+      side: const BorderSide(color: DesignTokens.softGray, width: DesignTokens.borderWidthThin),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DesignTokens.spaceMD,
+        vertical: DesignTokens.spaceSM,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
+      ),
+      textStyle: const TextStyle(
+        fontSize: DesignTokens.bodyMedium,
+        fontWeight: DesignTokens.fontWeightMedium,
+      ),
+    ),
+  ),
+  cardTheme: CardTheme(
+    color: DesignTokens.softGray,
+    elevation: DesignTokens.elevationNone,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
+    ),
+    margin: EdgeInsets.zero,
   ),
   dialogTheme: DialogTheme(
-    backgroundColor: Colors.white,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    titleTextStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black),
-    contentTextStyle: const TextStyle(fontSize: 16, color: Colors.black),
+    backgroundColor: DesignTokens.trueWhite,
+    elevation: DesignTokens.elevationNone,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
+    ),
+    titleTextStyle: const TextStyle(
+      fontSize: DesignTokens.headlineSmall,
+      fontWeight: DesignTokens.fontWeightBold,
+      color: DesignTokens.pureBlack,
+    ),
+    contentTextStyle: const TextStyle(
+      fontSize: DesignTokens.bodyMedium,
+      fontWeight: DesignTokens.fontWeightRegular,
+      color: DesignTokens.pureBlack,
+    ),
   ),
-  iconTheme: const IconThemeData(color: Color(0xFF52525B)),
+  appBarTheme: const AppBarTheme(
+    backgroundColor: DesignTokens.trueWhite,
+    foregroundColor: DesignTokens.pureBlack,
+    elevation: DesignTokens.elevationNone,
+    centerTitle: false,
+    titleTextStyle: TextStyle(
+      fontSize: DesignTokens.headlineSmall,
+      fontWeight: DesignTokens.fontWeightBold,
+      color: DesignTokens.pureBlack,
+    ),
+  ),
+  switchTheme: SwitchThemeData(
+    thumbColor: MaterialStateProperty.resolveWith((states) {
+      if (states.contains(MaterialState.selected)) {
+        return DesignTokens.vibrantCoral;
+      }
+      return DesignTokens.vibrantCoral; // Using vibrant coral for better visibility in light mode
+    }),
+    trackColor: MaterialStateProperty.resolveWith((states) {
+      if (states.contains(MaterialState.selected)) {
+        return Color.fromRGBO(245, 80, 54, DesignTokens.opacityFaint);
+      }
+      return DesignTokens.softGray;
+    }),
+  ),
+  checkboxTheme: CheckboxThemeData(
+    fillColor: MaterialStateProperty.resolveWith((states) {
+      if (states.contains(MaterialState.selected)) {
+        return DesignTokens.vibrantCoral;
+      }
+      return DesignTokens.softGray;
+    }),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(DesignTokens.radiusSM / 2),
+    ),
+  ),
+  iconTheme: const IconThemeData(
+    color: DesignTokens.pureBlack,
+    size: 24,
+  ),
   snackBarTheme: SnackBarThemeData(
-    backgroundColor: const Color(0xFFF3F4F6),
-    contentTextStyle: const TextStyle(color: Colors.black),
+    backgroundColor: DesignTokens.pureBlack,
+    contentTextStyle: const TextStyle(color: DesignTokens.trueWhite),
     behavior: SnackBarBehavior.floating,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
+    ),
   ),
 );

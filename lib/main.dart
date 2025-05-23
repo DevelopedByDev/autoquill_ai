@@ -177,8 +177,8 @@ class MainApp extends StatelessWidget {
                     title: 'AutoQuill AI',
                     builder: BotToastInit(),
                     navigatorObservers: [BotToastNavigatorObserver()],
-                    theme: shadcnLightTheme,
-                    darkTheme: shadcnDarkTheme,
+                    theme: minimalistLightTheme,
+                    darkTheme: minimalistDarkTheme,
                     themeMode: themeMode,
                     initialRoute: '/',
                     routes: {

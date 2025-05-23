@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:autoquill_ai/core/theme/design_tokens.dart';
 import 'package:autoquill_ai/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:autoquill_ai/features/settings/presentation/bloc/settings_state.dart';
 import 'package:autoquill_ai/features/settings/presentation/widgets/transcription_hotkey_settings_section.dart';
@@ -19,18 +20,34 @@ class TranscriptionSettingsPage extends StatelessWidget {
         }
       },
       builder: (context, state) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Transcription Hotkey Settings Section
-              const TranscriptionHotkeySettingsSection(),
-              const SizedBox(height: 32),
-              
-              // Transcription Models Section
-              const TranscriptionModelsSection(),
-            ],
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              'Transcription Settings',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: DesignTokens.fontWeightMedium,
+              ),
+            ),
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            elevation: 0,
+            centerTitle: false,
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(DesignTokens.spaceMD),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Transcription Hotkey Settings Section
+                const TranscriptionHotkeySettingsSection(),
+                const SizedBox(height: DesignTokens.spaceLG),
+                
+                // Transcription Models Section
+                const TranscriptionModelsSection(),
+                
+                // Bottom padding for scrolling
+                const SizedBox(height: DesignTokens.spaceLG),
+              ],
+            ),
           ),
         );
       },

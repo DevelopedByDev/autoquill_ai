@@ -18,7 +18,7 @@ class ThemeProviderWidget extends StatelessWidget {
       buildWhen: (previous, current) => previous.themeMode != current.themeMode,
       builder: (context, state) {
         return Theme(
-          data: state.themeMode == ThemeMode.dark ? shadcnDarkTheme : shadcnLightTheme,
+          data: state.themeMode == ThemeMode.dark ? minimalistDarkTheme : minimalistLightTheme,
           child: child,
         );
       },
