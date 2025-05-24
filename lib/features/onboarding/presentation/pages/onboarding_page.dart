@@ -7,6 +7,7 @@ import 'package:autoquill_ai/features/onboarding/presentation/widgets/api_key_st
 // Choose Tools step removed
 import 'package:autoquill_ai/features/onboarding/presentation/widgets/completed_step.dart';
 import 'package:autoquill_ai/features/onboarding/presentation/widgets/hotkeys_step.dart';
+import 'package:autoquill_ai/features/onboarding/presentation/widgets/permissions_step.dart';
 import 'package:autoquill_ai/features/onboarding/presentation/widgets/preferences_step.dart';
 import 'package:autoquill_ai/features/onboarding/presentation/widgets/welcome_step.dart';
 import 'package:flutter/material.dart';
@@ -33,16 +34,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
     return BlocProvider(
       create: (context) => OnboardingBloc()..add(InitializeOnboarding()),
       child: BlocConsumer<OnboardingBloc, OnboardingState>(
-        listenWhen: (previous, current) => 
-          previous.currentStep != current.currentStep || 
-          previous.themeMode != current.themeMode,
+        listenWhen: (previous, current) =>
+            previous.currentStep != current.currentStep ||
+            previous.themeMode != current.themeMode,
         listener: (context, state) {
           if (state.currentStep == OnboardingStep.completed) {
             // Use a more robust approach to restart the app
             // This will ensure all providers are properly initialized
             WidgetsBinding.instance.addPostFrameCallback((_) {
               // Close the current onboarding page
-              Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+              Navigator.of(context)
+                  .pushNamedAndRemoveUntil('/', (route) => false);
             });
           } else {
             // Animate to the current step
@@ -51,7 +53,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut,
             );
-            
+
             // Apply theme changes immediately
             if (state.themeMode == ThemeMode.light) {
               AppStorage.settingsBox.put('theme_mode', 'light');
@@ -68,7 +70,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                    Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.1),
                     Theme.of(context).colorScheme.surface,
                   ],
                 ),
@@ -78,19 +83,20 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   children: [
                     // Add sufficient padding at the top to avoid window control buttons
                     const SizedBox(height: 40),
-                    
+
                     // Progress indicator
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24.0),
                       child: LinearProgressIndicator(
-                        value: (state.currentStep.index) / (OnboardingStep.completed.index - 1),
+                        value: (state.currentStep.index) /
+                            (OnboardingStep.completed.index - 1),
                         backgroundColor: Colors.grey.withValues(alpha: 0.3),
                         valueColor: AlwaysStoppedAnimation<Color>(
                           Theme.of(context).colorScheme.primary,
                         ),
                       ),
                     ),
-                    
+
                     // Page content
                     Expanded(
                       child: PageView(
@@ -98,6 +104,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         physics: const NeverScrollableScrollPhysics(),
                         children: const [
                           WelcomeStep(),
+                          PermissionsStep(),
                           // ChooseToolsStep removed
                           ApiKeyStep(),
                           HotkeysStep(),
@@ -106,7 +113,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         ],
                       ),
                     ),
-                    
+
                     // Navigation buttons
                     if (state.currentStep != OnboardingStep.completed)
                       Padding(
@@ -120,10 +127,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
                                 width: 100,
                                 child: TextButton(
                                   onPressed: () {
-                                    context.read<OnboardingBloc>().add(NavigateToPreviousStep());
+                                    context
+                                        .read<OnboardingBloc>()
+                                        .add(NavigateToPreviousStep());
                                   },
                                   style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12.0),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
                                     ),
@@ -133,31 +143,40 @@ class _OnboardingPageState extends State<OnboardingPage> {
                               )
                             else
                               const SizedBox(width: 100),
-                            
+
                             // Next/Continue button
                             SizedBox(
                               width: 120,
                               child: ElevatedButton(
                                 onPressed: _canProceed(state)
-                                  ? () {
-                                      if (state.currentStep == OnboardingStep.preferences) {
-                                        context.read<OnboardingBloc>().add(CompleteOnboarding());
-                                      } else {
-                                        context.read<OnboardingBloc>().add(NavigateToNextStep());
+                                    ? () {
+                                        if (state.currentStep ==
+                                            OnboardingStep.preferences) {
+                                          context
+                                              .read<OnboardingBloc>()
+                                              .add(CompleteOnboarding());
+                                        } else {
+                                          context
+                                              .read<OnboardingBloc>()
+                                              .add(NavigateToNextStep());
+                                        }
                                       }
-                                    }
-                                  : null,
+                                    : null,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(context).colorScheme.primary,
-                                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+                                  backgroundColor:
+                                      Theme.of(context).colorScheme.primary,
+                                  foregroundColor:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12.0),
                                   elevation: 2,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
                                 child: Text(
-                                  state.currentStep == OnboardingStep.preferences
+                                  state.currentStep ==
+                                          OnboardingStep.preferences
                                       ? 'Finish'
                                       : 'Next',
                                 ),
@@ -180,6 +199,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
     switch (state.currentStep) {
       case OnboardingStep.welcome:
         return true;
+      case OnboardingStep.permissions:
+        return state.canProceedFromPermissions;
       // Choose Tools step removed
       case OnboardingStep.apiKey:
         return state.canProceedFromApiKey;

@@ -2,6 +2,7 @@ import 'package:autoquill_ai/core/settings/settings_service.dart';
 import 'package:autoquill_ai/core/storage/app_storage.dart';
 import 'package:autoquill_ai/features/onboarding/presentation/bloc/onboarding_event.dart';
 import 'package:autoquill_ai/features/onboarding/presentation/bloc/onboarding_state.dart';
+import 'package:autoquill_ai/core/permissions/permission_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,6 +13,13 @@ import 'package:http/http.dart' as http;
 class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
   OnboardingBloc() : super(const OnboardingState()) {
     on<InitializeOnboarding>(_onInitializeOnboarding);
+
+    // Permission events
+    on<CheckPermissions>(_onCheckPermissions);
+    on<RequestPermission>(_onRequestPermission);
+    on<OpenSystemPreferences>(_onOpenSystemPreferences);
+    on<UpdatePermissionStatus>(_onUpdatePermissionStatus);
+
     // UpdateSelectedTools event removed as both tools are always enabled
     on<UpdateApiKey>(_onUpdateApiKey);
     on<ValidateApiKey>(_onValidateApiKey);
@@ -20,7 +28,8 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     on<UpdateThemePreference>(_onUpdateThemePreference);
     on<UpdateAutoCopyPreference>(_onUpdateAutoCopyPreference);
     on<UpdateTranscriptionModel>(_onUpdateTranscriptionModel);
-    on<UpdateAssistantScreenshotPreference>(_onUpdateAssistantScreenshotPreference);
+    on<UpdateAssistantScreenshotPreference>(
+        _onUpdateAssistantScreenshotPreference);
     on<CompleteOnboarding>(_onCompleteOnboarding);
     on<NavigateToNextStep>(_onNavigateToNextStep);
     on<NavigateToPreviousStep>(_onNavigateToPreviousStep);
@@ -37,7 +46,7 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
       modifiers: [HotKeyModifier.alt, HotKeyModifier.shift],
       scope: HotKeyScope.system,
     );
-    
+
     final defaultAssistantHotkey = HotKey(
       key: LogicalKeyboardKey.keyS,
       modifiers: [HotKeyModifier.alt, HotKeyModifier.shift],
@@ -48,6 +57,66 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
       transcriptionHotkey: defaultTranscriptionHotkey,
       assistantHotkey: defaultAssistantHotkey,
     ));
+  }
+
+  Future<void> _onCheckPermissions(
+    CheckPermissions event,
+    Emitter<OnboardingState> emit,
+  ) async {
+    try {
+      final permissions = await PermissionService.checkAllPermissions();
+      emit(state.copyWith(permissionStatuses: permissions));
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error checking permissions: $e');
+      }
+    }
+  }
+
+  Future<void> _onRequestPermission(
+    RequestPermission event,
+    Emitter<OnboardingState> emit,
+  ) async {
+    try {
+      final status =
+          await PermissionService.requestPermission(event.permissionType);
+
+      // Update the permission status in the state
+      final updatedPermissions =
+          Map<PermissionType, PermissionStatus>.from(state.permissionStatuses);
+      updatedPermissions[event.permissionType] = status;
+
+      emit(state.copyWith(permissionStatuses: updatedPermissions));
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error requesting permission ${event.permissionType}: $e');
+      }
+    }
+  }
+
+  Future<void> _onOpenSystemPreferences(
+    OpenSystemPreferences event,
+    Emitter<OnboardingState> emit,
+  ) async {
+    try {
+      await PermissionService.openSystemPreferences(event.permissionType);
+    } catch (e) {
+      if (kDebugMode) {
+        print(
+            'Error opening system preferences for ${event.permissionType}: $e');
+      }
+    }
+  }
+
+  void _onUpdatePermissionStatus(
+    UpdatePermissionStatus event,
+    Emitter<OnboardingState> emit,
+  ) {
+    final updatedPermissions =
+        Map<PermissionType, PermissionStatus>.from(state.permissionStatuses);
+    updatedPermissions[event.permissionType] = event.status;
+
+    emit(state.copyWith(permissionStatuses: updatedPermissions));
   }
 
   // _onUpdateSelectedTools removed as both tools are always enabled
@@ -131,7 +200,7 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     // Use the settings service to update theme
     final settingsService = SettingsService();
     await settingsService.setThemeMode(event.themeMode);
-    
+
     emit(state.copyWith(themeMode: event.themeMode));
   }
 
@@ -163,13 +232,13 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     try {
       // Save all settings to persistent storage
       await _saveOnboardingSettings();
-      
+
       // Mark onboarding as completed
       await AppStorage.setOnboardingCompleted(true);
-      
+
       // Add a delay to ensure all settings are properly saved before navigation
       await Future.delayed(const Duration(milliseconds: 500));
-      
+
       emit(state.copyWith(currentStep: OnboardingStep.completed));
     } catch (e) {
       if (kDebugMode) {
@@ -189,6 +258,9 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
 
     switch (currentStep) {
       case OnboardingStep.welcome:
+        nextStep = OnboardingStep.permissions;
+        break;
+      case OnboardingStep.permissions:
         nextStep = OnboardingStep.apiKey;
         break;
       case OnboardingStep.apiKey:
@@ -222,8 +294,11 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
       case OnboardingStep.welcome:
         // Already at the first step
         return;
-      case OnboardingStep.apiKey:
+      case OnboardingStep.permissions:
         previousStep = OnboardingStep.welcome;
+        break;
+      case OnboardingStep.apiKey:
+        previousStep = OnboardingStep.permissions;
         break;
       case OnboardingStep.hotkeys:
         previousStep = OnboardingStep.apiKey;
@@ -244,9 +319,10 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
   Future<void> _saveOnboardingSettings() async {
     // Use the settings service for all settings
     final settingsService = SettingsService();
-    
+
     // Save API key
-    if (state.apiKey.isNotEmpty && state.apiKeyStatus == ApiKeyValidationStatus.valid) {
+    if (state.apiKey.isNotEmpty &&
+        state.apiKeyStatus == ApiKeyValidationStatus.valid) {
       await AppStorage.saveApiKey(state.apiKey);
       // Also save to settings service
       await settingsService.setApiKey(state.apiKey);
@@ -257,24 +333,24 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     if (state.transcriptionHotkey != null) {
       // Save using both methods to ensure compatibility
       await settingsService.setTranscriptionHotkey(state.transcriptionHotkey!);
-      
+
       // Save to Hive as a Map
       final hotkeyMap = state.transcriptionHotkey!.toJson();
       await AppStorage.settingsBox.put('transcription_hotkey', hotkeyMap);
-      
+
       if (kDebugMode) {
         print('Saved transcription hotkey: $hotkeyMap');
       }
     }
-    
+
     if (state.assistantHotkey != null) {
       // Save using both methods to ensure compatibility
       await settingsService.setAssistantHotkey(state.assistantHotkey!);
-      
+
       // Save to Hive as a Map
       final hotkeyMap = state.assistantHotkey!.toJson();
       await AppStorage.settingsBox.put('assistant_hotkey', hotkeyMap);
-      
+
       if (kDebugMode) {
         print('Saved assistant hotkey: $hotkeyMap');
       }
@@ -282,7 +358,8 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
 
     // Save theme preference
     await settingsService.setThemeMode(state.themeMode);
-    await AppStorage.settingsBox.put('theme_mode', state.themeMode == ThemeMode.light ? 'light' : 'dark');
+    await AppStorage.settingsBox.put(
+        'theme_mode', state.themeMode == ThemeMode.light ? 'light' : 'dark');
 
     // Save auto-copy preference
     await settingsService.setAutoCopy(state.autoCopyEnabled);
@@ -290,11 +367,13 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
 
     // Save transcription model
     await settingsService.setTranscriptionModel(state.transcriptionModel);
-    await AppStorage.settingsBox.put('transcription-model', state.transcriptionModel);
-    
+    await AppStorage.settingsBox
+        .put('transcription-model', state.transcriptionModel);
+
     // Save assistant screenshot preference
-    await AppStorage.settingsBox.put('assistant_screenshot_enabled', state.assistantScreenshotEnabled);
-    
+    await AppStorage.settingsBox
+        .put('assistant_screenshot_enabled', state.assistantScreenshotEnabled);
+
     // Add a longer delay to ensure all settings are written before navigation
     await Future.delayed(const Duration(milliseconds: 500));
   }

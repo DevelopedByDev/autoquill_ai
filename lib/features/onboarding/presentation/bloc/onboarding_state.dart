@@ -1,21 +1,18 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
+import '../../../../core/permissions/permission_service.dart';
 
 enum OnboardingStep {
   welcome,
+  permissions,
   apiKey,
   hotkeys,
   preferences,
   completed
 }
 
-enum ApiKeyValidationStatus {
-  initial,
-  validating,
-  valid,
-  invalid
-}
+enum ApiKeyValidationStatus { initial, validating, valid, invalid }
 
 class OnboardingState extends Equatable {
   final OnboardingStep currentStep;
@@ -29,6 +26,7 @@ class OnboardingState extends Equatable {
   final bool autoCopyEnabled;
   final String transcriptionModel;
   final bool assistantScreenshotEnabled;
+  final Map<PermissionType, PermissionStatus> permissionStatuses;
 
   const OnboardingState({
     this.currentStep = OnboardingStep.welcome,
@@ -42,6 +40,7 @@ class OnboardingState extends Equatable {
     this.autoCopyEnabled = true,
     this.transcriptionModel = 'whisper-large-v3',
     this.assistantScreenshotEnabled = true,
+    this.permissionStatuses = const {},
   });
 
   OnboardingState copyWith({
@@ -56,6 +55,7 @@ class OnboardingState extends Equatable {
     bool? autoCopyEnabled,
     String? transcriptionModel,
     bool? assistantScreenshotEnabled,
+    Map<PermissionType, PermissionStatus>? permissionStatuses,
   }) {
     return OnboardingState(
       currentStep: currentStep ?? this.currentStep,
@@ -68,33 +68,42 @@ class OnboardingState extends Equatable {
       themeMode: themeMode ?? this.themeMode,
       autoCopyEnabled: autoCopyEnabled ?? this.autoCopyEnabled,
       transcriptionModel: transcriptionModel ?? this.transcriptionModel,
-      assistantScreenshotEnabled: assistantScreenshotEnabled ?? this.assistantScreenshotEnabled,
+      assistantScreenshotEnabled:
+          assistantScreenshotEnabled ?? this.assistantScreenshotEnabled,
+      permissionStatuses: permissionStatuses ?? this.permissionStatuses,
     );
   }
 
   // Both tools are always enabled now
   // No need for tool selection validation
-  
+
   bool get canProceedFromApiKey => apiKeyStatus == ApiKeyValidationStatus.valid;
-  
-  bool get canProceedFromHotkeys => 
-    (transcriptionEnabled && transcriptionHotkey != null) &&
-    (assistantEnabled ? assistantHotkey != null : true);
-  
+
+  bool get canProceedFromHotkeys =>
+      (transcriptionEnabled && transcriptionHotkey != null) &&
+      (assistantEnabled ? assistantHotkey != null : true);
+
+  bool get canProceedFromPermissions {
+    // Check if all required permissions are granted
+    return permissionStatuses.values
+        .every((status) => status == PermissionStatus.authorized);
+  }
+
   bool get isComplete => currentStep == OnboardingStep.completed;
 
   @override
   List<Object?> get props => [
-    currentStep,
-    transcriptionEnabled,
-    assistantEnabled,
-    apiKey,
-    apiKeyStatus,
-    transcriptionHotkey,
-    assistantHotkey,
-    themeMode,
-    autoCopyEnabled,
-    transcriptionModel,
-    assistantScreenshotEnabled,
-  ];
+        currentStep,
+        transcriptionEnabled,
+        assistantEnabled,
+        apiKey,
+        apiKeyStatus,
+        transcriptionHotkey,
+        assistantHotkey,
+        themeMode,
+        autoCopyEnabled,
+        transcriptionModel,
+        assistantScreenshotEnabled,
+        permissionStatuses,
+      ];
 }

@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
+import '../../../../core/permissions/permission_service.dart';
 
 abstract class OnboardingEvent extends Equatable {
   const OnboardingEvent();
@@ -10,6 +11,40 @@ abstract class OnboardingEvent extends Equatable {
 }
 
 class InitializeOnboarding extends OnboardingEvent {}
+
+// Permission events
+class CheckPermissions extends OnboardingEvent {}
+
+class RequestPermission extends OnboardingEvent {
+  final PermissionType permissionType;
+
+  const RequestPermission({required this.permissionType});
+
+  @override
+  List<Object?> get props => [permissionType];
+}
+
+class OpenSystemPreferences extends OnboardingEvent {
+  final PermissionType permissionType;
+
+  const OpenSystemPreferences({required this.permissionType});
+
+  @override
+  List<Object?> get props => [permissionType];
+}
+
+class UpdatePermissionStatus extends OnboardingEvent {
+  final PermissionType permissionType;
+  final PermissionStatus status;
+
+  const UpdatePermissionStatus({
+    required this.permissionType,
+    required this.status,
+  });
+
+  @override
+  List<Object?> get props => [permissionType, status];
+}
 
 // UpdateSelectedTools event removed - both tools are always enabled
 
