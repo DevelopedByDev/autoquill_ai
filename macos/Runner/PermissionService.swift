@@ -5,6 +5,14 @@ import ScreenCaptureKit
 @available(macOS 11.0, *)
 public class PermissionService {
     
+    // MARK: - Test Mode (for debugging permission flows)
+    private static let testMode = false // Set to true to test different permission states
+    private static let testPermissions: [String: PermissionStatus] = [
+        "microphone": .authorized,
+        "accessibility": .notDetermined,
+        "screenRecording": .notDetermined
+    ]
+    
     public enum PermissionType: String, CaseIterable {
         case microphone
         case screenRecording
@@ -21,6 +29,15 @@ public class PermissionService {
     // MARK: - Permission Checking
     
     public static func checkPermission(for type: PermissionType) -> PermissionStatus {
+        // Test mode override for debugging
+        if testMode {
+            let status = testPermissions[type.rawValue] ?? .notDetermined
+            #if DEBUG
+            print("PermissionService: TEST MODE - \(type.rawValue) permission: \(status)")
+            #endif
+            return status
+        }
+        
         switch type {
         case .microphone:
             return checkMicrophonePermission()
@@ -91,8 +108,37 @@ public class PermissionService {
     
     private static func checkScreenRecordingPermission() -> PermissionStatus {
         if #available(macOS 11.0, *) {
-            let hasPermission = CGPreflightScreenCaptureAccess()
-            return hasPermission ? .authorized : .notDetermined
+            // Primary check using preflight
+            let canAccess = CGPreflightScreenCaptureAccess()
+            
+            #if DEBUG
+            print("PermissionService: Screen recording preflight check result: \(canAccess)")
+            #endif
+            
+            if canAccess {
+                return .authorized
+            }
+            
+            // Secondary check: try to get display information
+            // This is a more thorough test that should catch permission issues
+            let displayID = CGMainDisplayID()
+            let displayBounds = CGDisplayBounds(displayID)
+            
+            #if DEBUG
+            print("PermissionService: Display bounds check - width: \(displayBounds.width), height: \(displayBounds.height)")
+            #endif
+            
+            // If we can get meaningful display bounds, we likely have permission
+            if displayBounds.width > 0 && displayBounds.height > 0 {
+                // Final preflight check to be sure
+                let finalCheck = CGPreflightScreenCaptureAccess()
+                #if DEBUG
+                print("PermissionService: Final preflight check: \(finalCheck)")
+                #endif
+                return finalCheck ? .authorized : .notDetermined
+            }
+            
+            return .notDetermined
         } else {
             // For older macOS versions, assume permission is granted
             return .authorized
@@ -107,11 +153,11 @@ public class PermissionService {
                 return
             }
             
-            // Request permission by attempting to capture
-            CGRequestScreenCaptureAccess()
+            // Request permission
+            let granted = CGRequestScreenCaptureAccess()
             
-            // Check the result after a short delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            // Give the system time to process the permission
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 let hasPermission = CGPreflightScreenCaptureAccess()
                 completion(hasPermission ? .authorized : .denied)
             }
@@ -121,15 +167,40 @@ public class PermissionService {
     }
     
     private static func openScreenRecordingPreferences() {
-        let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!
-        NSWorkspace.shared.open(url)
+        if #available(macOS 13.0, *) {
+            // Use the new System Settings URL for macOS 13+
+            let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!
+            NSWorkspace.shared.open(url)
+        } else {
+            // Use the old System Preferences URL for older macOS versions
+            let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!
+            NSWorkspace.shared.open(url)
+        }
     }
     
     // MARK: - Accessibility Permission
     
     private static func checkAccessibilityPermission() -> PermissionStatus {
+        // More robust accessibility permission checking
         let trusted = AXIsProcessTrusted()
-        return trusted ? .authorized : .notDetermined
+        
+        #if DEBUG
+        print("PermissionService: Accessibility permission check - AXIsProcessTrusted: \(trusted)")
+        #endif
+        
+        if trusted {
+            return .authorized
+        }
+        
+        // Double-check with a different method
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): false] as CFDictionary
+        let trustedWithOptions = AXIsProcessTrustedWithOptions(options)
+        
+        #if DEBUG
+        print("PermissionService: Accessibility permission check - AXIsProcessTrustedWithOptions: \(trustedWithOptions)")
+        #endif
+        
+        return trustedWithOptions ? .authorized : .notDetermined
     }
     
     private static func requestAccessibilityPermission(completion: @escaping (PermissionStatus) -> Void) {
@@ -139,11 +210,16 @@ public class PermissionService {
             return
         }
         
-        // Request permission
+        // Request permission - this will show the system dialog
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
-        let trusted = AXIsProcessTrustedWithOptions(options)
+        let immediateResult = AXIsProcessTrustedWithOptions(options)
         
-        // The system will show a dialog, so we'll check again after a delay
+        if immediateResult {
+            completion(.authorized)
+            return
+        }
+        
+        // The system dialog was shown, check again after a delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             let newTrusted = AXIsProcessTrusted()
             completion(newTrusted ? .authorized : .denied)
@@ -151,7 +227,14 @@ public class PermissionService {
     }
     
     private static func openAccessibilityPreferences() {
-        let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
-        NSWorkspace.shared.open(url)
+        if #available(macOS 13.0, *) {
+            // Use the new System Settings URL for macOS 13+
+            let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
+            NSWorkspace.shared.open(url)
+        } else {
+            // Use the old System Preferences URL for older macOS versions
+            let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
+            NSWorkspace.shared.open(url)
+        }
     }
 } 

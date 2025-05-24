@@ -3,10 +3,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 /// Enum representing different permission types
+/// Order matches the UI display order for better UX flow
 enum PermissionType {
-  microphone,
-  screenRecording,
-  accessibility,
+  microphone, // First - simple permission, no restart needed
+  accessibility, // Second - needs manual granting in System Preferences
+  screenRecording, // Last - requires app restart after granting
 }
 
 /// Enum representing permission status
@@ -31,11 +32,23 @@ class PermissionService {
     if (!isSupported) return PermissionStatus.authorized;
 
     try {
+      if (kDebugMode) {
+        print(
+            'PermissionService: Checking ${permissionType.name} permission...');
+      }
+
       final String result = await _channel.invokeMethod('checkPermission', {
         'type': permissionType.name,
       });
 
-      return _parsePermissionStatus(result);
+      final status = _parsePermissionStatus(result);
+
+      if (kDebugMode) {
+        print(
+            'PermissionService: ${permissionType.name} permission status: $status (raw: $result)');
+      }
+
+      return status;
     } catch (e) {
       if (kDebugMode) {
         print('Error checking ${permissionType.name} permission: $e');
@@ -85,8 +98,26 @@ class PermissionService {
       checkAllPermissions() async {
     final Map<PermissionType, PermissionStatus> results = {};
 
+    if (kDebugMode) {
+      print('PermissionService: Checking all permissions...');
+    }
+
     for (final permissionType in PermissionType.values) {
-      results[permissionType] = await checkPermission(permissionType);
+      try {
+        results[permissionType] = await checkPermission(permissionType);
+
+        // Add a small delay between checks to ensure system has time to respond
+        await Future.delayed(const Duration(milliseconds: 100));
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error checking ${permissionType.name}: $e');
+        }
+        results[permissionType] = PermissionStatus.notDetermined;
+      }
+    }
+
+    if (kDebugMode) {
+      print('PermissionService: All permissions checked: $results');
     }
 
     return results;
@@ -104,10 +135,10 @@ class PermissionService {
     switch (permissionType) {
       case PermissionType.microphone:
         return 'AutoQuill AI needs microphone access to transcribe your voice recordings.';
-      case PermissionType.screenRecording:
-        return 'AutoQuill AI needs screen recording permission to capture screenshots for AI context.';
       case PermissionType.accessibility:
-        return 'AutoQuill AI needs accessibility permission to register global hotkeys and automate text insertion.';
+        return 'AutoQuill AI needs accessibility permission to register global hotkeys and automate text insertion. Grant this in System Preferences > Privacy & Security > Accessibility.';
+      case PermissionType.screenRecording:
+        return 'AutoQuill AI needs screen recording permission to capture screenshots for AI context. The app will restart automatically after granting this permission.';
     }
   }
 

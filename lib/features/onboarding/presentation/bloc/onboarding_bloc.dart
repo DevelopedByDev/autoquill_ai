@@ -39,7 +39,7 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
   void _onInitializeOnboarding(
     InitializeOnboarding event,
     Emitter<OnboardingState> emit,
-  ) {
+  ) async {
     // Set default hotkeys
     final defaultTranscriptionHotkey = HotKey(
       key: LogicalKeyboardKey.keyZ,
@@ -57,6 +57,19 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
       transcriptionHotkey: defaultTranscriptionHotkey,
       assistantHotkey: defaultAssistantHotkey,
     ));
+
+    // Check permissions on app startup
+    try {
+      final permissions = await PermissionService.checkAllPermissions();
+      emit(state.copyWith(permissionStatuses: permissions));
+      if (kDebugMode) {
+        print('Startup permission check completed: $permissions');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error checking permissions on startup: $e');
+      }
+    }
   }
 
   Future<void> _onCheckPermissions(

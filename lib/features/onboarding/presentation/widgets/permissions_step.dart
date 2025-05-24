@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/permissions/permission_service.dart';
@@ -15,14 +16,58 @@ class PermissionsStep extends StatefulWidget {
   State<PermissionsStep> createState() => _PermissionsStepState();
 }
 
-class _PermissionsStepState extends State<PermissionsStep> {
+class _PermissionsStepState extends State<PermissionsStep>
+    with WidgetsBindingObserver {
+  Timer? _permissionCheckTimer;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Check permissions when the widget is initialized
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<OnboardingBloc>().add(CheckPermissions());
     });
+
+    // Start periodic permission checking to catch changes (especially for accessibility)
+    _startPeriodicPermissionCheck();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _permissionCheckTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startPeriodicPermissionCheck() {
+    // Check permissions every 3 seconds to catch changes from System Preferences
+    _permissionCheckTimer = Timer.periodic(
+      const Duration(seconds: 3),
+      (timer) {
+        if (mounted) {
+          context.read<OnboardingBloc>().add(CheckPermissions());
+        }
+      },
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Refresh permissions when app becomes active (user might have granted permissions in System Preferences)
+    if (state == AppLifecycleState.resumed && mounted) {
+      // Add a small delay to ensure system has updated permission status
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          context.read<OnboardingBloc>().add(CheckPermissions());
+        }
+      });
+    }
+  }
+
+  void _refreshPermissions() {
+    context.read<OnboardingBloc>().add(CheckPermissions());
   }
 
   @override
@@ -77,20 +122,6 @@ class _PermissionsStepState extends State<PermissionsStep> {
 
                 _buildPermissionCard(
                   context,
-                  permissionType: PermissionType.screenRecording,
-                  icon: Icons.screen_share,
-                  title: PermissionService.getPermissionTitle(
-                      PermissionType.screenRecording),
-                  description: PermissionService.getPermissionDescription(
-                      PermissionType.screenRecording),
-                  status: state
-                          .permissionStatuses[PermissionType.screenRecording] ??
-                      PermissionStatus.notDetermined,
-                ),
-                const SizedBox(height: DesignTokens.spaceMD),
-
-                _buildPermissionCard(
-                  context,
                   permissionType: PermissionType.accessibility,
                   icon: Icons.accessibility,
                   title: PermissionService.getPermissionTitle(
@@ -100,6 +131,20 @@ class _PermissionsStepState extends State<PermissionsStep> {
                   status:
                       state.permissionStatuses[PermissionType.accessibility] ??
                           PermissionStatus.notDetermined,
+                ),
+                const SizedBox(height: DesignTokens.spaceMD),
+
+                _buildPermissionCard(
+                  context,
+                  permissionType: PermissionType.screenRecording,
+                  icon: Icons.screen_share,
+                  title: PermissionService.getPermissionTitle(
+                      PermissionType.screenRecording),
+                  description: PermissionService.getPermissionDescription(
+                      PermissionType.screenRecording),
+                  status: state
+                          .permissionStatuses[PermissionType.screenRecording] ??
+                      PermissionStatus.notDetermined,
                 ),
                 const SizedBox(height: DesignTokens.spaceLG),
 
@@ -140,14 +185,69 @@ class _PermissionsStepState extends State<PermissionsStep> {
                   const SizedBox(height: DesignTokens.spaceSM),
                 ],
 
+                // Help text for manual permission granting
+                if (!state.canProceedFromPermissions) ...[
+                  MinimalistCard(
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceVariant
+                        .withValues(alpha: 0.1),
+                    borderColor: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withValues(alpha: 0.3),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              size: 20,
+                            ),
+                            const SizedBox(width: DesignTokens.spaceSM),
+                            Expanded(
+                              child: Text(
+                                'Grant permissions and check again',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: DesignTokens.spaceXS),
+                        Text(
+                          'After granting permissions in System Preferences, return to this app and click "Check Permissions Again" to refresh the status.',
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant
+                                        .withValues(alpha: 0.8),
+                                  ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: DesignTokens.spaceMD),
+                ],
+
                 // Refresh permissions button
                 Center(
                   child: MinimalistButton(
                     label: 'Check Permissions Again',
                     variant: MinimalistButtonVariant.secondary,
-                    onPressed: () {
-                      context.read<OnboardingBloc>().add(CheckPermissions());
-                    },
+                    onPressed: _refreshPermissions,
                   ),
                 ),
               ],
@@ -171,6 +271,10 @@ class _PermissionsStepState extends State<PermissionsStep> {
     final String statusText;
     final String buttonText;
     final VoidCallback? onPressed;
+
+    // Special handling for screen recording
+    bool isScreenRecording = permissionType == PermissionType.screenRecording;
+    String specialNote = '';
 
     switch (status) {
       case PermissionStatus.authorized:
@@ -207,6 +311,10 @@ class _PermissionsStepState extends State<PermissionsStep> {
         statusIcon = Icons.help_outline;
         statusText = 'Not Granted';
         buttonText = 'Grant Permission';
+        if (isScreenRecording) {
+          specialNote =
+              'Note: App will need to restart after granting this permission.';
+        }
         onPressed = () {
           context.read<OnboardingBloc>().add(
                 RequestPermission(permissionType: permissionType),
@@ -284,6 +392,42 @@ class _PermissionsStepState extends State<PermissionsStep> {
                       .withValues(alpha: 0.8),
                 ),
           ),
+
+          // Special note for screen recording
+          if (specialNote.isNotEmpty) ...[
+            const SizedBox(height: DesignTokens.spaceXS),
+            Container(
+              padding: const EdgeInsets.all(DesignTokens.spaceSM),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusSM),
+                border: Border.all(
+                  color: Colors.orange.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: Colors.orange,
+                  ),
+                  const SizedBox(width: DesignTokens.spaceXS),
+                  Expanded(
+                    child: Text(
+                      specialNote,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.orange,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           const SizedBox(height: DesignTokens.spaceMD),
 
           // Action button
