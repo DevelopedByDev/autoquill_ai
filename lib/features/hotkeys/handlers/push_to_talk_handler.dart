@@ -268,7 +268,8 @@ class PushToTalkHandler {
 
       // Copy to clipboard - this will also update the overlay state to "Transcription copied"
       // and hide the overlay after pasting
-      await ClipboardService.copyToClipboard(transcriptionText);
+      await ClipboardService.copyToClipboard(transcriptionText,
+          mode: 'push_to_talk');
 
       // Update word count in Hive using StatsService
       if (transcriptionText.isNotEmpty) {

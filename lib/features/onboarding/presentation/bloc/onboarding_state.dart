@@ -8,6 +8,7 @@ enum OnboardingStep {
   permissions,
   apiKey,
   hotkeys,
+  testHotkeys,
   preferences,
   completed
 }
@@ -22,6 +23,7 @@ class OnboardingState extends Equatable {
   final ApiKeyValidationStatus apiKeyStatus;
   final HotKey? transcriptionHotkey;
   final HotKey? assistantHotkey;
+  final HotKey? pushToTalkHotkey;
   final ThemeMode themeMode;
   final bool autoCopyEnabled;
   final String transcriptionModel;
@@ -36,6 +38,7 @@ class OnboardingState extends Equatable {
     this.apiKeyStatus = ApiKeyValidationStatus.initial,
     this.transcriptionHotkey,
     this.assistantHotkey,
+    this.pushToTalkHotkey,
     this.themeMode = ThemeMode.system,
     this.autoCopyEnabled = true,
     this.transcriptionModel = 'whisper-large-v3',
@@ -51,6 +54,7 @@ class OnboardingState extends Equatable {
     ApiKeyValidationStatus? apiKeyStatus,
     HotKey? transcriptionHotkey,
     HotKey? assistantHotkey,
+    HotKey? pushToTalkHotkey,
     ThemeMode? themeMode,
     bool? autoCopyEnabled,
     String? transcriptionModel,
@@ -65,6 +69,7 @@ class OnboardingState extends Equatable {
       apiKeyStatus: apiKeyStatus ?? this.apiKeyStatus,
       transcriptionHotkey: transcriptionHotkey ?? this.transcriptionHotkey,
       assistantHotkey: assistantHotkey ?? this.assistantHotkey,
+      pushToTalkHotkey: pushToTalkHotkey ?? this.pushToTalkHotkey,
       themeMode: themeMode ?? this.themeMode,
       autoCopyEnabled: autoCopyEnabled ?? this.autoCopyEnabled,
       transcriptionModel: transcriptionModel ?? this.transcriptionModel,
@@ -81,7 +86,8 @@ class OnboardingState extends Equatable {
 
   bool get canProceedFromHotkeys =>
       (transcriptionEnabled && transcriptionHotkey != null) &&
-      (assistantEnabled ? assistantHotkey != null : true);
+      (assistantEnabled ? assistantHotkey != null : true) &&
+      pushToTalkHotkey != null;
 
   bool get canProceedFromPermissions {
     // Check if all required permissions are granted
@@ -100,6 +106,7 @@ class OnboardingState extends Equatable {
         apiKeyStatus,
         transcriptionHotkey,
         assistantHotkey,
+        pushToTalkHotkey,
         themeMode,
         autoCopyEnabled,
         transcriptionModel,

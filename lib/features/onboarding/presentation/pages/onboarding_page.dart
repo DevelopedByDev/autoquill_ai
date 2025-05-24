@@ -7,6 +7,7 @@ import 'package:autoquill_ai/features/onboarding/presentation/widgets/api_key_st
 // Choose Tools step removed
 import 'package:autoquill_ai/features/onboarding/presentation/widgets/completed_step.dart';
 import 'package:autoquill_ai/features/onboarding/presentation/widgets/hotkeys_step.dart';
+import 'package:autoquill_ai/features/onboarding/presentation/widgets/test_hotkeys_step.dart';
 import 'package:autoquill_ai/features/onboarding/presentation/widgets/permissions_step.dart';
 import 'package:autoquill_ai/features/onboarding/presentation/widgets/preferences_step.dart';
 import 'package:autoquill_ai/features/onboarding/presentation/widgets/welcome_step.dart';
@@ -108,6 +109,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           // ChooseToolsStep removed
                           ApiKeyStep(),
                           HotkeysStep(),
+                          TestHotkeysStep(),
                           PreferencesStep(),
                           CompletedStep(),
                         ],
@@ -156,6 +158,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
                                               .read<OnboardingBloc>()
                                               .add(CompleteOnboarding());
                                         } else {
+                                          // If moving from hotkeys to test step, register hotkeys
+                                          if (state.currentStep ==
+                                              OnboardingStep.hotkeys) {
+                                            context
+                                                .read<OnboardingBloc>()
+                                                .add(RegisterHotkeys());
+                                          }
                                           context
                                               .read<OnboardingBloc>()
                                               .add(NavigateToNextStep());
@@ -178,7 +187,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                                   state.currentStep ==
                                           OnboardingStep.preferences
                                       ? 'Finish'
-                                      : 'Next',
+                                      : state.currentStep ==
+                                              OnboardingStep.hotkeys
+                                          ? 'Test'
+                                          : 'Next',
                                 ),
                               ),
                             ),
@@ -206,6 +218,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
         return state.canProceedFromApiKey;
       case OnboardingStep.hotkeys:
         return state.canProceedFromHotkeys;
+      case OnboardingStep.testHotkeys:
+        return true;
       case OnboardingStep.preferences:
         return true;
       case OnboardingStep.completed:

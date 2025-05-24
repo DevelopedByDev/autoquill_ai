@@ -13,6 +13,7 @@ import 'package:autoquill_ai/features/transcription/domain/repositories/transcri
 import 'package:pasteboard/pasteboard.dart';
 import '../accessibility/domain/repositories/accessibility_repository.dart';
 import 'clipboard_listener_service.dart';
+import '../hotkeys/services/clipboard_service.dart';
 
 /// Service to handle assistant mode functionality
 class AssistantService {
@@ -568,17 +569,13 @@ class AssistantService {
           print('AI Response: $aiResponse');
         }
 
-        // Copy the AI response to clipboard using pasteboard for better compatibility
-        Pasteboard.writeText(aiResponse);
+        // Copy the AI response to clipboard using the clipboard service
+        // This will handle both test page and regular usage
+        await ClipboardService.copyToClipboard(aiResponse, mode: 'assistant');
 
         BotToast.showText(text: 'AI response copied to clipboard');
 
-        // Simulate paste command after a short delay
-        await Future.delayed(const Duration(milliseconds: 500));
-        await _simulatePasteCommand();
-
-        // Hide the overlay
-        await RecordingOverlayPlatform.hideOverlay();
+        // Note: ClipboardService.copyToClipboard() now handles both pasting and overlay hiding
 
         // Now that the overlay is hidden, update word counts using StatsService
         try {

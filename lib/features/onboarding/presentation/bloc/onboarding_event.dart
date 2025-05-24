@@ -84,6 +84,17 @@ class UpdateAssistantHotkey extends OnboardingEvent {
   List<Object?> get props => [hotkey];
 }
 
+class UpdatePushToTalkHotkey extends OnboardingEvent {
+  final HotKey hotkey;
+
+  const UpdatePushToTalkHotkey({required this.hotkey});
+
+  @override
+  List<Object?> get props => [hotkey];
+}
+
+class RegisterHotkeys extends OnboardingEvent {}
+
 class UpdateThemePreference extends OnboardingEvent {
   final ThemeMode themeMode;
 

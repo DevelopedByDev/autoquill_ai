@@ -3,6 +3,13 @@ import 'package:autoquill_ai/core/storage/app_storage.dart';
 import 'package:autoquill_ai/features/onboarding/presentation/bloc/onboarding_event.dart';
 import 'package:autoquill_ai/features/onboarding/presentation/bloc/onboarding_state.dart';
 import 'package:autoquill_ai/core/permissions/permission_service.dart';
+import 'package:autoquill_ai/widgets/hotkey_handler.dart';
+import 'package:autoquill_ai/core/di/injection_container.dart' as di;
+import 'package:autoquill_ai/features/recording/presentation/bloc/recording_bloc.dart';
+import 'package:autoquill_ai/features/transcription/presentation/bloc/transcription_bloc.dart'
+    as transcription_bloc;
+import 'package:autoquill_ai/features/recording/domain/repositories/recording_repository.dart';
+import 'package:autoquill_ai/features/transcription/domain/repositories/transcription_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -25,6 +32,8 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     on<ValidateApiKey>(_onValidateApiKey);
     on<UpdateTranscriptionHotkey>(_onUpdateTranscriptionHotkey);
     on<UpdateAssistantHotkey>(_onUpdateAssistantHotkey);
+    on<UpdatePushToTalkHotkey>(_onUpdatePushToTalkHotkey);
+    on<RegisterHotkeys>(_onRegisterHotkeys);
     on<UpdateThemePreference>(_onUpdateThemePreference);
     on<UpdateAutoCopyPreference>(_onUpdateAutoCopyPreference);
     on<UpdateTranscriptionModel>(_onUpdateTranscriptionModel);
@@ -53,9 +62,16 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
       scope: HotKeyScope.system,
     );
 
+    final defaultPushToTalkHotkey = HotKey(
+      key: LogicalKeyboardKey.space,
+      modifiers: [HotKeyModifier.control, HotKeyModifier.alt],
+      scope: HotKeyScope.system,
+    );
+
     emit(state.copyWith(
       transcriptionHotkey: defaultTranscriptionHotkey,
       assistantHotkey: defaultAssistantHotkey,
+      pushToTalkHotkey: defaultPushToTalkHotkey,
     ));
 
     // Check permissions on app startup
@@ -206,6 +222,53 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     emit(state.copyWith(assistantHotkey: event.hotkey));
   }
 
+  void _onUpdatePushToTalkHotkey(
+    UpdatePushToTalkHotkey event,
+    Emitter<OnboardingState> emit,
+  ) {
+    emit(state.copyWith(pushToTalkHotkey: event.hotkey));
+  }
+
+  Future<void> _onRegisterHotkeys(
+    RegisterHotkeys event,
+    Emitter<OnboardingState> emit,
+  ) async {
+    // This will register the hotkeys when moving from hotkeys step to test step
+    try {
+      // Save the current hotkeys to storage so they can be picked up by the hotkey system
+      final settingsService = SettingsService();
+
+      if (state.transcriptionHotkey != null) {
+        await settingsService
+            .setTranscriptionHotkey(state.transcriptionHotkey!);
+        final hotkeyMap = state.transcriptionHotkey!.toJson();
+        await AppStorage.settingsBox.put('transcription_hotkey', hotkeyMap);
+      }
+
+      if (state.assistantHotkey != null) {
+        await settingsService.setAssistantHotkey(state.assistantHotkey!);
+        final hotkeyMap = state.assistantHotkey!.toJson();
+        await AppStorage.settingsBox.put('assistant_hotkey', hotkeyMap);
+      }
+
+      if (state.pushToTalkHotkey != null) {
+        final hotkeyMap = state.pushToTalkHotkey!.toJson();
+        await AppStorage.settingsBox.put('push_to_talk_hotkey', hotkeyMap);
+      }
+
+      if (kDebugMode) {
+        print('Hotkeys saved to storage for testing');
+      }
+
+      // Reload hotkeys
+      await HotkeyHandler.reloadHotkeys();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error registering hotkeys: $e');
+      }
+    }
+  }
+
   void _onUpdateThemePreference(
     UpdateThemePreference event,
     Emitter<OnboardingState> emit,
@@ -275,11 +338,18 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
         break;
       case OnboardingStep.permissions:
         nextStep = OnboardingStep.apiKey;
+        // Initialize systems after permissions are granted
+        _initializeSystems();
         break;
       case OnboardingStep.apiKey:
         nextStep = OnboardingStep.hotkeys;
+        // Save API key immediately when moving from API key step
+        _saveApiKeyToStorage();
         break;
       case OnboardingStep.hotkeys:
+        nextStep = OnboardingStep.testHotkeys;
+        break;
+      case OnboardingStep.testHotkeys:
         nextStep = OnboardingStep.preferences;
         break;
       case OnboardingStep.preferences:
@@ -316,8 +386,11 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
       case OnboardingStep.hotkeys:
         previousStep = OnboardingStep.apiKey;
         break;
-      case OnboardingStep.preferences:
+      case OnboardingStep.testHotkeys:
         previousStep = OnboardingStep.hotkeys;
+        break;
+      case OnboardingStep.preferences:
+        previousStep = OnboardingStep.testHotkeys;
         break;
       case OnboardingStep.completed:
         previousStep = OnboardingStep.preferences;
@@ -328,6 +401,28 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
   }
 
   // _onSkipOnboarding method removed as skipping is no longer allowed
+
+  Future<void> _saveApiKeyToStorage() async {
+    try {
+      final settingsService = SettingsService();
+
+      // Save API key immediately for testing
+      if (state.apiKey.isNotEmpty &&
+          state.apiKeyStatus == ApiKeyValidationStatus.valid) {
+        await AppStorage.saveApiKey(state.apiKey);
+        // Also save to settings service
+        await settingsService.setApiKey(state.apiKey);
+
+        if (kDebugMode) {
+          print('API key saved to storage for testing');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error saving API key: $e');
+      }
+    }
+  }
 
   Future<void> _saveOnboardingSettings() async {
     // Use the settings service for all settings
@@ -369,6 +464,16 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
       }
     }
 
+    if (state.pushToTalkHotkey != null) {
+      // Save to Hive as a Map
+      final hotkeyMap = state.pushToTalkHotkey!.toJson();
+      await AppStorage.settingsBox.put('push_to_talk_hotkey', hotkeyMap);
+
+      if (kDebugMode) {
+        print('Saved push-to-talk hotkey: $hotkeyMap');
+      }
+    }
+
     // Save theme preference
     await settingsService.setThemeMode(state.themeMode);
     await AppStorage.settingsBox.put(
@@ -389,5 +494,59 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
 
     // Add a longer delay to ensure all settings are written before navigation
     await Future.delayed(const Duration(milliseconds: 500));
+  }
+
+  void _initializeSystems() async {
+    try {
+      if (kDebugMode) {
+        print('Initializing systems after permissions granted...');
+      }
+
+      // Prepare hotkeys (read from storage into cache)
+      await HotkeyHandler.prepareHotkeys();
+
+      // Load and register stored hotkeys for immediate availability
+      await HotkeyHandler.loadAndRegisterStoredHotkeys();
+
+      // Initialize recording and transcription systems
+      try {
+        // Get repositories from dependency injection
+        final recordingRepository = di.sl<RecordingRepository>();
+        final transcriptionRepository = di.sl<TranscriptionRepository>();
+
+        // Create blocs
+        final recordingBloc = RecordingBloc(repository: recordingRepository);
+        final transcriptionBloc = transcription_bloc.TranscriptionBloc(
+          repository: transcriptionRepository,
+        );
+
+        // Initialize transcription bloc
+        transcriptionBloc.add(transcription_bloc.InitializeTranscription());
+
+        // Set up HotkeyHandler with blocs and repositories
+        HotkeyHandler.setBlocs(
+          recordingBloc,
+          transcriptionBloc,
+          recordingRepository,
+          transcriptionRepository,
+        );
+
+        if (kDebugMode) {
+          print('Recording and transcription systems initialized');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error initializing recording/transcription systems: $e');
+        }
+      }
+
+      if (kDebugMode) {
+        print('Systems initialized successfully');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error initializing systems: $e');
+      }
+    }
   }
 }

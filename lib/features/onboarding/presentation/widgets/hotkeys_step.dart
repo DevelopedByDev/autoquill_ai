@@ -23,114 +23,130 @@ class HotkeysStep extends StatelessWidget {
             Text(
               'Set Your Shortcuts',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            
+
             // Description
             Text(
               'Configure hotkeys to quickly access AutoQuill AI features',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
-              ),
+                    color: Theme.of(context)
+                        .textTheme
+                        .bodyLarge
+                        ?.color
+                        ?.withValues(alpha: 0.7),
+                  ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 48),
-            
-            // Transcription hotkey
+
+            // Push-to-talk hotkey (moved to first position)
             BlocBuilder<OnboardingBloc, OnboardingState>(
-              buildWhen: (previous, current) => 
-                previous.transcriptionEnabled != current.transcriptionEnabled ||
-                previous.transcriptionHotkey != current.transcriptionHotkey,
+              buildWhen: (previous, current) =>
+                  previous.pushToTalkHotkey != current.pushToTalkHotkey,
               builder: (context, state) {
-                if (!state.transcriptionEnabled) {
-                  return const SizedBox.shrink();
-                }
-                
                 return _buildHotkeyCard(
                   context,
-                  icon: Icons.mic,
-                  title: 'Transcription Hotkey',
-                  description: 'Press this combination to start transcribing audio',
-                  hotkey: state.transcriptionHotkey,
+                  icon: Icons.push_pin,
+                  title: 'Push-to-Talk Hotkey',
+                  description: 'Hold this combination to record while pressed',
+                  hotkey: state.pushToTalkHotkey,
                   onRecordHotkey: (hotkey) {
                     context.read<OnboardingBloc>().add(
-                      UpdateTranscriptionHotkey(hotkey: hotkey),
-                    );
-                  },
-                  onTestHotkey: () {
-                    // Show a snackbar to simulate transcription
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Transcription started! (Test)'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                          UpdatePushToTalkHotkey(hotkey: hotkey),
+                        );
                   },
                 );
               },
             ),
-            
+
+            const SizedBox(height: 24),
+
+            // Transcription hotkey
+            BlocBuilder<OnboardingBloc, OnboardingState>(
+              buildWhen: (previous, current) =>
+                  previous.transcriptionEnabled !=
+                      current.transcriptionEnabled ||
+                  previous.transcriptionHotkey != current.transcriptionHotkey,
+              builder: (context, state) {
+                if (!state.transcriptionEnabled) {
+                  return const SizedBox.shrink();
+                }
+
+                return _buildHotkeyCard(
+                  context,
+                  icon: Icons.mic,
+                  title: 'Transcription Hotkey',
+                  description:
+                      'Press this combination to start transcribing audio',
+                  hotkey: state.transcriptionHotkey,
+                  onRecordHotkey: (hotkey) {
+                    context.read<OnboardingBloc>().add(
+                          UpdateTranscriptionHotkey(hotkey: hotkey),
+                        );
+                  },
+                );
+              },
+            ),
+
             // Add spacing if both hotkeys are shown
             BlocBuilder<OnboardingBloc, OnboardingState>(
-              buildWhen: (previous, current) => 
-                previous.transcriptionEnabled != current.transcriptionEnabled ||
-                previous.assistantEnabled != current.assistantEnabled,
+              buildWhen: (previous, current) =>
+                  previous.transcriptionEnabled !=
+                      current.transcriptionEnabled ||
+                  previous.assistantEnabled != current.assistantEnabled,
               builder: (context, state) {
                 return state.transcriptionEnabled && state.assistantEnabled
                     ? const SizedBox(height: 24)
                     : const SizedBox.shrink();
               },
             ),
-            
+
             // Assistant hotkey
             BlocBuilder<OnboardingBloc, OnboardingState>(
-              buildWhen: (previous, current) => 
-                previous.assistantEnabled != current.assistantEnabled ||
-                previous.assistantHotkey != current.assistantHotkey,
+              buildWhen: (previous, current) =>
+                  previous.assistantEnabled != current.assistantEnabled ||
+                  previous.assistantHotkey != current.assistantHotkey,
               builder: (context, state) {
                 if (!state.assistantEnabled) {
                   return const SizedBox.shrink();
                 }
-                
+
                 final hotkeyCard = _buildHotkeyCard(
                   context,
                   icon: Icons.chat_bubble_outline,
                   title: 'Assistant Hotkey',
-                  description: 'Press this combination to open the AI assistant',
+                  description:
+                      'Press this combination to open the AI assistant',
                   hotkey: state.assistantHotkey,
                   onRecordHotkey: (hotkey) {
                     context.read<OnboardingBloc>().add(
-                      UpdateAssistantHotkey(hotkey: hotkey),
-                    );
-                  },
-                  onTestHotkey: () {
-                    // Show a snackbar to simulate assistant
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Assistant opened! (Test)'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                          UpdateAssistantHotkey(hotkey: hotkey),
+                        );
                   },
                 );
-                
+
                 // Add screenshot toggle if assistant is enabled
                 if (state.assistantEnabled) {
                   final screenshotToggle = Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.7),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surface
+                          .withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: Theme.of(context).dividerColor,
                       ),
                     ),
                     child: BlocBuilder<OnboardingBloc, OnboardingState>(
-                      buildWhen: (previous, current) => 
-                        previous.assistantScreenshotEnabled != current.assistantScreenshotEnabled,
+                      buildWhen: (previous, current) =>
+                          previous.assistantScreenshotEnabled !=
+                          current.assistantScreenshotEnabled,
                       builder: (context, screenshotState) {
                         return SwitchListTile(
                           title: const Text('Auto-capture screenshot'),
@@ -141,16 +157,18 @@ class HotkeysStep extends StatelessWidget {
                           value: screenshotState.assistantScreenshotEnabled,
                           onChanged: (value) {
                             context.read<OnboardingBloc>().add(
-                              UpdateAssistantScreenshotPreference(enabled: value),
-                            );
+                                  UpdateAssistantScreenshotPreference(
+                                      enabled: value),
+                                );
                           },
                           dense: true,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 8),
                         );
                       },
                     ),
                   );
-                  
+
                   return Column(
                     children: [
                       hotkeyCard,
@@ -159,13 +177,13 @@ class HotkeysStep extends StatelessWidget {
                     ],
                   );
                 }
-                
+
                 return hotkeyCard;
               },
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Tip section
             Container(
               padding: const EdgeInsets.all(16),
@@ -188,9 +206,10 @@ class HotkeysStep extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         'Hotkey Tips',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                     ],
                   ),
@@ -225,7 +244,6 @@ class HotkeysStep extends StatelessWidget {
     required String description,
     required HotKey? hotkey,
     required Function(HotKey) onRecordHotkey,
-    required VoidCallback onTestHotkey,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -246,7 +264,10 @@ class HotkeysStep extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -263,24 +284,28 @@ class HotkeysStep extends StatelessWidget {
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       description,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
-                      ),
+                            color: Theme.of(context)
+                                .textTheme
+                                .bodyLarge
+                                ?.color
+                                ?.withValues(alpha: 0.7),
+                          ),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Current hotkey display
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -290,8 +315,11 @@ class HotkeysStep extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surface,
                   border: Border.all(
-                    color: hotkey != null 
-                        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)
+                    color: hotkey != null
+                        ? Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.5)
                         : Colors.grey,
                   ),
                   borderRadius: BorderRadius.circular(10),
@@ -304,22 +332,26 @@ class HotkeysStep extends StatelessWidget {
                   ],
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 12.0, horizontal: 16.0),
                   child: HotkeyDisplay.forPlatform(
                     hotkey: hotkey,
                     textColor: Theme.of(context).colorScheme.onSurface,
                     backgroundColor: Theme.of(context).colorScheme.surface,
-                    borderColor: hotkey != null 
-                        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)
+                    borderColor: hotkey != null
+                        ? Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.5)
                         : Colors.grey,
                   ),
                 ),
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Action buttons
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -327,7 +359,10 @@ class HotkeysStep extends StatelessWidget {
               SizedBox(
                 width: 180,
                 child: ElevatedButton.icon(
-                  icon: const Icon(Icons.keyboard),
+                  // icon: const Icon(
+                  //   Icons.keyboard,
+                  //   color: Colors.white,
+                  // ),
                   label: const Text('Record Hotkey'),
                   onPressed: () async {
                     final result = await _showHotkeyRecorderDialog(context);
@@ -344,18 +379,6 @@ class HotkeysStep extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              IconButton(
-                onPressed: hotkey != null ? onTestHotkey : null,
-                icon: const Icon(Icons.play_arrow),
-                tooltip: 'Test Hotkey',
-                style: IconButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
             ],
           ),
         ],
@@ -365,7 +388,7 @@ class HotkeysStep extends StatelessWidget {
 
   Future<HotKey?> _showHotkeyRecorderDialog(BuildContext context) async {
     HotKey? result;
-    
+
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -377,10 +400,10 @@ class HotkeysStep extends StatelessWidget {
         );
       },
     );
-    
+
     return result;
   }
-  
+
   // Removed unused method
 
   // Removed _formatHotkey method as it's now handled by the HotkeyDisplay widget
