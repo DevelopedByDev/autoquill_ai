@@ -121,3 +121,5 @@ class SavePushToTalkHotkey extends SettingsEvent {
 
 class DeletePushToTalkHotkey extends SettingsEvent {}
 
+class ToggleSmartTranscription extends SettingsEvent {}
+

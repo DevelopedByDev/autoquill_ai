@@ -5,6 +5,7 @@ import 'package:autoquill_ai/features/settings/presentation/bloc/settings_bloc.d
 import 'package:autoquill_ai/features/settings/presentation/bloc/settings_state.dart';
 import 'package:autoquill_ai/features/settings/presentation/widgets/transcription_hotkey_settings_section.dart';
 import 'package:autoquill_ai/features/settings/presentation/widgets/transcription_models_section.dart';
+import 'package:autoquill_ai/features/settings/presentation/widgets/smart_transcription_section.dart';
 
 class TranscriptionSettingsPage extends StatelessWidget {
   const TranscriptionSettingsPage({super.key});
@@ -25,8 +26,8 @@ class TranscriptionSettingsPage extends StatelessWidget {
             title: Text(
               'Transcription Settings',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: DesignTokens.fontWeightMedium,
-              ),
+                    fontWeight: DesignTokens.fontWeightMedium,
+                  ),
             ),
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             elevation: 0,
@@ -40,10 +41,14 @@ class TranscriptionSettingsPage extends StatelessWidget {
                 // Transcription Hotkey Settings Section
                 const TranscriptionHotkeySettingsSection(),
                 const SizedBox(height: DesignTokens.spaceLG),
-                
+
                 // Transcription Models Section
                 const TranscriptionModelsSection(),
-                
+                const SizedBox(height: DesignTokens.spaceLG),
+
+                // Smart Transcription Section
+                const SmartTranscriptionSection(),
+
                 // Bottom padding for scrolling
                 const SizedBox(height: DesignTokens.spaceLG),
               ],

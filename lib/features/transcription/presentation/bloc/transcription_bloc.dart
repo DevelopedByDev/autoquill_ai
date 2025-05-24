@@ -9,6 +9,7 @@ import 'package:pasteboard/pasteboard.dart';
 import 'package:keypress_simulator/keypress_simulator.dart';
 
 import '../../../../core/storage/transcription_storage.dart';
+import '../../services/smart_transcription_service.dart';
 
 import '../../../../core/storage/app_storage.dart';
 import '../../../../core/utils/sound_player.dart';
@@ -71,12 +72,14 @@ class TranscriptionState extends Equatable {
       transcriptionText: transcriptionText ?? this.transcriptionText,
       error: error,
       isLoading: isLoading ?? this.isLoading,
-      previouslyLoading: this.isLoading, // Store current loading state as previous
+      previouslyLoading:
+          this.isLoading, // Store current loading state as previous
     );
   }
 
   @override
-  List<Object?> get props => [apiKey, transcriptionText, error, isLoading, previouslyLoading];
+  List<Object?> get props =>
+      [apiKey, transcriptionText, error, isLoading, previouslyLoading];
 }
 
 class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
@@ -84,12 +87,14 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
   late final StreamSubscription<BoxEvent> _apiKeySubscription;
   final StatsService _statsService = StatsService();
 
-  TranscriptionBloc({required this.repository}) : super(const TranscriptionState()) {
+  TranscriptionBloc({required this.repository})
+      : super(const TranscriptionState()) {
     // Initialize stats service without awaiting to avoid blocking constructor
     _initStats();
-    
+
     // Listen to API key changes
-    _apiKeySubscription = Hive.box('settings').watch(key: 'groq_api_key').listen((event) async {
+    _apiKeySubscription =
+        Hive.box('settings').watch(key: 'groq_api_key').listen((event) async {
       final apiKey = await AppStorage.getApiKey();
       add(UpdateApiKey(apiKey));
     });
@@ -98,7 +103,7 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
     on<ClearTranscription>(_onClearTranscription);
     on<UpdateApiKey>(_onUpdateApiKey);
   }
-  
+
   /// Initialize stats service
   Future<void> _initStats() async {
     try {
@@ -110,14 +115,14 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
     }
   }
 
-
-
-  Future<void> _onInitializeTranscription(InitializeTranscription event, Emitter<TranscriptionState> emit) async {
+  Future<void> _onInitializeTranscription(
+      InitializeTranscription event, Emitter<TranscriptionState> emit) async {
     final savedApiKey = await AppStorage.getApiKey();
     emit(state.copyWith(apiKey: savedApiKey));
   }
 
-  Future<void> _onStartTranscription(StartTranscription event, Emitter<TranscriptionState> emit) async {
+  Future<void> _onStartTranscription(
+      StartTranscription event, Emitter<TranscriptionState> emit) async {
     final apiKey = await AppStorage.getApiKey();
     if (apiKey == null || apiKey.isEmpty) {
       emit(state.copyWith(
@@ -130,24 +135,75 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
     }
 
     emit(state.copyWith(isLoading: true, error: null));
-    
+
     // Update overlay to show we're processing the audio
     await RecordingOverlayPlatform.setProcessingAudio();
 
     try {
-      final response = await repository.transcribeAudio(event.audioPath, apiKey);
+      if (kDebugMode) {
+        print('Starting transcription for: ${event.audioPath}');
+      }
+
+      final response =
+          await repository.transcribeAudio(event.audioPath, apiKey);
+
+      if (kDebugMode) {
+        print('Transcription API response received: ${response.text}');
+      }
+
       // Trim any leading/trailing whitespace from the transcription text
-      final transcriptionText = response.text.trim();
-      
+      var transcriptionText = response.text.trim();
+
+      if (kDebugMode) {
+        print('Trimmed transcription text: "$transcriptionText"');
+      }
+
+      // Check if smart transcription is enabled
+      final settingsBox = Hive.box('settings');
+      final smartTranscriptionEnabled = settingsBox
+          .get('smart_transcription_enabled', defaultValue: false) as bool;
+
+      if (kDebugMode) {
+        print('Smart transcription enabled: $smartTranscriptionEnabled');
+        print('Transcription text length: ${transcriptionText.length}');
+        print(
+            'Checking smart transcription condition: ${smartTranscriptionEnabled && transcriptionText.isNotEmpty}');
+      }
+
+      if (smartTranscriptionEnabled && transcriptionText.isNotEmpty) {
+        try {
+          // Update overlay to show smart transcription is processing
+          await RecordingOverlayPlatform.setProcessingAudio();
+
+          if (kDebugMode) {
+            print('Applying smart transcription to: $transcriptionText');
+          }
+
+          // Apply smart transcription enhancement
+          transcriptionText =
+              await SmartTranscriptionService.enhanceTranscription(
+                  transcriptionText, apiKey);
+
+          if (kDebugMode) {
+            print('Smart transcription result: $transcriptionText');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('Smart transcription failed, using original text: $e');
+          }
+          // Continue with original transcription if smart transcription fails
+        }
+      }
+
       // Update overlay to show transcription is complete
       await RecordingOverlayPlatform.setTranscriptionCompleted();
-      
+
       // Copy the transcription text to clipboard
       await _copyToClipboard(transcriptionText);
-      
+
       // Hide the overlay
       await RecordingOverlayPlatform.hideOverlay();
-      
+
       // Now that the overlay is hidden, update word count using StatsService
       if (transcriptionText.isNotEmpty) {
         // Ensure stats box is open
@@ -159,38 +215,52 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
           await _statsService.addTranscriptionWords(transcriptionText);
         } catch (e) {
           if (kDebugMode) {
-            print('Error updating word count via StatsService in TranscriptionBloc: $e');
+            print(
+                'Error updating word count via StatsService in TranscriptionBloc: $e');
           }
-          
+
           // Fallback: Update directly in the stats box
           try {
             if (!Hive.isBoxOpen('stats')) {
               await Hive.openBox('stats');
             }
-            final wordCount = transcriptionText.trim().split(RegExp(r'\s+')).length;
+            final wordCount =
+                transcriptionText.trim().split(RegExp(r'\s+')).length;
             final box = Hive.box('stats');
-            final currentCount = box.get('transcription_words_count', defaultValue: 0);
+            final currentCount =
+                box.get('transcription_words_count', defaultValue: 0);
             final newCount = currentCount + wordCount;
-            
+
             // Use synchronous put for immediate update
             box.put('transcription_words_count', newCount);
           } catch (boxError) {
             if (kDebugMode) {
-              print('Error updating word count directly in TranscriptionBloc: $boxError');
+              print(
+                  'Error updating word count directly in TranscriptionBloc: $boxError');
             }
           }
         }
       }
-      
+
+      if (kDebugMode) {
+        print(
+            'About to emit final transcription state with text: "$transcriptionText"');
+      }
+
       emit(state.copyWith(
         transcriptionText: transcriptionText,
         isLoading: false,
         apiKey: apiKey,
       ));
     } catch (e) {
+      if (kDebugMode) {
+        print('Transcription error caught: $e');
+        print('Error type: ${e.runtimeType}');
+      }
+
       // Hide the overlay on error
       await RecordingOverlayPlatform.hideOverlay();
-      
+
       emit(state.copyWith(
         error: 'Transcription failed: $e',
         isLoading: false,
@@ -198,7 +268,8 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
     }
   }
 
-  void _onClearTranscription(ClearTranscription event, Emitter<TranscriptionState> emit) {
+  void _onClearTranscription(
+      ClearTranscription event, Emitter<TranscriptionState> emit) {
     emit(state.copyWith(transcriptionText: null, error: null));
   }
 
@@ -213,19 +284,19 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
     try {
       // Copy plain text to clipboard
       Pasteboard.writeText(text);
-      
+
       if (kDebugMode) {
         print('Transcription copied to clipboard');
       }
-      
+
       // Simulate paste command (Meta + V) after a short delay
       await Future.delayed(const Duration(milliseconds: 200));
       await _simulatePasteCommand();
-      
+
       // After pasting, save as a file in the dedicated transcriptions directory for backup
       try {
         final filePath = await TranscriptionStorage.saveTranscription(text);
-        
+
         if (kDebugMode) {
           print('Transcription saved to file: $filePath');
         }
@@ -240,30 +311,29 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
       }
     }
   }
-  
-  
+
   /// Simulate paste command (Meta + V)
   Future<void> _simulatePasteCommand() async {
     try {
       // Play typing sound for paste operation
       await SoundPlayer.playTypingSound();
-      
+
       // Simulate key down for Meta + V
       await keyPressSimulator.simulateKeyDown(
         PhysicalKeyboardKey.keyV,
         [ModifierKey.metaModifier],
       );
-      
+
       // Simulate key up for Meta + V
       await keyPressSimulator.simulateKeyUp(
         PhysicalKeyboardKey.keyV,
         [ModifierKey.metaModifier],
       );
-      
+
       if (kDebugMode) {
         print('Paste command simulated');
       }
-      
+
       // Now that we've pasted the text, hide the overlay
       await RecordingOverlayPlatform.hideOverlay();
     } catch (e) {
@@ -272,7 +342,7 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
       }
       // Play error sound
       await SoundPlayer.playErrorSound();
-      
+
       // Hide the overlay even if there's an error
       await RecordingOverlayPlatform.hideOverlay();
     }

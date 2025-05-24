@@ -32,6 +32,9 @@ class SettingsState extends Equatable {
   
   // Push-to-talk settings
   final bool pushToTalkEnabled;
+  
+  // Smart transcription setting
+  final bool smartTranscriptionEnabled;
 
   const SettingsState({
     this.apiKey,
@@ -48,6 +51,7 @@ class SettingsState extends Equatable {
     this.assistantScreenshotEnabled = true,
     this.selectedLanguage = const LanguageCode(name: 'Auto-detect', code: ''),
     this.pushToTalkEnabled = true,
+    this.smartTranscriptionEnabled = false,
   });
 
   SettingsState copyWith({
@@ -65,6 +69,7 @@ class SettingsState extends Equatable {
     bool? assistantScreenshotEnabled,
     LanguageCode? selectedLanguage,
     bool? pushToTalkEnabled,
+    bool? smartTranscriptionEnabled,
   }) {
     return SettingsState(
       apiKey: apiKey ?? this.apiKey,
@@ -79,8 +84,9 @@ class SettingsState extends Equatable {
       themeMode: themeMode ?? this.themeMode,
       dictionary: dictionary ?? this.dictionary,
       assistantScreenshotEnabled: assistantScreenshotEnabled ?? this.assistantScreenshotEnabled,
-      selectedLanguage: selectedLanguage ?? this.selectedLanguage,
+      selectedLanguage:       selectedLanguage ?? this.selectedLanguage,
       pushToTalkEnabled: pushToTalkEnabled ?? this.pushToTalkEnabled,
+      smartTranscriptionEnabled: smartTranscriptionEnabled ?? this.smartTranscriptionEnabled,
     );
   }
 
@@ -100,5 +106,6 @@ class SettingsState extends Equatable {
         pushToTalkEnabled,
         assistantScreenshotEnabled,
         selectedLanguage,
+        smartTranscriptionEnabled,
       ];
 }
