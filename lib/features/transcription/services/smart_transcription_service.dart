@@ -16,7 +16,7 @@ class SmartTranscriptionService {
   1. Apples
   2. Bananas
   3. Milk
-* "Send the file to jane dot doe at example dot com." → "Send the file to [jane.doe@example.com](mailto:jane.doe@example.com)"
+* "Send the file to jane dot doe at example dot com." → "Send the file to jane.doe@example.com"
 * "In lowercase: THIS SHOULD BE QUIET." → "this should be quiet."
 * "In all caps: remember to stay strong! Star emoji, flex emoji." → "REMEMBER TO STAY STRONG! ⭐💪"
 
