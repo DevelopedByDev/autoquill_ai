@@ -13,7 +13,6 @@ class SmartTranscriptionService {
 
       * "In all caps I'm so excited! In normal casing this is going to be awesome. Heart emoji. Muscle emoji." → "I'M SO EXCITED! This is going to be awesome ❤️💪"
       * "My grocery list: number 1 apples, number 2 bananas, number 3 milk." →
-
         1. Apples
         2. Bananas
         3. Milk
