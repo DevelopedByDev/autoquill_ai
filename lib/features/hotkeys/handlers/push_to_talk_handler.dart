@@ -6,6 +6,7 @@ import '../../../core/stats/stats_service.dart';
 import 'package:autoquill_ai/features/recording/domain/repositories/recording_repository.dart';
 import 'package:autoquill_ai/features/transcription/domain/repositories/transcription_repository.dart';
 import '../../../features/transcription/services/smart_transcription_service.dart';
+import '../../../features/transcription/services/phrase_replacement_service.dart';
 import '../../../features/recording/data/platform/recording_overlay_platform.dart';
 import '../services/clipboard_service.dart';
 import '../../../core/utils/sound_player.dart';
@@ -209,6 +210,27 @@ class PushToTalkHandler {
 
       // Check if smart transcription is enabled
       final settingsBox = Hive.box('settings');
+
+      // Apply phrase replacements before smart transcription
+      final Map<dynamic, dynamic>? storedReplacements =
+          settingsBox.get('phrase_replacements');
+
+      if (storedReplacements != null && storedReplacements.isNotEmpty) {
+        final Map<String, String> phraseReplacements =
+            Map<String, String>.from(storedReplacements);
+
+        if (kDebugMode) {
+          print('Applying phrase replacements: $phraseReplacements');
+        }
+
+        transcriptionText = PhraseReplacementService.applyReplacements(
+            transcriptionText, phraseReplacements);
+
+        if (kDebugMode) {
+          print(
+              'Transcription text after phrase replacements: "$transcriptionText"');
+        }
+      }
       final smartTranscriptionEnabled = settingsBox
           .get('smart_transcription_enabled', defaultValue: false) as bool;
 

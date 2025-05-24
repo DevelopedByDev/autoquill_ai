@@ -42,6 +42,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<AddWordToDictionary>(_onAddWordToDictionary);
     on<RemoveWordFromDictionary>(_onRemoveWordFromDictionary);
 
+    // Phrase replacement events
+    on<LoadPhraseReplacements>(_onLoadPhraseReplacements);
+    on<AddPhraseReplacement>(_onAddPhraseReplacement);
+    on<RemovePhraseReplacement>(_onRemovePhraseReplacement);
+
     // Language selection event
     on<SaveLanguage>(_onSaveLanguage);
 
@@ -66,6 +71,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
       // Load dictionary
       add(LoadDictionary());
+
+      // Load phrase replacements
+      add(LoadPhraseReplacements());
 
       // Load settings from the centralized service
       final transcriptionModel = settingsService.getTranscriptionModel();
@@ -357,6 +365,70 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
       // Update state
       emit(state.copyWith(dictionary: updatedDictionary));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  // Phrase replacement management methods
+  Future<void> _onLoadPhraseReplacements(
+      LoadPhraseReplacements event, Emitter<SettingsState> emit) async {
+    try {
+      final settingsBox = Hive.box('settings');
+      final Map<dynamic, dynamic>? storedReplacements =
+          settingsBox.get('phrase_replacements');
+
+      if (storedReplacements != null) {
+        final Map<String, String> phraseReplacements =
+            Map<String, String>.from(storedReplacements);
+        emit(state.copyWith(phraseReplacements: phraseReplacements));
+      }
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  Future<void> _onAddPhraseReplacement(
+      AddPhraseReplacement event, Emitter<SettingsState> emit) async {
+    try {
+      final fromPhrase = event.fromPhrase.trim();
+      final toPhrase = event.toPhrase.trim();
+
+      // Don't add empty phrases
+      if (fromPhrase.isEmpty || toPhrase.isEmpty) {
+        return;
+      }
+
+      final Map<String, String> updatedReplacements =
+          Map.from(state.phraseReplacements);
+      updatedReplacements[fromPhrase] = toPhrase;
+
+      // Save to Hive
+      final settingsBox = Hive.box('settings');
+      await settingsBox.put('phrase_replacements', updatedReplacements);
+
+      // Update state
+      emit(state.copyWith(phraseReplacements: updatedReplacements));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  Future<void> _onRemovePhraseReplacement(
+      RemovePhraseReplacement event, Emitter<SettingsState> emit) async {
+    try {
+      final fromPhrase = event.fromPhrase;
+
+      final Map<String, String> updatedReplacements =
+          Map.from(state.phraseReplacements);
+      updatedReplacements.remove(fromPhrase);
+
+      // Save to Hive
+      final settingsBox = Hive.box('settings');
+      await settingsBox.put('phrase_replacements', updatedReplacements);
+
+      // Update state
+      emit(state.copyWith(phraseReplacements: updatedReplacements));
     } catch (e) {
       emit(state.copyWith(error: e.toString()));
     }

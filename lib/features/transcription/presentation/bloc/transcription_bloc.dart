@@ -10,6 +10,7 @@ import 'package:keypress_simulator/keypress_simulator.dart';
 
 import '../../../../core/storage/transcription_storage.dart';
 import '../../services/smart_transcription_service.dart';
+import '../../services/phrase_replacement_service.dart';
 
 import '../../../../core/storage/app_storage.dart';
 import '../../../../core/utils/sound_player.dart';
@@ -160,6 +161,27 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
 
       // Check if smart transcription is enabled
       final settingsBox = Hive.box('settings');
+
+      // Apply phrase replacements before smart transcription
+      final Map<dynamic, dynamic>? storedReplacements =
+          settingsBox.get('phrase_replacements');
+
+      if (storedReplacements != null && storedReplacements.isNotEmpty) {
+        final Map<String, String> phraseReplacements =
+            Map<String, String>.from(storedReplacements);
+
+        if (kDebugMode) {
+          print('Applying phrase replacements: $phraseReplacements');
+        }
+
+        transcriptionText = PhraseReplacementService.applyReplacements(
+            transcriptionText, phraseReplacements);
+
+        if (kDebugMode) {
+          print(
+              'Transcription text after phrase replacements: "$transcriptionText"');
+        }
+      }
       final smartTranscriptionEnabled = settingsBox
           .get('smart_transcription_enabled', defaultValue: false) as bool;
 

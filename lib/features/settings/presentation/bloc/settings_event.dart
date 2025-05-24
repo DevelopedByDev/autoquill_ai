@@ -75,8 +75,6 @@ class SaveAssistantModel extends SettingsEvent {
   List<Object?> get props => [model];
 }
 
-
-
 class LoadDictionary extends SettingsEvent {}
 
 class AddWordToDictionary extends SettingsEvent {
@@ -93,6 +91,25 @@ class RemoveWordFromDictionary extends SettingsEvent {
 
   @override
   List<Object?> get props => [word];
+}
+
+class LoadPhraseReplacements extends SettingsEvent {}
+
+class AddPhraseReplacement extends SettingsEvent {
+  final String fromPhrase;
+  final String toPhrase;
+  const AddPhraseReplacement(this.fromPhrase, this.toPhrase);
+
+  @override
+  List<Object?> get props => [fromPhrase, toPhrase];
+}
+
+class RemovePhraseReplacement extends SettingsEvent {
+  final String fromPhrase;
+  const RemovePhraseReplacement(this.fromPhrase);
+
+  @override
+  List<Object?> get props => [fromPhrase];
 }
 
 class ToggleThemeMode extends SettingsEvent {}
@@ -122,4 +139,3 @@ class SavePushToTalkHotkey extends SettingsEvent {
 class DeletePushToTalkHotkey extends SettingsEvent {}
 
 class ToggleSmartTranscription extends SettingsEvent {}
-
