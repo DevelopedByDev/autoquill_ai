@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:autoquill_ai/core/theme/design_tokens.dart';
 import 'package:autoquill_ai/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:autoquill_ai/features/settings/presentation/bloc/settings_event.dart';
 import 'package:autoquill_ai/features/settings/presentation/bloc/settings_state.dart';
 import 'package:autoquill_ai/widgets/hotkey_converter.dart';
 import 'package:autoquill_ai/widgets/hotkey_display.dart';
+import 'package:autoquill_ai/widgets/minimalist_card.dart';
+import 'package:autoquill_ai/widgets/minimalist_button.dart';
 import 'package:autoquill_ai/widgets/record_hotkey_dialog.dart';
 
 class AssistantHotkeySettingsSection extends StatelessWidget {
@@ -12,82 +15,94 @@ class AssistantHotkeySettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<SettingsBloc, SettingsState>(
-      builder: (context, state) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Hotkey Settings',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+    return BlocBuilder<SettingsBloc, SettingsState>(builder: (context, state) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Hotkey Settings',
+            style: Theme.of(context).textTheme.displaySmall,
+          ),
+          const SizedBox(height: DesignTokens.spaceSM),
+          Text(
+            'Configure keyboard shortcuts for assistant features.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: DesignTokens.spaceMD),
+          _buildHotkeyRow(context, 'Assistant mode', 'assistant_hotkey', state),
+        ],
+      );
+    });
+  }
+
+  Widget _buildHotkeyRow(BuildContext context, String label, String hotkeyKey,
+      SettingsState state) {
+    return MinimalistCard(
+      padding: const EdgeInsets.all(DesignTokens.spaceMD),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: DesignTokens.fontWeightMedium,
+                ),
+          ),
+          const SizedBox(height: DesignTokens.spaceSM),
+          Row(
+            children: [
+              Expanded(
+                child: _buildHotkeyDisplay(context, hotkeyKey, state),
               ),
-            ),
-            const SizedBox(height: 16),
-            _buildHotkeyRow(context, 'Assistant mode', 'assistant_hotkey', state),
-          ],
-        );
-      }
-    );
-  }
-
-  Widget _buildHotkeyRow(BuildContext context, String label, String hotkeyKey, SettingsState state) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Text(label),
-            const Spacer(),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildHotkeyDisplay(context, hotkeyKey, state),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () {
-                    _showRecordHotkeyDialog(context, hotkeyKey);
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    context.read<SettingsBloc>().add(DeleteHotkey(hotkeyKey));
-                  },
-                ),
-              ],
-            ),
-          ],
-        ),
+              const SizedBox(width: DesignTokens.spaceSM),
+              MinimalistButton(
+                variant: MinimalistButtonVariant.icon,
+                icon: Icons.edit,
+                onPressed: () {
+                  _showRecordHotkeyDialog(context, hotkeyKey);
+                },
+              ),
+              const SizedBox(width: DesignTokens.spaceXS),
+              MinimalistButton(
+                variant: MinimalistButtonVariant.icon,
+                icon: Icons.delete_outline,
+                onPressed: () {
+                  context.read<SettingsBloc>().add(DeleteHotkey(hotkeyKey));
+                },
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildHotkeyDisplay(BuildContext context, String hotkeyKey, SettingsState state) {
+  Widget _buildHotkeyDisplay(
+      BuildContext context, String hotkeyKey, SettingsState state) {
     final hotkeyData = state.storedHotkeys[hotkeyKey];
     final hotKey = hotkeyData != null ? hotKeyConverter(hotkeyData) : null;
-    
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return HotkeyDisplay.forPlatform(
       hotkey: hotKey,
       showIcon: false,
-      fontSize: 14.0,
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      borderColor: hotKey != null 
-          ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)
-          : Colors.grey,
+      fontSize: DesignTokens.bodyMedium,
+      padding: const EdgeInsets.symmetric(
+        vertical: DesignTokens.spaceSM,
+        horizontal: DesignTokens.spaceMD,
+      ),
+      backgroundColor:
+          isDarkMode ? DesignTokens.darkSurface : DesignTokens.lightSurface,
+      borderColor: hotKey != null
+          ? DesignTokens.vibrantCoral.withOpacity(0.5)
+          : Colors.grey.withOpacity(0.3),
     );
   }
 
-  Future<void> _showRecordHotkeyDialog(BuildContext context, String mode) async {
+  Future<void> _showRecordHotkeyDialog(
+      BuildContext context, String mode) async {
     context.read<SettingsBloc>().add(StartHotkeyRecording(mode));
-    
+
     return showDialog<void>(
       context: context,
       barrierDismissible: false,

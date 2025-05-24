@@ -42,12 +42,12 @@ class TranscriptionSettingsPage extends StatelessWidget {
                 const TranscriptionHotkeySettingsSection(),
                 const SizedBox(height: DesignTokens.spaceLG),
 
-                // Transcription Models Section
-                const TranscriptionModelsSection(),
-                const SizedBox(height: DesignTokens.spaceLG),
-
                 // Smart Transcription Section
                 const SmartTranscriptionSection(),
+                const SizedBox(height: DesignTokens.spaceLG),
+
+                // Transcription Models Section
+                const TranscriptionModelsSection(),
 
                 // Bottom padding for scrolling
                 const SizedBox(height: DesignTokens.spaceLG),
