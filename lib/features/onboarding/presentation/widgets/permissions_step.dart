@@ -147,6 +147,8 @@ class _PermissionsStepState extends State<PermissionsStep>
                   status:
                       state.permissionStatuses[PermissionType.accessibility] ??
                           PermissionStatus.notDetermined,
+                  guidingText:
+                      "System Preferences → Privacy & Security → Accessibility → + (add app) → Select AutoQuill AI (in Applications) → Turn On → Close System Preferences",
                 ),
                 const SizedBox(height: DesignTokens.spaceMD),
 
@@ -161,6 +163,8 @@ class _PermissionsStepState extends State<PermissionsStep>
                   status: state
                           .permissionStatuses[PermissionType.screenRecording] ??
                       PermissionStatus.notDetermined,
+                  guidingText:
+                      "You might be prompted to restart the app after giving permission for screen recording. Please do so.",
                 ),
                 const SizedBox(height: DesignTokens.spaceLG),
 
@@ -281,6 +285,7 @@ class _PermissionsStepState extends State<PermissionsStep>
     required String title,
     required String description,
     required PermissionStatus status,
+    String? guidingText,
   }) {
     final Color statusColor;
     final IconData statusIcon;
@@ -449,6 +454,48 @@ class _PermissionsStepState extends State<PermissionsStep>
                       .withValues(alpha: 0.8),
                 ),
           ),
+
+          // Guiding text if provided
+          if (guidingText != null) ...[
+            const SizedBox(height: DesignTokens.spaceSM),
+            Container(
+              padding: const EdgeInsets.all(DesignTokens.spaceSM),
+              decoration: BoxDecoration(
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusSM),
+                border: Border.all(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: DesignTokens.spaceXS),
+                  Expanded(
+                    child: Text(
+                      guidingText,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
 
           // Special note for screen recording
           if (specialNote.isNotEmpty) ...[
