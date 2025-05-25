@@ -210,20 +210,12 @@ public class PermissionService {
             return
         }
         
-        // Request permission - this will show the system dialog
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
-        let immediateResult = AXIsProcessTrustedWithOptions(options)
+        // For accessibility permissions, directly open System Preferences
+        // instead of showing the system prompt which can be confusing
+        openAccessibilityPreferences()
         
-        if immediateResult {
-            completion(.authorized)
-            return
-        }
-        
-        // The system dialog was shown, check again after a delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            let newTrusted = AXIsProcessTrusted()
-            completion(newTrusted ? .authorized : .denied)
-        }
+        // Return current status (not determined) since user needs to manually grant in System Preferences
+        completion(.notDetermined)
     }
     
     private static func openAccessibilityPreferences() {

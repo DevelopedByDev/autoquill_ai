@@ -19,6 +19,8 @@ class PermissionsStep extends StatefulWidget {
 class _PermissionsStepState extends State<PermissionsStep>
     with WidgetsBindingObserver {
   Timer? _permissionCheckTimer;
+  Timer? _debounceTimer;
+  final Set<PermissionType> _pendingPermissions = <PermissionType>{};
 
   @override
   void initState() {
@@ -37,19 +39,33 @@ class _PermissionsStepState extends State<PermissionsStep>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _permissionCheckTimer?.cancel();
+    _debounceTimer?.cancel();
     super.dispose();
   }
 
   void _startPeriodicPermissionCheck() {
-    // Check permissions every 3 seconds to catch changes from System Preferences
+    // Check permissions every 5 seconds to catch changes from System Preferences
+    // Less frequent to reduce UI flickering
     _permissionCheckTimer = Timer.periodic(
-      const Duration(seconds: 3),
+      const Duration(seconds: 5),
       (timer) {
         if (mounted) {
-          context.read<OnboardingBloc>().add(CheckPermissions());
+          _checkPermissionsWithDebounce();
         }
       },
     );
+  }
+
+  void _checkPermissionsWithDebounce() {
+    // Cancel any existing debounce timer
+    _debounceTimer?.cancel();
+
+    // Set up a new debounce timer to prevent rapid consecutive calls
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        context.read<OnboardingBloc>().add(CheckPermissions());
+      }
+    });
   }
 
   @override
@@ -60,14 +76,14 @@ class _PermissionsStepState extends State<PermissionsStep>
       // Add a small delay to ensure system has updated permission status
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) {
-          context.read<OnboardingBloc>().add(CheckPermissions());
+          _checkPermissionsWithDebounce();
         }
       });
     }
   }
 
   void _refreshPermissions() {
-    context.read<OnboardingBloc>().add(CheckPermissions());
+    _checkPermissionsWithDebounce();
   }
 
   @override
@@ -310,16 +326,57 @@ class _PermissionsStepState extends State<PermissionsStep>
         statusColor = Colors.grey;
         statusIcon = Icons.help_outline;
         statusText = 'Not Granted';
-        buttonText = 'Grant Permission';
-        if (isScreenRecording) {
-          specialNote =
-              'Note: App will need to restart after granting this permission.';
+
+        // Special handling for accessibility permission
+        if (permissionType == PermissionType.accessibility) {
+          buttonText = _pendingPermissions.contains(permissionType)
+              ? 'Opening Settings...'
+              : 'Open Settings';
+          onPressed = _pendingPermissions.contains(permissionType)
+              ? null
+              : () {
+                  setState(() {
+                    _pendingPermissions.add(permissionType);
+                  });
+                  context.read<OnboardingBloc>().add(
+                        OpenSystemPreferences(permissionType: permissionType),
+                      );
+                  // Clear pending state after a delay
+                  Timer(const Duration(seconds: 2), () {
+                    if (mounted) {
+                      setState(() {
+                        _pendingPermissions.remove(permissionType);
+                      });
+                    }
+                  });
+                };
+        } else {
+          buttonText = _pendingPermissions.contains(permissionType)
+              ? 'Requesting...'
+              : 'Grant Permission';
+          if (isScreenRecording) {
+            specialNote =
+                'Note: App will need to restart after granting this permission.';
+          }
+          onPressed = _pendingPermissions.contains(permissionType)
+              ? null
+              : () {
+                  setState(() {
+                    _pendingPermissions.add(permissionType);
+                  });
+                  context.read<OnboardingBloc>().add(
+                        RequestPermission(permissionType: permissionType),
+                      );
+                  // Clear pending state after a delay
+                  Timer(const Duration(seconds: 3), () {
+                    if (mounted) {
+                      setState(() {
+                        _pendingPermissions.remove(permissionType);
+                      });
+                    }
+                  });
+                };
         }
-        onPressed = () {
-          context.read<OnboardingBloc>().add(
-                RequestPermission(permissionType: permissionType),
-              );
-        };
         break;
     }
 
