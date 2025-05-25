@@ -117,7 +117,7 @@ class MinimalistToggle extends StatelessWidget {
                     color: effectiveThumbColor,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 2,
                         offset: const Offset(0, 1),
                       ),
@@ -144,7 +144,7 @@ class MinimalistToggle extends StatelessWidget {
               fontSize: DesignTokens.bodyMedium,
               fontWeight: DesignTokens.fontWeightMedium,
               color: isDisabled 
-                  ? Theme.of(context).colorScheme.onSurface.withOpacity(DesignTokens.opacityDisabled)
+                  ? Theme.of(context).colorScheme.onSurface.withValues(alpha: DesignTokens.opacityDisabled)
                   : Theme.of(context).colorScheme.onSurface,
             ),
           )
@@ -156,8 +156,8 @@ class MinimalistToggle extends StatelessWidget {
             style: TextStyle(
               fontSize: DesignTokens.captionSize,
               color: isDisabled 
-                  ? Theme.of(context).colorScheme.onSurface.withOpacity(DesignTokens.opacityDisabled)
-                  : Theme.of(context).colorScheme.onSurface.withOpacity(DesignTokens.opacitySubtle),
+                  ? Theme.of(context).colorScheme.onSurface.withValues(alpha: DesignTokens.opacityDisabled)
+                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: DesignTokens.opacitySubtle),
             ),
           )
         : null;

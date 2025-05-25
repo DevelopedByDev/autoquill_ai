@@ -51,7 +51,7 @@ class TranscriptionModelsSection extends StatelessWidget {
           Text(
             'Choose the model that best suits your needs based on accuracy and speed.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: DesignTokens.spaceMD),
@@ -153,14 +153,14 @@ class TranscriptionModelsSection extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: isSelected 
                           ? DesignTokens.vibrantCoral 
-                          : Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                          : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
                     ),
                   ),
                   const SizedBox(height: DesignTokens.spaceXXS),
                   Text(
                     description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],

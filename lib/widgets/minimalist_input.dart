@@ -133,9 +133,9 @@ class _MinimalistInputState extends State<MinimalistInput> {
     Color bgColor = widget.backgroundColor ?? defaultBgColor;
     Color txtColor = widget.textColor ?? defaultTextColor;
     
-    if (widget.isDisabled) {
-      bgColor = bgColor.withOpacity(DesignTokens.opacityDisabled);
-      txtColor = txtColor.withOpacity(DesignTokens.opacityDisabled);
+    if (widget.isDisabled) {  
+      bgColor = bgColor.withValues(alpha: DesignTokens.opacityDisabled);
+      txtColor = txtColor.withValues(alpha: DesignTokens.opacityDisabled);
     }
     
     // Build suffix icon if needed
@@ -218,7 +218,7 @@ class _MinimalistInputState extends State<MinimalistInput> {
             decoration: InputDecoration(
               hintText: widget.placeholder,
               hintStyle: TextStyle(
-                color: txtColor.withOpacity(0.5),
+                color: txtColor.withValues(alpha: 0.5),
                 fontSize: DesignTokens.bodyMedium,
               ),
               prefixIcon: widget.prefixIcon != null
@@ -246,7 +246,7 @@ class _MinimalistInputState extends State<MinimalistInput> {
               fontSize: DesignTokens.captionSize,
               color: widget.errorText != null
                   ? DesignTokens.vibrantCoral
-                  : txtColor.withOpacity(0.7),
+                  : txtColor.withValues(alpha: 0.7),
             ),
           ),
         ],

@@ -51,7 +51,7 @@ class AssistantModelsSection extends StatelessWidget {
             'Choose the model that best suits your assistant needs based on performance and capabilities.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                      Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
           ),
           const SizedBox(height: DesignTokens.spaceMD),
@@ -156,7 +156,7 @@ class AssistantModelsSection extends StatelessWidget {
                               : Theme.of(context)
                                   .colorScheme
                                   .onSurface
-                                  .withOpacity(0.8),
+                                  .withValues(alpha: 0.8),
                         ),
                   ),
                   const SizedBox(height: DesignTokens.spaceXXS),
@@ -166,7 +166,7 @@ class AssistantModelsSection extends StatelessWidget {
                           color: Theme.of(context)
                               .colorScheme
                               .onSurface
-                              .withOpacity(0.6),
+                              .withValues(alpha: 0.6),
                         ),
                   ),
                 ],

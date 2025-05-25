@@ -94,8 +94,8 @@ class AssistantHotkeySettingsSection extends StatelessWidget {
       backgroundColor:
           isDarkMode ? DesignTokens.darkSurface : DesignTokens.lightSurface,
       borderColor: hotKey != null
-          ? DesignTokens.vibrantCoral.withOpacity(0.5)
-          : Colors.grey.withOpacity(0.3),
+          ? DesignTokens.vibrantCoral.withValues(alpha: 0.5)
+          : Colors.grey.withValues(alpha: 0.3),
     );
   }
 

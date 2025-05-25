@@ -22,8 +22,8 @@ class MinimalistSnackbar extends SnackBar {
     required String message,
     MinimalistSnackbarType type = MinimalistSnackbarType.info,
     IconData? icon,
-    Duration duration = const Duration(seconds: 4),
-    SnackBarAction? action,
+    super.duration,
+    super.action,
   }) : super(
     content: _SnackbarContent(
       message: message,
@@ -33,8 +33,6 @@ class MinimalistSnackbar extends SnackBar {
     backgroundColor: Colors.transparent,
     elevation: 0,
     behavior: SnackBarBehavior.floating,
-    duration: duration,
-    action: action,
     padding: EdgeInsets.zero,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
@@ -187,7 +185,7 @@ class _SnackbarContent extends StatelessWidget {
         borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

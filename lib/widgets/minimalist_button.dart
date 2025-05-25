@@ -100,10 +100,10 @@ class MinimalistButton extends StatelessWidget {
     
     // Apply disabled state
     if (isDisabled) {
-      bgColor = bgColor.withOpacity(DesignTokens.opacityDisabled);
-      fgColor = fgColor.withOpacity(DesignTokens.opacityDisabled);
+      bgColor = bgColor.withValues(alpha: DesignTokens.opacityDisabled);
+      fgColor = fgColor.withValues(alpha: DesignTokens.opacityDisabled);
       if (bdColor != null) {
-        bdColor = bdColor.withOpacity(DesignTokens.opacityDisabled);
+        bdColor = bdColor.withValues(alpha: DesignTokens.opacityDisabled);
       }
     }
     
@@ -167,11 +167,11 @@ class MinimalistButton extends StatelessWidget {
           onTap: isDisabled || isLoading ? null : onPressed,
           borderRadius: BorderRadius.circular(borderRadius ?? DesignTokens.radiusMD),
           splashColor: variant != MinimalistButtonVariant.tertiary && variant != MinimalistButtonVariant.icon
-              ? fgColor.withOpacity(0.1)
-              : DesignTokens.vibrantCoral.withOpacity(0.1),
+              ? fgColor.withValues(alpha: 0.1)
+              : DesignTokens.vibrantCoral.withValues(alpha: 0.1),
           highlightColor: variant != MinimalistButtonVariant.tertiary && variant != MinimalistButtonVariant.icon
-              ? fgColor.withOpacity(0.05)
-              : DesignTokens.vibrantCoral.withOpacity(0.05),
+              ? fgColor.withValues(alpha: 0.05)
+              : DesignTokens.vibrantCoral.withValues(alpha: 0.05),
           child: Padding(
             padding: buttonPadding,
             child: Center(child: buttonContent),

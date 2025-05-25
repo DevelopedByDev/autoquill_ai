@@ -60,7 +60,7 @@ class SmartTranscriptionSection extends StatelessWidget {
             'When enabled, transcriptions are enhanced with intelligent formatting including emoji conversion, proper casing, numbered lists, and email formatting.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                      Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
           ),
           if (state.smartTranscriptionEnabled) ...[
@@ -68,10 +68,10 @@ class SmartTranscriptionSection extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(DesignTokens.spaceSM),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(DesignTokens.radiusSM),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -95,7 +95,7 @@ class SmartTranscriptionSection extends StatelessWidget {
                           color: Theme.of(context)
                               .colorScheme
                               .onSurface
-                              .withOpacity(0.8),
+                              .withValues(alpha: 0.8),
                         ),
                   ),
                 ],

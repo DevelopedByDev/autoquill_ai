@@ -64,7 +64,7 @@ class MinimalistCard extends StatelessWidget {
         boxShadow: elevation != null && elevation! > 0 
             ? [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: elevation! * 4,
                   offset: Offset(0, elevation!),
                 ),
@@ -77,13 +77,13 @@ class MinimalistCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(borderRadius ?? DesignTokens.radiusMD),
           splashColor: interactive 
-              ? DesignTokens.vibrantCoral.withOpacity(0.1) 
+              ? DesignTokens.vibrantCoral.withValues(alpha: 0.1) 
               : Colors.transparent,
           highlightColor: interactive 
-              ? DesignTokens.vibrantCoral.withOpacity(0.05) 
+              ? DesignTokens.vibrantCoral.withValues(alpha: 0.05) 
               : Colors.transparent,
           hoverColor: interactive 
-              ? DesignTokens.vibrantCoral.withOpacity(0.05) 
+              ? DesignTokens.vibrantCoral.withValues(alpha: 0.05) 
               : Colors.transparent,
           child: child,
         ),

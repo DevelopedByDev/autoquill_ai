@@ -100,7 +100,7 @@ class AssistantSettingsPage extends StatelessWidget {
               Text(
                 'When enabled, a screenshot will be taken when the assistant hotkey is pressed to provide visual context for more accurate responses.',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
               ),
             ],

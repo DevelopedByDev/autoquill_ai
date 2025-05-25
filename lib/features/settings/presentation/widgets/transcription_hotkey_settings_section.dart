@@ -95,8 +95,8 @@ class TranscriptionHotkeySettingsSection extends StatelessWidget {
       ),
       backgroundColor: isDarkMode ? DesignTokens.darkSurface : DesignTokens.lightSurface,
       borderColor: hotKey != null 
-          ? DesignTokens.vibrantCoral.withOpacity(0.5)
-          : Colors.grey.withOpacity(0.3),
+          ? DesignTokens.vibrantCoral.withValues(alpha: 0.5)
+          : Colors.grey.withValues(alpha: 0.3),
     );
   }
 
@@ -143,7 +143,7 @@ class TranscriptionHotkeySettingsSection extends StatelessWidget {
           Text(
             'Hold down the hotkey to record, release to transcribe',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: DesignTokens.spaceMD),

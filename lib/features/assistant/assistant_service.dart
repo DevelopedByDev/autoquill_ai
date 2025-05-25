@@ -10,7 +10,6 @@ import 'package:http/http.dart' as http;
 import 'package:keypress_simulator/keypress_simulator.dart';
 import 'package:autoquill_ai/features/recording/domain/repositories/recording_repository.dart';
 import 'package:autoquill_ai/features/transcription/domain/repositories/transcription_repository.dart';
-import 'package:pasteboard/pasteboard.dart';
 import '../accessibility/domain/repositories/accessibility_repository.dart';
 import 'clipboard_listener_service.dart';
 import '../hotkeys/services/clipboard_service.dart';
