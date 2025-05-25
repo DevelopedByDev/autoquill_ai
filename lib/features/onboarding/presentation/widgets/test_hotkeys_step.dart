@@ -123,7 +123,7 @@ class _TestHotkeysStepState extends State<TestHotkeysStep> {
                   _buildTestField(
                     context,
                     title: 'Transcription Mode',
-                    description: 'Press your transcription hotkey to activate',
+                    description: 'Press your transcription hotkey to start and press again to stop',
                     hotkey: state.transcriptionHotkey!,
                     controller: _transcriptionController,
                     icon: Icons.mic,
@@ -142,7 +142,8 @@ class _TestHotkeysStepState extends State<TestHotkeysStep> {
                   _buildTestField(
                     context,
                     title: 'Assistant Mode',
-                    description: 'Press your assistant hotkey to activate',
+                    description:
+                        'Press your assistant hotkey to start and press again to stop',
                     hotkey: state.assistantHotkey!,
                     controller: _assistantController,
                     icon: Icons.chat_bubble_outline,
