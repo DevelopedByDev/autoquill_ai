@@ -70,13 +70,15 @@ class HotkeysStep extends StatelessWidget {
               buildWhen: (previous, current) =>
                   previous.transcriptionEnabled !=
                       current.transcriptionEnabled ||
-                  previous.transcriptionHotkey != current.transcriptionHotkey,
+                  previous.transcriptionHotkey != current.transcriptionHotkey ||
+                  previous.smartTranscriptionEnabled !=
+                      current.smartTranscriptionEnabled,
               builder: (context, state) {
                 if (!state.transcriptionEnabled) {
                   return const SizedBox.shrink();
                 }
 
-                return _buildHotkeyCard(
+                final hotkeyCard = _buildHotkeyCard(
                   context,
                   icon: Icons.mic,
                   title: 'Transcription Hotkey',
@@ -89,6 +91,111 @@ class HotkeysStep extends StatelessWidget {
                         );
                   },
                 );
+
+                // Add smart transcription toggle if transcription is enabled
+                if (state.transcriptionEnabled) {
+                  final smartTranscriptionToggle = Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surface
+                          .withValues(alpha: 0.7),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Theme.of(context).dividerColor,
+                      ),
+                    ),
+                    child: BlocBuilder<OnboardingBloc, OnboardingState>(
+                      buildWhen: (previous, current) =>
+                          previous.smartTranscriptionEnabled !=
+                          current.smartTranscriptionEnabled,
+                      builder: (context, smartTranscriptionState) {
+                        return SwitchListTile(
+                          title: const Text('Smart Transcription'),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Enhance transcriptions with intelligent formatting, emoji conversion, and proper casing. Slower but more polished results.',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Examples:',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    const Text(
+                                      '• "heart emoji" → ❤️',
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                    const Text(
+                                      '• "in all caps excited" → "EXCITED"',
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                    const Text(
+                                      '• "number 1 apples, number 2 bananas" → numbered list',
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                    const Text(
+                                      '• "john dot doe at email dot com" → john.doe@email.com',
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'You can change this in Settings later.',
+                                style: TextStyle(fontSize: 11),
+                              ),
+                            ],
+                          ),
+                          value:
+                              smartTranscriptionState.smartTranscriptionEnabled,
+                          onChanged: (value) {
+                            context.read<OnboardingBloc>().add(
+                                  UpdateSmartTranscriptionPreference(
+                                      enabled: value),
+                                );
+                          },
+                          dense: true,
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 8),
+                        );
+                      },
+                    ),
+                  );
+
+                  return Column(
+                    children: [
+                      hotkeyCard,
+                      const SizedBox(height: 16),
+                      smartTranscriptionToggle,
+                    ],
+                  );
+                }
+
+                return hotkeyCard;
               },
             ),
 
@@ -151,7 +258,7 @@ class HotkeysStep extends StatelessWidget {
                         return SwitchListTile(
                           title: const Text('Auto-capture screenshot'),
                           subtitle: const Text(
-                            'Automatically take a screenshot when assistant is activated to provide visual context',
+                            'Automatically take a screenshot when assistant is activated to provide visual context, slower but more powerful. You can change this in Settings later.',
                             style: TextStyle(fontSize: 12),
                           ),
                           value: screenshotState.assistantScreenshotEnabled,

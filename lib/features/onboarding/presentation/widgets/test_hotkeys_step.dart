@@ -109,8 +109,10 @@ class _TestHotkeysStepState extends State<TestHotkeysStep> {
                     hotkey: state.pushToTalkHotkey!,
                     controller: _pushToTalkController,
                     icon: Icons.push_pin,
-                    hintText:
-                        'Hold your push-to-talk key and say: "Hello, this is a test"',
+                    hintText: state.smartTranscriptionEnabled
+                        ? 'Hold your push-to-talk key and say: "heart emoji excited in all caps" (Smart Transcription enabled)'
+                        : 'Hold your push-to-talk key and say: "Hello, this is a test"',
+                    smartTranscriptionEnabled: state.smartTranscriptionEnabled,
                   ),
 
                 if (state.pushToTalkHotkey != null) const SizedBox(height: 24),
@@ -125,8 +127,10 @@ class _TestHotkeysStepState extends State<TestHotkeysStep> {
                     hotkey: state.transcriptionHotkey!,
                     controller: _transcriptionController,
                     icon: Icons.mic,
-                    hintText:
-                        'Press your transcription key and say: "The quick brown fox jumps"',
+                    hintText: state.smartTranscriptionEnabled
+                        ? 'Press your transcription key and say: "heart emoji excited in all caps" (Smart Transcription enabled)'
+                        : 'Press your transcription key and say: "The quick brown fox jumps over the lazy dog"',
+                    smartTranscriptionEnabled: state.smartTranscriptionEnabled,
                   ),
 
                 if (state.transcriptionEnabled &&
@@ -143,7 +147,7 @@ class _TestHotkeysStepState extends State<TestHotkeysStep> {
                     controller: _assistantController,
                     icon: Icons.chat_bubble_outline,
                     hintText:
-                        'Press your assistant key and ask: "What is the weather today?"',
+                        'Press your assistant key and ask: "Write me a tweet about the benefits of vitamin supplementation"',
                   ),
 
                 const SizedBox(height: 32),
@@ -213,6 +217,7 @@ class _TestHotkeysStepState extends State<TestHotkeysStep> {
     required TextEditingController controller,
     required IconData icon,
     required String hintText,
+    bool smartTranscriptionEnabled = false,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -250,11 +255,37 @@ class _TestHotkeysStepState extends State<TestHotkeysStep> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
+                    Row(
+                      children: [
+                        Text(
+                          title,
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
+                        if (smartTranscriptionEnabled &&
+                            (title.contains('Transcription') ||
+                                title.contains('Push-to-Talk'))) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'SMART',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              ),
+                            ),
                           ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Text(

@@ -28,6 +28,7 @@ class OnboardingState extends Equatable {
   final bool autoCopyEnabled;
   final String transcriptionModel;
   final bool assistantScreenshotEnabled;
+  final bool smartTranscriptionEnabled;
   final Map<PermissionType, PermissionStatus> permissionStatuses;
 
   const OnboardingState({
@@ -43,6 +44,7 @@ class OnboardingState extends Equatable {
     this.autoCopyEnabled = true,
     this.transcriptionModel = 'whisper-large-v3',
     this.assistantScreenshotEnabled = true,
+    this.smartTranscriptionEnabled = false,
     this.permissionStatuses = const {},
   });
 
@@ -59,6 +61,7 @@ class OnboardingState extends Equatable {
     bool? autoCopyEnabled,
     String? transcriptionModel,
     bool? assistantScreenshotEnabled,
+    bool? smartTranscriptionEnabled,
     Map<PermissionType, PermissionStatus>? permissionStatuses,
   }) {
     return OnboardingState(
@@ -75,6 +78,8 @@ class OnboardingState extends Equatable {
       transcriptionModel: transcriptionModel ?? this.transcriptionModel,
       assistantScreenshotEnabled:
           assistantScreenshotEnabled ?? this.assistantScreenshotEnabled,
+      smartTranscriptionEnabled:
+          smartTranscriptionEnabled ?? this.smartTranscriptionEnabled,
       permissionStatuses: permissionStatuses ?? this.permissionStatuses,
     );
   }
@@ -111,6 +116,7 @@ class OnboardingState extends Equatable {
         autoCopyEnabled,
         transcriptionModel,
         assistantScreenshotEnabled,
+        smartTranscriptionEnabled,
         permissionStatuses,
       ];
 }

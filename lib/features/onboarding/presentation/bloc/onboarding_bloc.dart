@@ -39,6 +39,8 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     on<UpdateTranscriptionModel>(_onUpdateTranscriptionModel);
     on<UpdateAssistantScreenshotPreference>(
         _onUpdateAssistantScreenshotPreference);
+    on<UpdateSmartTranscriptionPreference>(
+        _onUpdateSmartTranscriptionPreference);
     on<CompleteOnboarding>(_onCompleteOnboarding);
     on<NavigateToNextStep>(_onNavigateToNextStep);
     on<NavigateToPreviousStep>(_onNavigateToPreviousStep);
@@ -297,8 +299,45 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
   void _onUpdateAssistantScreenshotPreference(
     UpdateAssistantScreenshotPreference event,
     Emitter<OnboardingState> emit,
-  ) {
+  ) async {
+    // Save the setting immediately to make it available for testing
+    try {
+      await AppStorage.settingsBox
+          .put('assistant_screenshot_enabled', event.enabled);
+
+      if (kDebugMode) {
+        print(
+            'Assistant screenshot preference saved immediately: ${event.enabled}');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error saving assistant screenshot preference: $e');
+      }
+    }
+
     emit(state.copyWith(assistantScreenshotEnabled: event.enabled));
+  }
+
+  void _onUpdateSmartTranscriptionPreference(
+    UpdateSmartTranscriptionPreference event,
+    Emitter<OnboardingState> emit,
+  ) async {
+    // Save the setting immediately to make it available for testing
+    try {
+      await AppStorage.settingsBox
+          .put('smart_transcription_enabled', event.enabled);
+
+      if (kDebugMode) {
+        print(
+            'Smart transcription preference saved immediately: ${event.enabled}');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error saving smart transcription preference: $e');
+      }
+    }
+
+    emit(state.copyWith(smartTranscriptionEnabled: event.enabled));
   }
 
   Future<void> _onCompleteOnboarding(
@@ -491,6 +530,10 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     // Save assistant screenshot preference
     await AppStorage.settingsBox
         .put('assistant_screenshot_enabled', state.assistantScreenshotEnabled);
+
+    // Save smart transcription preference
+    await AppStorage.settingsBox
+        .put('smart_transcription_enabled', state.smartTranscriptionEnabled);
 
     // Add a longer delay to ensure all settings are written before navigation
     await Future.delayed(const Duration(milliseconds: 500));
