@@ -52,7 +52,8 @@ class HotkeysStep extends StatelessWidget {
                   context,
                   icon: Icons.push_pin,
                   title: 'Push-to-Talk Hotkey',
-                  description: 'Hold this combination to record while pressed',
+                  description:
+                      'Hold this combination to record while pressed (default: Option+Space on Mac, Alt+Space on Windows)',
                   hotkey: state.pushToTalkHotkey,
                   onRecordHotkey: (hotkey) {
                     context.read<OnboardingBloc>().add(

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:autoquill_ai/core/settings/settings_service.dart';
 import 'package:autoquill_ai/core/storage/app_storage.dart';
 import 'package:autoquill_ai/features/onboarding/presentation/bloc/onboarding_event.dart';
@@ -66,7 +68,7 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
 
     final defaultPushToTalkHotkey = HotKey(
       key: LogicalKeyboardKey.space,
-      modifiers: [HotKeyModifier.control, HotKeyModifier.alt],
+      modifiers: [HotKeyModifier.alt],
       scope: HotKeyScope.system,
     );
 

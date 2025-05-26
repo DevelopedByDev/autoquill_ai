@@ -12,24 +12,20 @@ import '../utils/hotkey_converter.dart';
 class HotkeyRegistration {
   // Cache for converted hotkeys to avoid repeated conversions
   static final Map<String, HotKey> _hotkeyCache = {};
-  
+
   /// Registers a hotkey with the system
-  static Future<void> registerHotKey(
-    HotKey hotKey, 
-    String setting, 
-    Function(HotKey) keyDownHandler, 
-    Function(HotKey) keyUpHandler
-  ) async {
+  static Future<void> registerHotKey(HotKey hotKey, String setting,
+      Function(HotKey) keyDownHandler, Function(HotKey) keyUpHandler) async {
     try {
       await hotKeyManager.register(
         hotKey,
         keyDownHandler: keyDownHandler,
         keyUpHandler: keyUpHandler,
       );
-      
+
       // Update cache
       _hotkeyCache[setting] = hotKey;
-      
+
       final keyData = {
         'identifier': hotKey.identifier,
         'key': {
@@ -40,10 +36,11 @@ class HotkeyRegistration {
               ? (hotKey.key as PhysicalKeyboardKey).usbHidUsage
               : null,
         },
-        'modifiers': hotKey.modifiers?.map((m) => m.name).toList() ?? <String>[],
+        'modifiers':
+            hotKey.modifiers?.map((m) => m.name).toList() ?? <String>[],
         'scope': hotKey.scope.name,
       };
-      
+
       await AppStorage.saveHotkey(setting, keyData);
     } catch (e) {
       if (kDebugMode) {
@@ -79,22 +76,22 @@ class HotkeyRegistration {
   static Future<void> prepareHotkeys() async {
     // Clear the cache to ensure we have the latest settings
     _hotkeyCache.clear();
-    
+
     final stopwatch = Stopwatch()..start();
-    
+
     try {
       final settingsBox = Hive.box('settings');
-      
+
       if (kDebugMode) {
         print('Checking for hotkeys in settings box...');
         print('Settings box keys: ${settingsBox.keys.toList()}');
       }
-      
+
       // Try multiple ways to get the hotkeys to ensure we find them
       dynamic transcriptionHotkey = settingsBox.get('transcription_hotkey');
       dynamic assistantHotkey = settingsBox.get('assistant_hotkey');
       dynamic pushToTalkHotkey = settingsBox.get('push_to_talk_hotkey');
-      
+
       // If hotkeys are not found, try the settings service
       if (transcriptionHotkey == null || assistantHotkey == null) {
         final settingsService = SettingsService();
@@ -103,28 +100,30 @@ class HotkeyRegistration {
           if (hotkeyMap != null) {
             transcriptionHotkey = hotkeyMap;
             if (kDebugMode) {
-              print('Loaded transcription hotkey from settings service: $transcriptionHotkey');
+              print(
+                  'Loaded transcription hotkey from settings service: $transcriptionHotkey');
             }
           }
         }
-        
+
         if (assistantHotkey == null) {
           final hotkeyMap = settingsService.getAssistantHotkey();
           if (hotkeyMap != null) {
             assistantHotkey = hotkeyMap;
             if (kDebugMode) {
-              print('Loaded assistant hotkey from settings service: $assistantHotkey');
+              print(
+                  'Loaded assistant hotkey from settings service: $assistantHotkey');
             }
           }
         }
       }
-      
+
       if (kDebugMode) {
         print('Transcription hotkey from settings: $transcriptionHotkey');
         print('Assistant hotkey from settings: $assistantHotkey');
         print('Push-to-talk hotkey from settings: $pushToTalkHotkey');
       }
-      
+
       // Convert hotkeys and store in cache (fast operation)
       if (transcriptionHotkey != null) {
         try {
@@ -137,9 +136,10 @@ class HotkeyRegistration {
             identifier: 'transcription_hotkey',
           );
           _hotkeyCache['transcription_hotkey'] = updatedHotkey;
-          
+
           if (kDebugMode) {
-            print('Successfully cached transcription hotkey: ${updatedHotkey.toJson()}');
+            print(
+                'Successfully cached transcription hotkey: ${updatedHotkey.toJson()}');
           }
         } catch (e) {
           if (kDebugMode) {
@@ -147,7 +147,7 @@ class HotkeyRegistration {
           }
         }
       }
-      
+
       if (assistantHotkey != null) {
         try {
           final hotkey = hotKeyConverter(assistantHotkey);
@@ -159,9 +159,10 @@ class HotkeyRegistration {
             identifier: 'assistant_hotkey',
           );
           _hotkeyCache['assistant_hotkey'] = updatedHotkey;
-          
+
           if (kDebugMode) {
-            print('Successfully cached assistant hotkey: ${updatedHotkey.toJson()}');
+            print(
+                'Successfully cached assistant hotkey: ${updatedHotkey.toJson()}');
           }
         } catch (e) {
           if (kDebugMode) {
@@ -169,7 +170,7 @@ class HotkeyRegistration {
           }
         }
       }
-      
+
       if (pushToTalkHotkey != null) {
         try {
           final hotkey = hotKeyConverter(pushToTalkHotkey);
@@ -181,9 +182,10 @@ class HotkeyRegistration {
             identifier: 'push_to_talk_hotkey',
           );
           _hotkeyCache['push_to_talk_hotkey'] = updatedHotkey;
-          
+
           if (kDebugMode) {
-            print('Successfully cached push-to-talk hotkey: ${updatedHotkey.toJson()}');
+            print(
+                'Successfully cached push-to-talk hotkey: ${updatedHotkey.toJson()}');
           }
         } catch (e) {
           if (kDebugMode) {
@@ -191,7 +193,7 @@ class HotkeyRegistration {
           }
         }
       }
-      
+
       if (kDebugMode) {
         print('Prepared hotkeys in ${stopwatch.elapsedMilliseconds}ms');
       }
@@ -203,13 +205,10 @@ class HotkeyRegistration {
   }
 
   /// Registers a single hotkey from the cache
-  static Future<void> _registerHotkeyFromCache(
-    String setting, 
-    Function(HotKey) keyDownHandler, 
-    Function(HotKey) keyUpHandler
-  ) async {
+  static Future<void> _registerHotkeyFromCache(String setting,
+      Function(HotKey) keyDownHandler, Function(HotKey) keyUpHandler) async {
     if (!_hotkeyCache.containsKey(setting)) return;
-    
+
     try {
       final hotkey = _hotkeyCache[setting]!;
       await hotKeyManager.register(
@@ -217,7 +216,7 @@ class HotkeyRegistration {
         keyDownHandler: keyDownHandler,
         keyUpHandler: keyUpHandler,
       );
-      
+
       if (kDebugMode) {
         print('Registered $setting hotkey');
       }
@@ -234,24 +233,25 @@ class HotkeyRegistration {
     required Function(HotKey) keyUpHandler,
   }) async {
     final stopwatch = Stopwatch()..start();
-    
+
     try {
       // First unregister all existing hotkeys to avoid conflicts
       await hotKeyManager.unregisterAll();
-      
+
       // First prepare the hotkeys (fast operation)
       await prepareHotkeys();
-      
+
       // Register hotkeys in parallel
       final futures = <Future>[];
-      
+
       for (final setting in _hotkeyCache.keys) {
-        futures.add(_registerHotkeyFromCache(setting, keyDownHandler, keyUpHandler));
+        futures.add(
+            _registerHotkeyFromCache(setting, keyDownHandler, keyUpHandler));
       }
-      
+
       // Wait for all registrations to complete
       await Future.wait(futures);
-      
+
       if (kDebugMode) {
         print('Registered all hotkeys in ${stopwatch.elapsedMilliseconds}ms');
         print('Active hotkeys: ${_hotkeyCache.keys.join(', ')}');
@@ -264,7 +264,7 @@ class HotkeyRegistration {
       stopwatch.stop();
     }
   }
-  
+
   /// Reloads all hotkeys from storage and registers them
   /// This is used when hotkeys are changed in settings
   static Future<void> reloadAllHotkeys({
@@ -274,34 +274,34 @@ class HotkeyRegistration {
     try {
       // First unregister all existing hotkeys to avoid conflicts
       await hotKeyManager.unregisterAll();
-      
+
       // Prepare hotkeys from storage
       await prepareHotkeys();
-      
+
       // Register hotkeys from cache
       await _registerHotkeyFromCache(
         'transcription_hotkey',
         keyDownHandler,
         keyUpHandler,
       );
-      
+
       await _registerHotkeyFromCache(
         'assistant_hotkey',
         keyDownHandler,
         keyUpHandler,
       );
-      
+
       await _registerHotkeyFromCache(
         'push_to_talk_hotkey',
         keyDownHandler,
         keyUpHandler,
       );
-      
+
       // If push-to-talk hotkey is not set, register the default one
       if (!_hotkeyCache.containsKey('push_to_talk_hotkey')) {
         await _registerDefaultPushToTalkHotkey(keyDownHandler, keyUpHandler);
       }
-      
+
       if (kDebugMode) {
         print('All hotkeys reloaded and registered');
       }
@@ -311,7 +311,7 @@ class HotkeyRegistration {
       }
     }
   }
-  
+
   /// Ensures hotkeys are properly loaded after onboarding
   /// This is called when the app starts after onboarding is completed
   static Future<void> ensureHotkeysLoadedAfterOnboarding() async {
@@ -319,10 +319,10 @@ class HotkeyRegistration {
       if (kDebugMode) {
         print('Ensuring hotkeys are properly loaded after onboarding');
       }
-      
+
       final settingsBox = Hive.box('settings');
       final settingsService = SettingsService();
-      
+
       // Check if transcription hotkey exists in Hive
       if (settingsBox.get('transcription_hotkey') == null) {
         // Try to get it from the settings service
@@ -335,7 +335,7 @@ class HotkeyRegistration {
           }
         }
       }
-      
+
       // Check if assistant hotkey exists in Hive
       if (settingsBox.get('assistant_hotkey') == null) {
         // Try to get it from the settings service
@@ -348,7 +348,7 @@ class HotkeyRegistration {
           }
         }
       }
-      
+
       // Check if push-to-talk hotkey exists in Hive
       if (settingsBox.get('push_to_talk_hotkey') == null) {
         // Create default push-to-talk hotkey
@@ -357,7 +357,7 @@ class HotkeyRegistration {
           print('Created default push-to-talk hotkey');
         }
       }
-      
+
       // Clear the cache to ensure hotkeys are reloaded
       _hotkeyCache.clear();
     } catch (e) {
@@ -366,30 +366,29 @@ class HotkeyRegistration {
       }
     }
   }
-  
+
   /// Register the default push-to-talk hotkey
   static Future<void> _registerDefaultPushToTalkHotkey(
-    Function(HotKey) keyDownHandler,
-    Function(HotKey) keyUpHandler
-  ) async {
+      Function(HotKey) keyDownHandler, Function(HotKey) keyUpHandler) async {
     try {
       // Create the default push-to-talk hotkey
       final defaultHotkey = await _createDefaultPushToTalkHotkey();
-      
+
       // Register the hotkey
       await hotKeyManager.register(
         defaultHotkey,
         keyDownHandler: keyDownHandler,
         keyUpHandler: keyUpHandler,
       );
-      
+
       // Save to cache
       _hotkeyCache['push_to_talk_hotkey'] = defaultHotkey;
-      
+
       if (kDebugMode) {
-        print('Registered default push-to-talk hotkey: ${defaultHotkey.toJson()}');
+        print(
+            'Registered default push-to-talk hotkey: ${defaultHotkey.toJson()}');
       }
-      
+
       // Save to settings
       await _saveDefaultPushToTalkHotkey();
     } catch (e) {
@@ -398,19 +397,12 @@ class HotkeyRegistration {
       }
     }
   }
-  
+
   /// Create the default push-to-talk hotkey based on platform
   static Future<HotKey> _createDefaultPushToTalkHotkey() async {
-    // Default modifiers based on platform
-    final modifiers = <HotKeyModifier>[HotKeyModifier.control];
-    
-    // On macOS, use Option instead of Alt
-    if (Platform.isMacOS) {
-      modifiers.add(HotKeyModifier.alt);
-    } else {
-      modifiers.add(HotKeyModifier.alt);
-    }
-    
+    // Use Alt (which maps to Option on Mac) + Space as the default
+    final modifiers = <HotKeyModifier>[HotKeyModifier.alt];
+
     // Create the hotkey with Space key
     return HotKey(
       key: LogicalKeyboardKey.space,
@@ -419,12 +411,12 @@ class HotkeyRegistration {
       identifier: 'push_to_talk_hotkey',
     );
   }
-  
+
   /// Save the default push-to-talk hotkey to settings
   static Future<void> _saveDefaultPushToTalkHotkey() async {
     try {
       final defaultHotkey = await _createDefaultPushToTalkHotkey();
-      
+
       // Convert to storable format
       final keyData = {
         'identifier': defaultHotkey.identifier,
@@ -436,14 +428,15 @@ class HotkeyRegistration {
               ? (defaultHotkey.key as PhysicalKeyboardKey).usbHidUsage
               : null,
         },
-        'modifiers': defaultHotkey.modifiers?.map((m) => m.name).toList() ?? <String>[],
+        'modifiers':
+            defaultHotkey.modifiers?.map((m) => m.name).toList() ?? <String>[],
         'scope': defaultHotkey.scope.name,
       };
-      
+
       // Save to Hive
       final settingsBox = Hive.box('settings');
       await settingsBox.put('push_to_talk_hotkey', keyData);
-      
+
       if (kDebugMode) {
         print('Saved default push-to-talk hotkey to settings');
       }

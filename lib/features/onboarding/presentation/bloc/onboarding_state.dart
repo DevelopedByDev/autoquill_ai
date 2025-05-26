@@ -43,8 +43,8 @@ class OnboardingState extends Equatable {
     this.themeMode = ThemeMode.system,
     this.autoCopyEnabled = true,
     this.transcriptionModel = 'whisper-large-v3',
-    this.assistantScreenshotEnabled = true,
-    this.smartTranscriptionEnabled = true,
+    this.assistantScreenshotEnabled = false,
+    this.smartTranscriptionEnabled = false,
     this.permissionStatuses = const {},
   });
 
