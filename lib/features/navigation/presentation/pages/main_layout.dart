@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:autoquill_ai/features/home/presentation/pages/home_page.dart';
-import 'package:autoquill_ai/features/transcription/presentation/pages/transcription_page.dart';
 import 'package:autoquill_ai/features/settings/presentation/pages/settings.dart';
 import 'package:autoquill_ai/features/recording/presentation/bloc/recording_bloc.dart';
 import 'package:autoquill_ai/features/transcription/presentation/bloc/transcription_bloc.dart';
@@ -23,7 +22,6 @@ class _MainLayoutState extends State<MainLayout> {
 
   final List<Widget> _pages = [
     const HomePage(),
-    const TranscriptionPage(),
     const SettingsPage(),
   ];
 
@@ -34,7 +32,7 @@ class _MainLayoutState extends State<MainLayout> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Make sure we can access all the required providers
       if (!mounted) return;
-      
+
       try {
         final recordingBloc = context.read<RecordingBloc>();
         final transcriptionBloc = context.read<TranscriptionBloc>();
@@ -104,11 +102,6 @@ class _MainLayoutState extends State<MainLayout> {
                     icon: Icon(Icons.home_outlined),
                     selectedIcon: Icon(Icons.home),
                     label: Text('Home'),
-                  ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.mic_outlined),
-                    selectedIcon: Icon(Icons.mic),
-                    label: Text('Transcription'),
                   ),
                   NavigationRailDestination(
                     icon: Icon(Icons.settings_outlined),
