@@ -293,10 +293,18 @@ class RecordingOverlayWindow: NSPanel {
     private var visualEffectView: NSVisualEffectView!
     private var backgroundLayer: CAGradientLayer!
     private var pulseLayer: CAShapeLayer!
+    
+    // Dragging support
+    private var isDragging = false
+    private var dragStartLocation: NSPoint = .zero
 
     // Define window dimensions as class properties
     private let windowWidth: CGFloat = 220
     private let windowHeight: CGFloat = 100
+    
+    // UserDefaults keys for position persistence
+    private let positionXKey = "RecordingOverlayPositionX"
+    private let positionYKey = "RecordingOverlayPositionY"
     
     private init() {
         super.init(
@@ -310,19 +318,122 @@ class RecordingOverlayWindow: NSPanel {
         self.isOpaque = false
         self.backgroundColor = .clear
         self.hasShadow = false
-        self.ignoresMouseEvents = true
+        self.ignoresMouseEvents = false  // Enable mouse events for dragging
         self.isMovableByWindowBackground = false
 
-        if let screenFrame = NSScreen.main?.visibleFrame {
-            let xPos = (screenFrame.width - windowWidth) - 25
-            let yPos = (screenFrame.height - windowHeight) + 25 // 30 points from bottom of the visible area
-            // let yPos = screenFrame.origin.y + (screenFrame.height - windowHeight) / 2  // 30 points from bottom of the visible area
-
-            self.setFrameOrigin(NSPoint(x: xPos, y: yPos))
-        }
+        // Restore saved position or use default
+        restoreSavedPosition()
 
         setupUI()
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+    }
+    
+    private func restoreSavedPosition() {
+        let defaults = UserDefaults.standard
+        
+        // Check if we have saved position
+        if defaults.object(forKey: positionXKey) != nil && defaults.object(forKey: positionYKey) != nil {
+            let savedX = defaults.double(forKey: positionXKey)
+            let savedY = defaults.double(forKey: positionYKey)
+            let savedPosition = NSPoint(x: savedX, y: savedY)
+            
+            // Validate that the saved position is still on screen
+            if let screenFrame = NSScreen.main?.visibleFrame {
+                let windowFrame = NSRect(origin: savedPosition, size: NSSize(width: windowWidth, height: windowHeight))
+                
+                // Check if the window would be completely off-screen
+                if screenFrame.intersects(windowFrame) {
+                    self.setFrameOrigin(savedPosition)
+                    return
+                }
+            }
+        }
+        
+        // Use default position if no saved position or saved position is off-screen
+        if let screenFrame = NSScreen.main?.visibleFrame {
+            let xPos = screenFrame.maxX - windowWidth - 25
+            let yPos = screenFrame.maxY - windowHeight - 25
+            self.setFrameOrigin(NSPoint(x: xPos, y: yPos))
+        }
+    }
+    
+    private func saveCurrentPosition() {
+        let defaults = UserDefaults.standard
+        let currentOrigin = self.frame.origin
+        defaults.set(currentOrigin.x, forKey: positionXKey)
+        defaults.set(currentOrigin.y, forKey: positionYKey)
+        defaults.synchronize()
+    }
+    
+    // Override mouse events for dragging
+    override func mouseDown(with event: NSEvent) {
+        isDragging = true
+        // Store the mouse position relative to the window's origin
+        dragStartLocation = event.locationInWindow
+        
+        // Change cursor to closed hand during drag
+        NSCursor.closedHand.push()
+        
+        // Add visual feedback when dragging starts
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = 0.1
+            self.animator().alphaValue = 0.8
+        })
+    }
+    
+    override func mouseDragged(with event: NSEvent) {
+        guard isDragging else { return }
+        
+        // Get the current mouse position in screen coordinates
+        let mouseLocationInScreen = NSEvent.mouseLocation
+        
+        // Calculate the new window origin by offsetting the mouse position
+        // by the initial click offset within the window
+        let newOrigin = NSPoint(
+            x: mouseLocationInScreen.x - dragStartLocation.x,
+            y: mouseLocationInScreen.y - dragStartLocation.y
+        )
+        
+        // Constrain to screen bounds
+        if let screenFrame = NSScreen.main?.visibleFrame {
+            let constrainedX = max(screenFrame.minX, min(newOrigin.x, screenFrame.maxX - windowWidth))
+            let constrainedY = max(screenFrame.minY, min(newOrigin.y, screenFrame.maxY - windowHeight))
+            
+            self.setFrameOrigin(NSPoint(x: constrainedX, y: constrainedY))
+        } else {
+            self.setFrameOrigin(newOrigin)
+        }
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        if isDragging {
+            isDragging = false
+            
+            // Restore cursor
+            NSCursor.pop()
+            
+            // Save the new position
+            saveCurrentPosition()
+            
+            // Restore full opacity
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = 0.2
+                self.animator().alphaValue = 1.0
+            })
+        }
+    }
+    
+    // Add cursor tracking for better UX
+    override func mouseEntered(with event: NSEvent) {
+        if !isDragging {
+            NSCursor.openHand.set()
+        }
+    }
+    
+    override func mouseExited(with event: NSEvent) {
+        if !isDragging {
+            NSCursor.arrow.set()
+        }
     }
     
     private func setupUI() {
@@ -377,6 +488,15 @@ class RecordingOverlayWindow: NSPanel {
         visualEffectView.layer?.shadowRadius = 12
         
         self.contentView = visualEffectView
+        
+        // Add tracking area for cursor changes
+        let trackingArea = NSTrackingArea(
+            rect: visualEffectView.bounds,
+            options: [.mouseEnteredAndExited, .activeAlways],
+            owner: self,
+            userInfo: nil
+        )
+        visualEffectView.addTrackingArea(trackingArea)
     }
 
     func updateColors(_ colors: (background: NSColor, accent: NSColor, text: NSColor)) {
@@ -432,6 +552,8 @@ class RecordingOverlayWindow: NSPanel {
     
     func showOverlayWithMode(_ mode: String) {
         DispatchQueue.main.async {
+            // Ensure window is properly positioned and visible
+            self.level = .floating
             self.orderFront(nil)
             self.alphaValue = 0
             self.setIsVisible(true)
