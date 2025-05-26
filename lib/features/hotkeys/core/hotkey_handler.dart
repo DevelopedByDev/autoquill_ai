@@ -82,6 +82,11 @@ class HotkeyHandler {
         print("Assistant hotkey detected, handling...");
       }
       AssistantHotkeyHandler.handleHotkey();
+    } else if (hotKey.identifier == 'escape_cancel') {
+      if (kDebugMode) {
+        print("Escape key detected, cancelling recording...");
+      }
+      _handleEscapeCancel();
     } else if (kDebugMode) {
       print("Unknown hotkey: '${hotKey.identifier}'");
     }
@@ -151,5 +156,36 @@ class HotkeyHandler {
     
     // Show a toast notification to inform the user
     BotToast.showText(text: 'Hotkey changes applied successfully');
+  }
+
+  /// Handles escape key cancellation for any active recording
+  static void _handleEscapeCancel() {
+    // Check if any recording is in progress and cancel it
+    if (_recordingBloc != null) {
+      // Check if transcription hotkey handler has an active recording
+      if (TranscriptionHotkeyHandler.isRecordingActive()) {
+        TranscriptionHotkeyHandler.cancelRecording();
+        return;
+      }
+      
+      // Check if assistant handler has an active recording
+      if (AssistantHotkeyHandler.isRecordingActive()) {
+        AssistantHotkeyHandler.cancelRecording();
+        return;
+      }
+      
+      // Check if push-to-talk handler has an active recording
+      if (PushToTalkHandler.isRecordingActive()) {
+        PushToTalkHandler.cancelRecording();
+        return;
+      }
+      
+      // If no specific handler is active, try to cancel via the recording bloc
+      _recordingBloc!.add(CancelRecording());
+    }
+    
+    if (kDebugMode) {
+      print('Escape key cancellation handled');
+    }
   }
 }

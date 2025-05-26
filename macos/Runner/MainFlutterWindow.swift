@@ -40,19 +40,38 @@ class BlinkingLabel: NSTextField {
     
     // Text states for different recording and transcription states
     enum TextState {
-        case recording(mode: String)
+        case recording(mode: String, finishHotkey: String?, cancelHotkey: String?)
         case stopped
         case processing
         case completed
         
         var text: String {
             switch self {
-            case .recording(let mode):
+            case .recording(let mode, let finishHotkey, let cancelHotkey):
+                var baseText = ""
                 if mode.isEmpty {
-                    return "🎙️ Recording..."
+                    baseText = "🎙️ Recording..."
                 } else {
-                    return "🎙️ \(mode)\nRecording..."
+                    baseText = "🎙️ \(mode)\nRecording..."
                 }
+                
+                // Add hotkey instructions
+                var instructions = ""
+                if let finish = finishHotkey {
+                    instructions += "Finish \(finish)"
+                }
+                if let cancel = cancelHotkey {
+                    if !instructions.isEmpty {
+                        instructions += "  •  "
+                    }
+                    instructions += "Cancel \(cancel)"
+                }
+                
+                if !instructions.isEmpty {
+                    baseText += "\n\n\(instructions)"
+                }
+                
+                return baseText
             case .stopped: return "⏹️ Recording Stopped"
             case .processing: return "⚡ Processing..."
             case .completed: return "✅ Complete!"
@@ -70,7 +89,7 @@ class BlinkingLabel: NSTextField {
         
         var colors: (background: NSColor, accent: NSColor, text: NSColor) {
             switch self {
-            case .recording(let mode):
+            case .recording(let mode, _, _):
                 if mode.lowercased().contains("assistant") {
                     // Purple theme for Assistant
                     return (
@@ -115,7 +134,7 @@ class BlinkingLabel: NSTextField {
         }
     }
     
-    private var currentState: TextState = .recording(mode: "")
+    private var currentState: TextState = .recording(mode: "", finishHotkey: nil, cancelHotkey: nil)
     
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -128,14 +147,14 @@ class BlinkingLabel: NSTextField {
     }
     
     private func setup() {
-        self.stringValue = TextState.recording(mode: "").text
+        self.stringValue = TextState.recording(mode: "", finishHotkey: nil, cancelHotkey: nil).text
         self.alignment = .center
         self.isBezeled = false
         self.isEditable = false
         self.isSelectable = false
         self.drawsBackground = false
         self.textColor = NSColor.white
-        self.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
+        self.font = NSFont.systemFont(ofSize: 11, weight: .medium)
         self.wantsLayer = true
         
         // Add text shadow for better readability
@@ -299,8 +318,8 @@ class RecordingOverlayWindow: NSPanel {
     private var dragStartLocation: NSPoint = .zero
 
     // Define window dimensions as class properties
-    private let windowWidth: CGFloat = 220
-    private let windowHeight: CGFloat = 100
+    private let windowWidth: CGFloat = 280
+    private let windowHeight: CGFloat = 120
     
     // UserDefaults keys for position persistence
     private let positionXKey = "RecordingOverlayPositionX"
@@ -471,12 +490,12 @@ class RecordingOverlayWindow: NSPanel {
         visualEffectView.layer?.addSublayer(pulseLayer)
         
         // Setup label
-        blinkingLabel.frame = NSRect(x: 20, y: 45, width: windowWidth - 40, height: 35)
-        blinkingLabel.font = NSFont.systemFont(ofSize: 12, weight: .medium)
+        blinkingLabel.frame = NSRect(x: 15, y: 35, width: windowWidth - 30, height: 70)
+        blinkingLabel.font = NSFont.systemFont(ofSize: 11, weight: .medium)
         visualEffectView.addSubview(blinkingLabel)
         
         // Setup audio level indicator
-        audioLevelIndicator.frame = NSRect(x: 20, y: 15, width: windowWidth - 40, height: 25)
+        audioLevelIndicator.frame = NSRect(x: 20, y: 10, width: windowWidth - 40, height: 20)
         visualEffectView.addSubview(audioLevelIndicator)
         
         // Add border and shadow
@@ -551,6 +570,10 @@ class RecordingOverlayWindow: NSPanel {
     }
     
     func showOverlayWithMode(_ mode: String) {
+        showOverlayWithModeAndHotkeys(mode, finishHotkey: nil, cancelHotkey: "Esc")
+    }
+    
+    func showOverlayWithModeAndHotkeys(_ mode: String, finishHotkey: String?, cancelHotkey: String?) {
         DispatchQueue.main.async {
             // Ensure window is properly positioned and visible
             self.level = .floating
@@ -574,8 +597,8 @@ class RecordingOverlayWindow: NSPanel {
             self.contentView?.layer?.transform = CATransform3DIdentity
             CATransaction.commit()
             
-            // Set initial state to recording with the specified mode and start blinking
-            self.setOverlayState(.recording(mode: mode))
+            // Set initial state to recording with the specified mode and hotkeys
+            self.setOverlayState(.recording(mode: mode, finishHotkey: finishHotkey, cancelHotkey: cancelHotkey))
             self.audioLevelIndicator.startAnimating()
         }
     }
@@ -657,6 +680,18 @@ class MainFlutterWindow: NSWindow {
         if let args = call.arguments as? [String: Any],
            let mode = args["mode"] as? String {
           RecordingOverlayWindow.shared.showOverlayWithMode(mode)
+          result(nil)
+        } else {
+          result(FlutterError(code: "INVALID_ARGUMENTS", 
+                             message: "Expected mode parameter", 
+                             details: nil))
+        }
+      case "showOverlayWithModeAndHotkeys":
+        if let args = call.arguments as? [String: Any],
+           let mode = args["mode"] as? String {
+          let finishHotkey = args["finishHotkey"] as? String
+          let cancelHotkey = args["cancelHotkey"] as? String
+          RecordingOverlayWindow.shared.showOverlayWithModeAndHotkeys(mode, finishHotkey: finishHotkey, cancelHotkey: cancelHotkey)
           result(nil)
         } else {
           result(FlutterError(code: "INVALID_ARGUMENTS", 

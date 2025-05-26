@@ -111,8 +111,12 @@ class PushToTalkHandler {
       // Play the start recording sound
       await SoundPlayer.playStartRecordingSound();
 
-      // Show the overlay with the push-to-talk mode
-      await RecordingOverlayPlatform.showOverlayWithMode('Push-to-Talk');
+      // Get the push-to-talk hotkey for display
+      final pushToTalkHotkey = _getHotkeyDisplayString('push_to_talk_hotkey');
+
+      // Show the overlay with the push-to-talk mode and hotkey info
+      await RecordingOverlayPlatform.showOverlayWithModeAndHotkeys(
+          'Push-to-Talk', pushToTalkHotkey, 'Esc');
       await _recordingRepository!.startRecording();
       _isPushToTalkRecordingActive = true;
       _recordingStartTime = DateTime.now();
@@ -323,6 +327,75 @@ class PushToTalkHandler {
       // Hide the overlay on error
       await RecordingOverlayPlatform.hideOverlay();
       BotToast.showText(text: 'Transcription failed: $e');
+    }
+  }
+
+  /// Get hotkey display string for the overlay
+  static String? _getHotkeyDisplayString(String hotkeyKey) {
+    try {
+      if (!Hive.isBoxOpen('settings')) return null;
+
+      final settingsBox = Hive.box('settings');
+      final hotkeyData = settingsBox.get(hotkeyKey);
+
+      if (hotkeyData == null) return null;
+
+      // Convert the stored hotkey data to a display string
+      if (hotkeyData is Map) {
+        final modifiers = <String>[];
+
+        // Add modifiers in the correct order for macOS
+        if (hotkeyData['meta'] == true) modifiers.add('⌘');
+        if (hotkeyData['control'] == true) modifiers.add('⌃');
+        if (hotkeyData['alt'] == true) modifiers.add('⌥');
+        if (hotkeyData['shift'] == true) modifiers.add('⇧');
+
+        final keyLabel = hotkeyData['keyLabel'] as String?;
+        if (keyLabel != null) {
+          modifiers.add(keyLabel.toUpperCase());
+        }
+
+        return modifiers.join('');
+      }
+
+      return null;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting hotkey display string: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Check if push-to-talk recording is currently active
+  static bool isRecordingActive() {
+    return _isPushToTalkRecordingActive;
+  }
+
+  /// Cancel the current push-to-talk recording
+  static Future<void> cancelRecording() async {
+    if (!_isPushToTalkRecordingActive) return;
+
+    try {
+      // Cancel the recording
+      await _recordingRepository?.cancelRecording();
+      _isPushToTalkRecordingActive = false;
+      _recordingStartTime = null;
+      _pushToTalkRecordedFilePath = null;
+
+      // Hide the overlay
+      await RecordingOverlayPlatform.hideOverlay();
+
+      BotToast.showText(text: 'Push-to-talk recording cancelled');
+
+      if (kDebugMode) {
+        print('Push-to-talk recording cancelled via Esc key');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error cancelling push-to-talk recording: $e');
+      }
+      BotToast.showText(text: 'Error cancelling recording');
     }
   }
 }

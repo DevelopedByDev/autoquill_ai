@@ -242,8 +242,12 @@ class AssistantService {
       // Play the start recording sound
       await SoundPlayer.playStartRecordingSound();
 
-      // Show the overlay with the assistant mode
-      await RecordingOverlayPlatform.showOverlayWithMode('Assistant');
+      // Get the assistant hotkey for display
+      final assistantHotkey = _getHotkeyDisplayString('assistant_hotkey');
+
+      // Show the overlay with the assistant mode and hotkey info
+      await RecordingOverlayPlatform.showOverlayWithModeAndHotkeys(
+          'Assistant', assistantHotkey, 'Esc');
       await _recordingRepository!.startRecording();
       _isRecording = true;
       _recordingStartTime = DateTime.now();
@@ -638,6 +642,74 @@ class AssistantService {
         print('Error sending to API: $e');
       }
       BotToast.showText(text: 'Error sending to API: $e');
+    }
+  }
+
+  /// Get hotkey display string for the overlay
+  String? _getHotkeyDisplayString(String hotkeyKey) {
+    try {
+      if (!Hive.isBoxOpen('settings')) return null;
+
+      final settingsBox = Hive.box('settings');
+      final hotkeyData = settingsBox.get(hotkeyKey);
+
+      if (hotkeyData == null) return null;
+
+      // Convert the stored hotkey data to a display string
+      if (hotkeyData is Map) {
+        final modifiers = <String>[];
+
+        // Add modifiers in the correct order for macOS
+        if (hotkeyData['meta'] == true) modifiers.add('⌘');
+        if (hotkeyData['control'] == true) modifiers.add('⌃');
+        if (hotkeyData['alt'] == true) modifiers.add('⌥');
+        if (hotkeyData['shift'] == true) modifiers.add('⇧');
+
+        final keyLabel = hotkeyData['keyLabel'] as String?;
+        if (keyLabel != null) {
+          modifiers.add(keyLabel.toUpperCase());
+        }
+
+        return modifiers.join('');
+      }
+
+      return null;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting hotkey display string: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Check if recording is currently active
+  bool get isRecording => _isRecording;
+
+  /// Cancel the current recording
+  Future<void> cancelRecording() async {
+    if (!_isRecording) return;
+
+    try {
+      // Cancel the recording
+      await _recordingRepository?.cancelRecording();
+      _isRecording = false;
+      _recordingStartTime = null;
+      _recordedFilePath = null;
+      _selectedText = null;
+
+      // Stop clipboard listener if it's active
+      _clipboardListenerService.stopWatching();
+
+      // Hide the overlay
+      await RecordingOverlayPlatform.hideOverlay();
+
+      if (kDebugMode) {
+        print('Assistant recording cancelled');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error cancelling assistant recording: $e');
+      }
     }
   }
 

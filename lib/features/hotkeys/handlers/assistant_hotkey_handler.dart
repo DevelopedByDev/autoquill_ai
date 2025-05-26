@@ -30,4 +30,28 @@ class AssistantHotkeyHandler {
       BotToast.showText(text: 'Error activating assistant mode');
     }
   }
+
+  /// Check if assistant recording is currently active
+  static bool isRecordingActive() {
+    return _assistantService?.isRecording ?? false;
+  }
+
+  /// Cancel the current assistant recording
+  static Future<void> cancelRecording() async {
+    if (_assistantService == null) return;
+
+    try {
+      await _assistantService!.cancelRecording();
+      BotToast.showText(text: 'Assistant recording cancelled');
+
+      if (kDebugMode) {
+        print('Assistant recording cancelled via Esc key');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error cancelling assistant recording: $e');
+      }
+      BotToast.showText(text: 'Error cancelling recording');
+    }
+  }
 }

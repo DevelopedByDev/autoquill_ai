@@ -227,6 +227,33 @@ class HotkeyRegistration {
     }
   }
 
+  /// Registers the Esc key for cancelling recordings
+  static Future<void> _registerEscapeKey(
+      Function(HotKey) keyDownHandler, Function(HotKey) keyUpHandler) async {
+    try {
+      final escapeHotkey = HotKey(
+        key: LogicalKeyboardKey.escape,
+        modifiers: [],
+        scope: HotKeyScope.system,
+        identifier: 'escape_cancel',
+      );
+
+      await hotKeyManager.register(
+        escapeHotkey,
+        keyDownHandler: keyDownHandler,
+        keyUpHandler: keyUpHandler,
+      );
+
+      if (kDebugMode) {
+        print('Registered escape key for cancellation');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error registering escape key: $e');
+      }
+    }
+  }
+
   /// Loads and registers all stored hotkeys from settings in parallel
   static Future<void> loadAndRegisterStoredHotkeys({
     required Function(HotKey) keyDownHandler,
@@ -249,12 +276,15 @@ class HotkeyRegistration {
             _registerHotkeyFromCache(setting, keyDownHandler, keyUpHandler));
       }
 
+      // Register the Esc key for cancellation
+      futures.add(_registerEscapeKey(keyDownHandler, keyUpHandler));
+
       // Wait for all registrations to complete
       await Future.wait(futures);
 
       if (kDebugMode) {
         print('Registered all hotkeys in ${stopwatch.elapsedMilliseconds}ms');
-        print('Active hotkeys: ${_hotkeyCache.keys.join(', ')}');
+        print('Active hotkeys: ${_hotkeyCache.keys.join(', ')}, escape_cancel');
       }
     } catch (e) {
       if (kDebugMode) {
@@ -301,6 +331,9 @@ class HotkeyRegistration {
       if (!_hotkeyCache.containsKey('push_to_talk_hotkey')) {
         await _registerDefaultPushToTalkHotkey(keyDownHandler, keyUpHandler);
       }
+
+      // Always register the escape key for cancellation
+      await _registerEscapeKey(keyDownHandler, keyUpHandler);
 
       if (kDebugMode) {
         print('All hotkeys reloaded and registered');

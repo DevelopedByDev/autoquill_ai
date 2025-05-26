@@ -112,8 +112,15 @@ class TranscriptionHotkeyHandler {
         // Play the start recording sound
         await SoundPlayer.playStartRecordingSound();
 
-        // Show the overlay with the transcription mode
-        await RecordingOverlayPlatform.showOverlayWithMode('Transcription');
+        // Get the transcription hotkey for display
+        final transcriptionHotkey = _getHotkeyDisplayString('transcription_hotkey');
+        
+        // Show the overlay with the transcription mode and hotkey info
+        await RecordingOverlayPlatform.showOverlayWithModeAndHotkeys(
+          'Transcription', 
+          transcriptionHotkey, 
+          'Esc'
+        );
         await _recordingRepository!.startRecording();
         _isHotkeyRecordingActive = true;
         _recordingStartTime = DateTime.now();
@@ -304,6 +311,75 @@ class TranscriptionHotkeyHandler {
       // Hide the overlay on error
       await RecordingOverlayPlatform.hideOverlay();
       BotToast.showText(text: 'Transcription failed: $e');
+    }
+  }
+
+  /// Get hotkey display string for the overlay
+  static String? _getHotkeyDisplayString(String hotkeyKey) {
+    try {
+      if (!Hive.isBoxOpen('settings')) return null;
+      
+      final settingsBox = Hive.box('settings');
+      final hotkeyData = settingsBox.get(hotkeyKey);
+      
+      if (hotkeyData == null) return null;
+      
+      // Convert the stored hotkey data to a display string
+      if (hotkeyData is Map) {
+        final modifiers = <String>[];
+        
+        // Add modifiers in the correct order for macOS
+        if (hotkeyData['meta'] == true) modifiers.add('⌘');
+        if (hotkeyData['control'] == true) modifiers.add('⌃');
+        if (hotkeyData['alt'] == true) modifiers.add('⌥');
+        if (hotkeyData['shift'] == true) modifiers.add('⇧');
+        
+        final keyLabel = hotkeyData['keyLabel'] as String?;
+        if (keyLabel != null) {
+          modifiers.add(keyLabel.toUpperCase());
+        }
+        
+        return modifiers.join('');
+      }
+      
+      return null;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting hotkey display string: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Check if transcription recording is currently active
+  static bool isRecordingActive() {
+    return _isHotkeyRecordingActive;
+  }
+
+  /// Cancel the current transcription recording
+  static Future<void> cancelRecording() async {
+    if (!_isHotkeyRecordingActive) return;
+
+    try {
+      // Cancel the recording
+      await _recordingRepository?.cancelRecording();
+      _isHotkeyRecordingActive = false;
+      _recordingStartTime = null;
+      _hotkeyRecordedFilePath = null;
+
+      // Hide the overlay
+      await RecordingOverlayPlatform.hideOverlay();
+
+      BotToast.showText(text: 'Transcription recording cancelled');
+
+      if (kDebugMode) {
+        print('Transcription recording cancelled via Esc key');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error cancelling transcription recording: $e');
+      }
+      BotToast.showText(text: 'Error cancelling recording');
     }
   }
 }

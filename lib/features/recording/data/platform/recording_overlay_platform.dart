@@ -39,6 +39,11 @@ class RecordingOverlayPlatform {
   
   /// Shows the recording overlay with a specific mode label
   static Future<void> showOverlayWithMode(String mode) async {
+    await showOverlayWithModeAndHotkeys(mode, null, 'Esc');
+  }
+  
+  /// Shows the recording overlay with a specific mode label and hotkey information
+  static Future<void> showOverlayWithModeAndHotkeys(String mode, String? finishHotkey, String? cancelHotkey) async {
     // If a recording is already in progress, don't start another one
     if (isRecordingInProgress) {
       if (kDebugMode) {
@@ -54,10 +59,14 @@ class RecordingOverlayPlatform {
       // Set the flag to indicate a recording is in progress
       isRecordingInProgress = true;
       
-      await _channel.invokeMethod('showOverlayWithMode', {'mode': mode});
+      await _channel.invokeMethod('showOverlayWithModeAndHotkeys', {
+        'mode': mode,
+        'finishHotkey': finishHotkey,
+        'cancelHotkey': cancelHotkey,
+      });
     } on PlatformException catch (e) {
       if (kDebugMode) {
-        print('Failed to show overlay with mode: ${e.message}');
+        print('Failed to show overlay with mode and hotkeys: ${e.message}');
       }
       isRecordingInProgress = false;
     }
