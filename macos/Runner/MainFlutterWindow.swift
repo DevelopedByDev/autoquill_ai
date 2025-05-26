@@ -314,8 +314,9 @@ class RecordingOverlayWindow: NSPanel {
         self.isMovableByWindowBackground = false
 
         if let screenFrame = NSScreen.main?.visibleFrame {
-            let xPos = screenFrame.origin.x + (screenFrame.width - windowWidth) / 2
-            let yPos = screenFrame.origin.y + 30  // 30 points from bottom of the visible area
+            let xPos = (screenFrame.width - windowWidth) - 25
+            let yPos = (screenFrame.height - windowHeight) + 25 // 30 points from bottom of the visible area
+            // let yPos = screenFrame.origin.y + (screenFrame.height - windowHeight) / 2  // 30 points from bottom of the visible area
 
             self.setFrameOrigin(NSPoint(x: xPos, y: yPos))
         }

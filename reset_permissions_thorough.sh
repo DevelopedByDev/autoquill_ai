@@ -30,7 +30,7 @@ print_error() {
 
 # Multiple potential bundle IDs that might be used
 BUNDLE_IDS=(
-    "com.example.autoquillAi"
+    "com.divyansh-lalwani.autoquill-ai"
     "com.example.autoquill_ai" 
     "autoquill_ai"
     "AutoQuill AI"

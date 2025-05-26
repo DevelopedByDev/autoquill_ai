@@ -29,7 +29,7 @@ print_error() {
 }
 
 # App bundle identifier - adjust if needed
-BUNDLE_ID="com.example.autoquillAi"
+BUNDLE_ID="com.divyansh-lalwani.autoquill-ai"
 APP_NAME="AutoQuill AI"
 
 print_status "Resetting permissions for ${APP_NAME}..."

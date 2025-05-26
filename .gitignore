@@ -47,3 +47,4 @@ app.*.map.json
 
 # windsurf rules
 .windsurfrules
+NOTARIZATION_GUIDE.md

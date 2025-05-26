@@ -9,7 +9,7 @@ MACOSX_DEPLOYMENT_TARGET = 10.15
 PRODUCT_NAME = AutoQuill AI
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.autoquillAi
+PRODUCT_BUNDLE_IDENTIFIER = com.divyansh-lalwani.autoquill-ai
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright 2025 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright 2025 Divyansh Lalwani. All rights reserved.
