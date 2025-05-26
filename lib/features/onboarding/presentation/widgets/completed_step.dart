@@ -44,7 +44,7 @@ class CompletedStep extends StatelessWidget {
                 
                 // Description
                 Text(
-                  'AutoQuill AI is ready to help you transcribe and assist',
+                  'AutoQuill is ready to help you transcribe and assist',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
                   ),
@@ -90,7 +90,7 @@ class CompletedStep extends StatelessWidget {
                       ),
                     ),
                     child: const Text(
-                      'Start Using AutoQuill AI',
+                      'Start Using AutoQuill',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

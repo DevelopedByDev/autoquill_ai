@@ -1,10 +1,10 @@
-# AutoQuill AI - Minimalist Design System
+# AutoQuill - Minimalist Design System
 
-This document outlines the design system used in AutoQuill AI, a desktop application for audio transcription and AI assistance.
+This document outlines the design system used in AutoQuill, a desktop application for audio transcription and AI assistance.
 
 ## Design Philosophy
 
-The AutoQuill AI design system follows minimalist principles, emphasizing:
+The AutoQuill design system follows minimalist principles, emphasizing:
 
 - **Clarity**: Clean, readable interfaces with clear visual hierarchy
 - **Whitespace**: Strategic use of negative space to improve readability and focus

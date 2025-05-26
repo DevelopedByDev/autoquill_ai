@@ -99,7 +99,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AutoQuill AI'),
+        title: const Text('AutoQuill'),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
       ),
@@ -109,7 +109,7 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Welcome to AutoQuill AI',
+              'Welcome to AutoQuill',
               style: Theme.of(context).textTheme.displaySmall,
             ),
             const SizedBox(height: DesignTokens.spaceXS),

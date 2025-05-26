@@ -6,7 +6,7 @@
 
 // The application's name. By default this is also the title of the Flutter window.
 MACOSX_DEPLOYMENT_TARGET = 10.15
-PRODUCT_NAME = AutoQuill AI
+PRODUCT_NAME = AutoQuill
 
 // The application's bundle identifier
 PRODUCT_BUNDLE_IDENTIFIER = com.divyansh-lalwani.autoquill-ai

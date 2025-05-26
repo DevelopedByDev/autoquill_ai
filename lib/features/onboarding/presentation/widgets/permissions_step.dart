@@ -111,7 +111,7 @@ class _PermissionsStepState extends State<PermissionsStep>
 
                 // Description
                 Text(
-                  'AutoQuill AI needs these permissions to provide the best experience',
+                  'AutoQuill needs these permissions to provide the best experience',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: Theme.of(context)
                             .colorScheme
@@ -148,7 +148,7 @@ class _PermissionsStepState extends State<PermissionsStep>
                       state.permissionStatuses[PermissionType.accessibility] ??
                           PermissionStatus.notDetermined,
                   guidingText:
-                      "System Preferences → Privacy & Security → Accessibility → + (add app) → Select AutoQuill AI (in Applications) → Turn On → Close System Preferences",
+                      "System Preferences → Privacy & Security → Accessibility → + (add app) → Select AutoQuill (in Applications) → Turn On → Close System Preferences",
                 ),
                 const SizedBox(height: DesignTokens.spaceMD),
 

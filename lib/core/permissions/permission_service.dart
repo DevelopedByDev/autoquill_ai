@@ -134,11 +134,11 @@ class PermissionService {
   static String getPermissionDescription(PermissionType permissionType) {
     switch (permissionType) {
       case PermissionType.microphone:
-        return 'AutoQuill AI needs microphone access to transcribe your voice recordings.';
+        return 'AutoQuill needs microphone access to transcribe your voice recordings.';
       case PermissionType.accessibility:
-        return 'AutoQuill AI needs accessibility permission to register global hotkeys and automate text insertion. Grant this in System Preferences > Privacy & Security > Accessibility.';
+        return 'AutoQuill needs accessibility permission to register global hotkeys and automate text insertion. Grant this in System Preferences > Privacy & Security > Accessibility.';
       case PermissionType.screenRecording:
-        return 'AutoQuill AI needs screen recording permission to capture screenshots for AI context. The app will restart automatically after granting this permission.';
+        return 'AutoQuill needs screen recording permission to capture screenshots for AI context. The app will restart automatically after granting this permission.';
     }
   }
 

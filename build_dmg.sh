@@ -1,16 +1,16 @@
 #!/bin/bash
 
-# AutoQuill AI - Build and Package DMG Script
+# AutoQuill - Build and Package DMG Script
 # This script builds the Flutter app for macOS and creates a DMG for distribution
 
 set -e  # Exit on any error
 
 # Configuration
-APP_NAME="AutoQuill AI"
+APP_NAME="AutoQuill"
 BUNDLE_NAME="autoquill_ai"
 VERSION=$(grep "version:" pubspec.yaml | sed 's/version: //' | sed 's/+.*//')
 BUILD_NUMBER=$(grep "version:" pubspec.yaml | sed 's/.*+//')
-DMG_NAME="AutoQuill_AI_v${VERSION}"
+DMG_NAME="AutoQuill_v${VERSION}"
 BACKGROUND_IMAGE="assets/icons/with_bg/autoquill_centered_1024_rounded.png"
 
 # Colors for output
@@ -148,4 +148,4 @@ print_warning "2. Notarize the DMG with Apple"
 print_warning "3. Staple the notarization ticket to the DMG"
 
 echo ""
-print_success "🎉 AutoQuill AI DMG packaging complete!" 
+print_success "🎉 AutoQuill DMG packaging complete!" 

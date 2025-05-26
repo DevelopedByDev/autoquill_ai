@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# AutoQuill AI - Build and Package DMG Script with Code Signing
-# This script builds, signs, and packages the AutoQuill AI app for distribution
+# AutoQuill - Build and Package DMG Script with Code Signing
+# This script builds, signs, and packages the AutoQuill app for distribution
 
 set -e  # Exit on any error
 
@@ -15,11 +15,11 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Configuration
-APP_NAME="AutoQuill AI"
+APP_NAME="AutoQuill"
 VERSION="1.0.0"
 BUNDLE_ID="com.divyansh-lalwani.autoquill-ai"
 BUILD_DIR="build/macos/Build/Products/Release"
-DMG_NAME="AutoQuill_AI_v${VERSION}"
+DMG_NAME="AutoQuill_v${VERSION}"
 
 # Code signing identities (update these with your actual certificate names)
 DEVELOPER_ID_APP="Developer ID Application: Divyansh Lalwani (562STT95YC)"
@@ -327,7 +327,7 @@ show_summary() {
 
 # Main execution
 main() {
-    print_header "AutoQuill AI - Signed Build Process"
+    print_header "AutoQuill - Signed Build Process"
     
     check_prerequisites
     clean_build

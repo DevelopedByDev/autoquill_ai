@@ -29,7 +29,7 @@ class WelcomeStep extends StatelessWidget {
             
             // Welcome title
             Text(
-              'Welcome to AutoQuill AI',
+              'Welcome to AutoQuill',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),

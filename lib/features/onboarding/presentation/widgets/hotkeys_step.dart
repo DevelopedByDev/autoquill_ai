@@ -31,7 +31,7 @@ class HotkeysStep extends StatelessWidget {
 
             // Description
             Text(
-              'Configure hotkeys to quickly access AutoQuill AI features',
+              'Configure hotkeys to quickly access AutoQuill features',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Theme.of(context)
                         .textTheme

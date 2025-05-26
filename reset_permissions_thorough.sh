@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Thorough Reset Permissions Script for AutoQuill AI
+# Thorough Reset Permissions Script for AutoQuill
 # This script performs a comprehensive reset of all macOS permissions
 
 set -e
@@ -33,12 +33,12 @@ BUNDLE_IDS=(
     "com.divyansh-lalwani.autoquill-ai"
     "com.example.autoquill_ai" 
     "autoquill_ai"
-    "AutoQuill AI"
+    "AutoQuill"
     "com.flutter.autoquill_ai"
     "dev.flutter.autoquill_ai"
 )
 
-APP_NAME="AutoQuill AI"
+APP_NAME="AutoQuill"
 
 print_status "🧹 Performing thorough permission reset for ${APP_NAME}..."
 
@@ -81,7 +81,7 @@ print_status "🔧 MANUAL STEPS REQUIRED:"
 print_warning "To ensure permissions are fully reset, please do the following:"
 echo ""
 print_warning "1. Open System Preferences/Settings > Security & Privacy > Privacy"
-print_warning "2. Check and manually remove 'AutoQuill AI' from these sections:"
+print_warning "2. Check and manually remove 'AutoQuill' from these sections:"
 print_warning "   - 🎤 Microphone"
 print_warning "   - 📺 Screen Recording" 
 print_warning "   - ♿ Accessibility"
@@ -106,7 +106,7 @@ case $choice in
         print_status "Building fresh DMG for testing..."
         ./build_dmg.sh
         print_status "Opening the DMG to test with the release version..."
-        open dist/AutoQuill_AI_v*.dmg
+        open dist/AutoQuill_v*.dmg
         ;;
     2)
         print_status "Running with Flutter..."

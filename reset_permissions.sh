@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Reset Permissions Script for AutoQuill AI
+# Reset Permissions Script for AutoQuill
 # This script clears all macOS permissions for the app to test permission prompting
 
 set -e
@@ -30,13 +30,13 @@ print_error() {
 
 # App bundle identifier - adjust if needed
 BUNDLE_ID="com.divyansh-lalwani.autoquill-ai"
-APP_NAME="AutoQuill AI"
+APP_NAME="AutoQuill"
 
 print_status "Resetting permissions for ${APP_NAME}..."
 
 # Kill the app if it's running
 print_status "Stopping ${APP_NAME} if running..."
-pkill -f "AutoQuill AI" || true
+pkill -f "AutoQuill" || true
 pkill -f "autoquill_ai" || true
 
 # Reset microphone permissions

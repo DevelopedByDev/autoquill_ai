@@ -1,6 +1,6 @@
-# AutoQuill AI - Build Instructions
+# AutoQuill - Build Instructions
 
-This document provides instructions for building and packaging AutoQuill AI for macOS distribution.
+This document provides instructions for building and packaging AutoQuill for macOS distribution.
 
 ## Prerequisites
 
@@ -33,7 +33,7 @@ The `build_dmg.sh` script performs the following steps:
 ## Output
 
 The script creates:
-- `dist/AutoQuill_AI_v{version}.dmg` - The distributable DMG file
+- `dist/AutoQuill_v{version}.dmg` - The distributable DMG file
 - Automatically opens the `dist/` folder when complete
 
 ## Code Signing (Optional)
@@ -59,11 +59,11 @@ If you plan to distribute outside the App Store:
 1. **Code sign** the app with a Developer ID certificate
 2. **Notarize** the DMG with Apple:
    ```bash
-   xcrun notarytool submit dist/AutoQuill_AI_v{version}.dmg --keychain-profile "AC_PASSWORD" --wait
+   xcrun notarytool submit dist/AutoQuill_v{version}.dmg --keychain-profile "AC_PASSWORD" --wait
    ```
 3. **Staple** the notarization ticket:
    ```bash
-   xcrun stapler staple dist/AutoQuill_AI_v{version}.dmg
+   xcrun stapler staple dist/AutoQuill_v{version}.dmg
    ```
 
 ## Troubleshooting
@@ -91,20 +91,20 @@ npm install -g create-dmg
 The script automatically extracts version information from `pubspec.yaml`. To change the app name or other settings, modify the configuration section at the top of `build_dmg.sh`:
 
 ```bash
-APP_NAME="AutoQuill AI"
+APP_NAME="AutoQuill"
 BUNDLE_NAME="autoquill_ai"
-DMG_NAME="AutoQuill_AI_v${VERSION}"
+DMG_NAME="AutoQuill_v${VERSION}"
 ```
 
 ## File Structure After Build
 
 ```
 dist/
-└── AutoQuill_AI_v1.0.0.dmg    # Distributable DMG file
+└── AutoQuill_v1.0.0.dmg    # Distributable DMG file
 ```
 
 The DMG contains:
-- AutoQuill AI.app (the application)
+- AutoQuill.app (the application)
 - Applications folder shortcut (for easy installation)
 - Custom background and layout
 

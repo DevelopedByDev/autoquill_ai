@@ -27,7 +27,7 @@ class PreferencesStep extends StatelessWidget {
             
             // Description
             Text(
-              'Customize AutoQuill AI to work the way you want',
+              'Customize AutoQuill to work the way you want',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
               ),

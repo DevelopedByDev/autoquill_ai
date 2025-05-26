@@ -34,41 +34,45 @@ class _ApiKeyStepState extends State<ApiKeyStep> {
             Text(
               'Connect to Groq',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            
+
             // Description
             Text(
-              'Enter your Groq API key to power AutoQuill AI',
+              'Enter your Groq API key to power AutoQuill',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
-              ),
+                    color: Theme.of(context)
+                        .textTheme
+                        .bodyLarge
+                        ?.color
+                        ?.withValues(alpha: 0.7),
+                  ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 48),
-            
+
             // API key input field
             BlocBuilder<OnboardingBloc, OnboardingState>(
-              buildWhen: (previous, current) => 
-                previous.apiKey != current.apiKey || 
-                previous.apiKeyStatus != current.apiKeyStatus,
+              buildWhen: (previous, current) =>
+                  previous.apiKey != current.apiKey ||
+                  previous.apiKeyStatus != current.apiKeyStatus,
               builder: (context, state) {
                 // Update controller if API key is set in state but not in controller
                 if (state.apiKey.isNotEmpty && _apiKeyController.text.isEmpty) {
                   _apiKeyController.text = state.apiKey;
                 }
-                
+
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Groq API Key',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
@@ -77,7 +81,9 @@ class _ApiKeyStepState extends State<ApiKeyStep> {
                       decoration: InputDecoration(
                         hintText: 'Enter your Groq API key',
                         hintStyle: TextStyle(
-                          color: Theme.of(context).hintColor.withValues(alpha: 0.7),
+                          color: Theme.of(context)
+                              .hintColor
+                              .withValues(alpha: 0.7),
                         ),
                         filled: true,
                         fillColor: Theme.of(context).colorScheme.surface,
@@ -109,10 +115,14 @@ class _ApiKeyStepState extends State<ApiKeyStep> {
                             width: 1.0,
                           ),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 16),
                         prefixIcon: Icon(
                           Icons.vpn_key,
-                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withValues(alpha: 0.7),
                         ),
                         suffixIcon: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -120,8 +130,13 @@ class _ApiKeyStepState extends State<ApiKeyStep> {
                             // Toggle visibility
                             IconButton(
                               icon: Icon(
-                                _obscureText ? Icons.visibility_off : Icons.visibility,
-                                color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.7),
+                                _obscureText
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: Theme.of(context)
+                                    .iconTheme
+                                    .color
+                                    ?.withValues(alpha: 0.7),
                               ),
                               onPressed: () {
                                 setState(() {
@@ -134,23 +149,28 @@ class _ApiKeyStepState extends State<ApiKeyStep> {
                               IconButton(
                                 icon: Icon(
                                   Icons.clear,
-                                  color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.7),
+                                  color: Theme.of(context)
+                                      .iconTheme
+                                      .color
+                                      ?.withValues(alpha: 0.7),
                                 ),
                                 onPressed: () {
                                   _apiKeyController.clear();
                                   context.read<OnboardingBloc>().add(
-                                    const UpdateApiKey(apiKey: ''),
-                                  );
+                                        const UpdateApiKey(apiKey: ''),
+                                      );
                                 },
                               ),
                           ],
                         ),
                         // Show validation status
-                        errorText: state.apiKeyStatus == ApiKeyValidationStatus.invalid
-                            ? 'Invalid API key'
-                            : null,
+                        errorText:
+                            state.apiKeyStatus == ApiKeyValidationStatus.invalid
+                                ? 'Invalid API key'
+                                : null,
                         // Show loading indicator
-                        suffixIconConstraints: const BoxConstraints(minWidth: 100),
+                        suffixIconConstraints:
+                            const BoxConstraints(minWidth: 100),
                       ),
                       style: TextStyle(
                         fontSize: 16,
@@ -158,30 +178,33 @@ class _ApiKeyStepState extends State<ApiKeyStep> {
                       ),
                       onChanged: (value) {
                         context.read<OnboardingBloc>().add(
-                          UpdateApiKey(apiKey: value),
-                        );
+                              UpdateApiKey(apiKey: value),
+                            );
                       },
                     ),
                     const SizedBox(height: 8),
-                    
+
                     // Validation status
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 200),
-                      child: _buildValidationStatus(context, state.apiKeyStatus),
+                      child:
+                          _buildValidationStatus(context, state.apiKeyStatus),
                     ),
-                    
+
                     // Validate button
                     const SizedBox(height: 16),
                     Center(
                       child: SizedBox(
                         width: 160,
                         child: ElevatedButton(
-                          onPressed: state.apiKeyStatus != ApiKeyValidationStatus.validating &&
-                                    _apiKeyController.text.isNotEmpty
+                          onPressed: state.apiKeyStatus !=
+                                      ApiKeyValidationStatus.validating &&
+                                  _apiKeyController.text.isNotEmpty
                               ? () {
                                   context.read<OnboardingBloc>().add(
-                                    ValidateApiKey(apiKey: _apiKeyController.text),
-                                  );
+                                        ValidateApiKey(
+                                            apiKey: _apiKeyController.text),
+                                      );
                                 }
                               : null,
                           style: ElevatedButton.styleFrom(
@@ -191,11 +214,13 @@ class _ApiKeyStepState extends State<ApiKeyStep> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: state.apiKeyStatus == ApiKeyValidationStatus.validating
+                          child: state.apiKeyStatus ==
+                                  ApiKeyValidationStatus.validating
                               ? const SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : const Text('Validate Key'),
                         ),
@@ -205,9 +230,9 @@ class _ApiKeyStepState extends State<ApiKeyStep> {
                 );
               },
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Help section
             Container(
               padding: const EdgeInsets.all(16),
@@ -230,9 +255,10 @@ class _ApiKeyStepState extends State<ApiKeyStep> {
                       const SizedBox(width: 8),
                       Text(
                         'Where to get a Groq API key?',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                     ],
                   ),
@@ -265,14 +291,16 @@ class _ApiKeyStepState extends State<ApiKeyStep> {
                           ),
                         ),
                         onPressed: () async {
-                          final Uri url = Uri.parse('https://console.groq.com/keys');
+                          final Uri url =
+                              Uri.parse('https://console.groq.com/keys');
                           try {
                             await url_launcher.launchUrl(url);
                           } catch (e) {
                             // Handle error if URL can't be launched
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Could not open URL')),
+                                const SnackBar(
+                                    content: Text('Could not open URL')),
                               );
                             }
                           }
@@ -289,7 +317,8 @@ class _ApiKeyStepState extends State<ApiKeyStep> {
     );
   }
 
-  Widget _buildValidationStatus(BuildContext context, ApiKeyValidationStatus status) {
+  Widget _buildValidationStatus(
+      BuildContext context, ApiKeyValidationStatus status) {
     switch (status) {
       case ApiKeyValidationStatus.valid:
         return Row(
