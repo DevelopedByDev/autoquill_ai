@@ -4,7 +4,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../../../core/stats/stats_service.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../widgets/enhanced_stats_card.dart';
-import '../../../../widgets/minimalist_card.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -225,7 +224,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                   ),
                                   const SizedBox(height: DesignTokens.spaceXS),
                                   Text(
-                                    'Ready to capture your thoughts with AutoQuill',
+                                    'Ready to capture your thoughts with AutoQuill?',
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleMedium
@@ -299,7 +298,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         crossAxisCount: 2,
                         mainAxisSpacing: DesignTokens.spaceMD,
                         crossAxisSpacing: DesignTokens.spaceMD,
-                        childAspectRatio: 1.2,
+                        childAspectRatio: 1.7,
                         children: [
                           // Transcription Words Card
                           ValueListenableBuilder<int>(
@@ -374,142 +373,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   ),
 
                   const SizedBox(height: DesignTokens.spaceXXL),
-
-                  // Quick actions section
-                  Container(
-                    margin: const EdgeInsets.only(bottom: DesignTokens.spaceLG),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(DesignTokens.spaceXS),
-                          decoration: BoxDecoration(
-                            gradient: DesignTokens.blueGradient,
-                            borderRadius:
-                                BorderRadius.circular(DesignTokens.radiusSM),
-                          ),
-                          child: Icon(
-                            Icons.flash_on_rounded,
-                            color: DesignTokens.trueWhite,
-                            size: DesignTokens.iconSizeSM,
-                          ),
-                        ),
-                        const SizedBox(width: DesignTokens.spaceSM),
-                        Text(
-                          'Quick Actions',
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: DesignTokens.fontWeightSemiBold,
-                                    color: isDarkMode
-                                        ? DesignTokens.trueWhite
-                                        : DesignTokens.pureBlack,
-                                  ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Quick action buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildQuickActionCard(
-                          context,
-                          icon: Icons.mic_rounded,
-                          title: 'Start Recording',
-                          subtitle: 'Press your hotkey to begin',
-                          gradient: DesignTokens.coralGradient,
-                          onTap: () {
-                            // Show hotkey hint
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                    'Use your configured hotkey to start recording'),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: DesignTokens.spaceMD),
-                      Expanded(
-                        child: _buildQuickActionCard(
-                          context,
-                          icon: Icons.settings_rounded,
-                          title: 'Settings',
-                          subtitle: 'Configure your preferences',
-                          gradient: DesignTokens.blueGradient,
-                          onTap: () {
-                            // Navigate to settings - this would be handled by the parent
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: DesignTokens.spaceXXL),
                 ]),
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActionCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required LinearGradient gradient,
-    required VoidCallback onTap,
-  }) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(DesignTokens.radiusLG),
-        boxShadow:
-            isDarkMode ? DesignTokens.cardShadowDark : DesignTokens.cardShadow,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(DesignTokens.radiusLG),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: gradient,
-              borderRadius: BorderRadius.circular(DesignTokens.radiusLG),
-            ),
-            padding: const EdgeInsets.all(DesignTokens.spaceLG),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  icon,
-                  color: DesignTokens.trueWhite,
-                  size: DesignTokens.iconSizeLG,
-                ),
-                const SizedBox(height: DesignTokens.spaceSM),
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: DesignTokens.trueWhite,
-                        fontWeight: DesignTokens.fontWeightSemiBold,
-                      ),
-                ),
-                const SizedBox(height: DesignTokens.spaceXXS),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: DesignTokens.trueWhite.withValues(alpha: 0.9),
-                        fontWeight: DesignTokens.fontWeightRegular,
-                      ),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );
