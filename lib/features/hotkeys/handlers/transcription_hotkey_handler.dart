@@ -14,6 +14,7 @@ import '../../../features/recording/data/platform/recording_overlay_platform.dar
 import '../services/clipboard_service.dart';
 import '../../../core/utils/sound_player.dart';
 import '../utils/hotkey_converter.dart';
+import '../core/hotkey_handler.dart';
 
 /// Handler for transcription hotkey functionality
 class TranscriptionHotkeyHandler {
@@ -112,6 +113,9 @@ class TranscriptionHotkeyHandler {
     if (!_isHotkeyRecordingActive) {
       // Start recording directly using the repository
       try {
+        // Register Esc key for cancellation
+        await HotkeyHandler.registerEscKeyForRecording();
+
         // Play the start recording sound
         await SoundPlayer.playStartRecordingSound();
 
@@ -134,19 +138,24 @@ class TranscriptionHotkeyHandler {
         if (kDebugMode) {
           print('Error starting recording: $e');
         }
+        // Unregister Esc key if recording failed to start
+        await HotkeyHandler.unregisterEscKeyForRecording();
         // Play error sound
         await SoundPlayer.playErrorSound();
         BotToast.showText(text: 'Failed to start recording: $e');
       }
     } else {
-      // Stop recording and transcribe directly
-      try {
-        // Play the stop recording sound
-        await SoundPlayer.playStopRecordingSound();
+              // Stop recording and transcribe directly
+        try {
+          // Play the stop recording sound
+          await SoundPlayer.playStopRecordingSound();
 
-        // Stop recording
-        _hotkeyRecordedFilePath = await _recordingRepository!.stopRecording();
-        _isHotkeyRecordingActive = false;
+          // Stop recording
+          _hotkeyRecordedFilePath = await _recordingRepository!.stopRecording();
+          _isHotkeyRecordingActive = false;
+
+          // Unregister Esc key since recording is done
+          await HotkeyHandler.unregisterEscKeyForRecording();
 
         // Calculate recording duration
         if (_recordingStartTime != null) {
@@ -435,6 +444,9 @@ class TranscriptionHotkeyHandler {
       _isHotkeyRecordingActive = false;
       _recordingStartTime = null;
       _hotkeyRecordedFilePath = null;
+
+      // Unregister Esc key since recording is cancelled
+      await HotkeyHandler.unregisterEscKeyForRecording();
 
       // Hide the overlay
       await RecordingOverlayPlatform.hideOverlay();

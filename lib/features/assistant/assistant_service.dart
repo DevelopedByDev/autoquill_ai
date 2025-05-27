@@ -15,6 +15,7 @@ import '../accessibility/domain/repositories/accessibility_repository.dart';
 import 'clipboard_listener_service.dart';
 import '../hotkeys/services/clipboard_service.dart';
 import '../hotkeys/utils/hotkey_converter.dart';
+import '../hotkeys/core/hotkey_handler.dart';
 
 /// Service to handle assistant mode functionality
 class AssistantService {
@@ -241,6 +242,9 @@ class AssistantService {
     }
 
     try {
+      // Register Esc key for cancellation
+      await HotkeyHandler.registerEscKeyForRecording();
+
       // Play the start recording sound
       await SoundPlayer.playStartRecordingSound();
 
@@ -259,6 +263,8 @@ class AssistantService {
       if (kDebugMode) {
         print('Error starting recording: $e');
       }
+      // Unregister Esc key if recording failed to start
+      await HotkeyHandler.unregisterEscKeyForRecording();
       // Play error sound
       await SoundPlayer.playErrorSound();
       BotToast.showText(text: 'Failed to start recording');
@@ -281,6 +287,9 @@ class AssistantService {
       // Stop recording
       _recordedFilePath = await _recordingRepository!.stopRecording();
       _isRecording = false;
+
+      // Unregister Esc key since recording is done
+      await HotkeyHandler.unregisterEscKeyForRecording();
 
       // Calculate recording duration
       if (_recordingStartTime != null) {
@@ -751,6 +760,9 @@ class AssistantService {
       _recordingStartTime = null;
       _recordedFilePath = null;
       _selectedText = null;
+
+      // Unregister Esc key since recording is cancelled
+      await HotkeyHandler.unregisterEscKeyForRecording();
 
       // Stop clipboard listener if it's active
       _clipboardListenerService.stopWatching();

@@ -13,6 +13,7 @@ import '../../../features/recording/data/platform/recording_overlay_platform.dar
 import '../services/clipboard_service.dart';
 import '../../../core/utils/sound_player.dart';
 import '../utils/hotkey_converter.dart';
+import '../core/hotkey_handler.dart';
 
 /// Handler for push-to-talk hotkey functionality
 class PushToTalkHandler {
@@ -111,6 +112,9 @@ class PushToTalkHandler {
 
     // Start recording
     try {
+      // Register Esc key for cancellation
+      await HotkeyHandler.registerEscKeyForRecording();
+
       // Play the start recording sound
       await SoundPlayer.playStartRecordingSound();
 
@@ -132,6 +136,8 @@ class PushToTalkHandler {
       if (kDebugMode) {
         print('Error starting push-to-talk recording: $e');
       }
+      // Unregister Esc key if recording failed to start
+      await HotkeyHandler.unregisterEscKeyForRecording();
       // Play error sound
       await SoundPlayer.playErrorSound();
       BotToast.showText(text: 'Failed to start recording: $e');
@@ -152,6 +158,9 @@ class PushToTalkHandler {
       // Stop recording
       _pushToTalkRecordedFilePath = await _recordingRepository!.stopRecording();
       _isPushToTalkRecordingActive = false;
+
+      // Unregister Esc key since recording is done
+      await HotkeyHandler.unregisterEscKeyForRecording();
 
       // Calculate recording duration
       if (_recordingStartTime != null) {
@@ -438,6 +447,9 @@ class PushToTalkHandler {
       _isPushToTalkRecordingActive = false;
       _recordingStartTime = null;
       _pushToTalkRecordedFilePath = null;
+
+      // Unregister Esc key since recording is cancelled
+      await HotkeyHandler.unregisterEscKeyForRecording();
 
       // Hide the overlay
       await RecordingOverlayPlatform.hideOverlay();

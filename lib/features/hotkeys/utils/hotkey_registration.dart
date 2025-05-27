@@ -227,8 +227,8 @@ class HotkeyRegistration {
     }
   }
 
-  /// Registers the Esc key for cancelling recordings
-  static Future<void> _registerEscapeKey(
+  /// Registers the Esc key for cancelling recordings (only during recording)
+  static Future<void> registerEscapeKey(
       Function(HotKey) keyDownHandler, Function(HotKey) keyUpHandler) async {
     try {
       final escapeHotkey = HotKey(
@@ -245,11 +245,33 @@ class HotkeyRegistration {
       );
 
       if (kDebugMode) {
-        print('Registered escape key for cancellation');
+        print('Registered escape key for recording cancellation');
       }
     } catch (e) {
       if (kDebugMode) {
         print('Error registering escape key: $e');
+      }
+    }
+  }
+
+  /// Unregisters the Esc key when recording stops
+  static Future<void> unregisterEscapeKey() async {
+    try {
+      final escapeHotkey = HotKey(
+        key: LogicalKeyboardKey.escape,
+        modifiers: [],
+        scope: HotKeyScope.system,
+        identifier: 'escape_cancel',
+      );
+
+      await hotKeyManager.unregister(escapeHotkey);
+
+      if (kDebugMode) {
+        print('Unregistered escape key for recording cancellation');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error unregistering escape key: $e');
       }
     }
   }
@@ -276,15 +298,14 @@ class HotkeyRegistration {
             _registerHotkeyFromCache(setting, keyDownHandler, keyUpHandler));
       }
 
-      // Register the Esc key for cancellation
-      futures.add(_registerEscapeKey(keyDownHandler, keyUpHandler));
+      // Note: Esc key is now registered dynamically during recording only
 
       // Wait for all registrations to complete
       await Future.wait(futures);
 
       if (kDebugMode) {
         print('Registered all hotkeys in ${stopwatch.elapsedMilliseconds}ms');
-        print('Active hotkeys: ${_hotkeyCache.keys.join(', ')}, escape_cancel');
+        print('Active hotkeys: ${_hotkeyCache.keys.join(', ')}');
       }
     } catch (e) {
       if (kDebugMode) {
@@ -332,8 +353,7 @@ class HotkeyRegistration {
         await _registerDefaultPushToTalkHotkey(keyDownHandler, keyUpHandler);
       }
 
-      // Always register the escape key for cancellation
-      await _registerEscapeKey(keyDownHandler, keyUpHandler);
+      // Note: Esc key is now registered dynamically during recording only
 
       if (kDebugMode) {
         print('All hotkeys reloaded and registered');

@@ -24,6 +24,9 @@ class HotkeyHandler {
   
   // Track active hotkeys to prevent duplicate events
   static final Set<String> _activeHotkeys = {};
+
+  // Track if any recording is currently active and Esc key is registered
+  static bool _isEscKeyRegistered = false;
   
   /// Set the blocs and repositories for handling recording and transcription
   static void setBlocs(RecordingBloc recordingBloc, TranscriptionBloc transcriptionBloc, 
@@ -156,6 +159,49 @@ class HotkeyHandler {
     
     // Show a toast notification to inform the user
     BotToast.showText(text: 'Hotkey changes applied successfully');
+  }
+
+  /// Registers the Esc key dynamically when recording starts
+  static Future<void> registerEscKeyForRecording() async {
+    if (_isEscKeyRegistered) return; // Already registered
+    
+    try {
+      await HotkeyRegistration.registerEscapeKey(keyDownHandler, keyUpHandler);
+      _isEscKeyRegistered = true;
+      
+      if (kDebugMode) {
+        print('Esc key registered for recording cancellation');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error registering Esc key for recording: $e');
+      }
+    }
+  }
+
+  /// Unregisters the Esc key when recording stops
+  static Future<void> unregisterEscKeyForRecording() async {
+    if (!_isEscKeyRegistered) return; // Not registered
+    
+    try {
+      await HotkeyRegistration.unregisterEscapeKey();
+      _isEscKeyRegistered = false;
+      
+      if (kDebugMode) {
+        print('Esc key unregistered for recording cancellation');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error unregistering Esc key for recording: $e');
+      }
+    }
+  }
+
+  /// Checks if any recording mode is currently active
+  static bool isAnyRecordingActive() {
+    return TranscriptionHotkeyHandler.isRecordingActive() ||
+           AssistantHotkeyHandler.isRecordingActive() ||
+           PushToTalkHandler.isRecordingActive();
   }
 
   /// Handles escape key cancellation for any active recording
