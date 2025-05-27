@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:autoquill_ai/core/utils/sound_player.dart';
 import 'package:autoquill_ai/core/stats/stats_service.dart';
 import '../recording/data/platform/recording_overlay_platform.dart';
@@ -13,6 +14,7 @@ import 'package:autoquill_ai/features/transcription/domain/repositories/transcri
 import '../accessibility/domain/repositories/accessibility_repository.dart';
 import 'clipboard_listener_service.dart';
 import '../hotkeys/services/clipboard_service.dart';
+import '../hotkeys/utils/hotkey_converter.dart';
 
 /// Service to handle assistant mode functionality
 class AssistantService {
@@ -655,22 +657,39 @@ class AssistantService {
 
       if (hotkeyData == null) return null;
 
-      // Convert the stored hotkey data to a display string
+      // Convert the stored hotkey data to a HotKey object and use its display formatting
       if (hotkeyData is Map) {
-        final modifiers = <String>[];
+        try {
+          // Use the existing hotkey converter to get a proper HotKey object
+          final hotkey = hotKeyConverter(hotkeyData);
 
-        // Add modifiers in the correct order for macOS
-        if (hotkeyData['meta'] == true) modifiers.add('⌘');
-        if (hotkeyData['control'] == true) modifiers.add('⌃');
-        if (hotkeyData['alt'] == true) modifiers.add('⌥');
-        if (hotkeyData['shift'] == true) modifiers.add('⇧');
+          // Format for macOS display
+          String keyText = '';
 
-        final keyLabel = hotkeyData['keyLabel'] as String?;
-        if (keyLabel != null) {
-          modifiers.add(keyLabel.toUpperCase());
+          // Add modifiers in the correct order for macOS
+          if (hotkey.modifiers?.contains(HotKeyModifier.meta) ?? false) {
+            keyText += '⌘';
+          }
+          if (hotkey.modifiers?.contains(HotKeyModifier.control) ?? false) {
+            keyText += '⌃';
+          }
+          if (hotkey.modifiers?.contains(HotKeyModifier.alt) ?? false) {
+            keyText += '⌥';
+          }
+          if (hotkey.modifiers?.contains(HotKeyModifier.shift) ?? false) {
+            keyText += '⇧';
+          }
+
+          // Add the key itself using Flutter's built-in keyLabel
+          keyText += _getMacKeySymbol(hotkey.key);
+
+          return keyText.isNotEmpty ? keyText : null;
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error converting hotkey data to HotKey object: $e');
+          }
+          return null;
         }
-
-        return modifiers.join('');
       }
 
       return null;
@@ -679,6 +698,42 @@ class AssistantService {
         print('Error getting hotkey display string: $e');
       }
       return null;
+    }
+  }
+
+  /// Convert key to Mac symbol (similar to HotkeyDisplay widget)
+  String _getMacKeySymbol(KeyboardKey key) {
+    // Convert common keys to their Mac symbols
+    switch (key.keyLabel) {
+      case 'Arrow Up':
+        return '↑';
+      case 'Arrow Down':
+        return '↓';
+      case 'Arrow Left':
+        return '←';
+      case 'Arrow Right':
+        return '→';
+      case 'Enter':
+        return '↩';
+      case 'Tab':
+        return '⇥';
+      case 'Escape':
+        return '⎋';
+      case 'Delete':
+        return '⌫';
+      case 'Page Up':
+        return '⇞';
+      case 'Page Down':
+        return '⇟';
+      case 'Home':
+        return '↖';
+      case 'End':
+        return '↘';
+      case 'Space':
+        return 'Space';
+      default:
+        // For letter keys and others, just use the label
+        return key.keyLabel;
     }
   }
 

@@ -55,16 +55,16 @@ class BlinkingLabel: NSTextField {
                     baseText = "🎙️ \(mode)\nRecording..."
                 }
                 
-                // Add hotkey instructions
+                // Add hotkey instructions with button-like styling
                 var instructions = ""
                 if let finish = finishHotkey {
-                    instructions += "Finish \(finish)"
+                    instructions += "Finish [\(finish)]"
                 }
                 if let cancel = cancelHotkey {
                     if !instructions.isEmpty {
                         instructions += "  •  "
                     }
-                    instructions += "Cancel \(cancel)"
+                    instructions += "Cancel [\(cancel)]"
                 }
                 
                 if !instructions.isEmpty {

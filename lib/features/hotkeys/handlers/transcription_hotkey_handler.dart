@@ -1,6 +1,8 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hotkey_manager/hotkey_manager.dart';
 
 import '../../../core/stats/stats_service.dart';
 
@@ -11,6 +13,7 @@ import '../../../features/transcription/services/phrase_replacement_service.dart
 import '../../../features/recording/data/platform/recording_overlay_platform.dart';
 import '../services/clipboard_service.dart';
 import '../../../core/utils/sound_player.dart';
+import '../utils/hotkey_converter.dart';
 
 /// Handler for transcription hotkey functionality
 class TranscriptionHotkeyHandler {
@@ -113,14 +116,16 @@ class TranscriptionHotkeyHandler {
         await SoundPlayer.playStartRecordingSound();
 
         // Get the transcription hotkey for display
-        final transcriptionHotkey = _getHotkeyDisplayString('transcription_hotkey');
-        
+        final transcriptionHotkey =
+            _getHotkeyDisplayString('transcription_hotkey');
+
+        if (kDebugMode) {
+          print('Transcription hotkey display string: "$transcriptionHotkey"');
+        }
+
         // Show the overlay with the transcription mode and hotkey info
         await RecordingOverlayPlatform.showOverlayWithModeAndHotkeys(
-          'Transcription', 
-          transcriptionHotkey, 
-          'Esc'
-        );
+            'Transcription', transcriptionHotkey, 'Esc');
         await _recordingRepository!.startRecording();
         _isHotkeyRecordingActive = true;
         _recordingStartTime = DateTime.now();
@@ -318,36 +323,100 @@ class TranscriptionHotkeyHandler {
   static String? _getHotkeyDisplayString(String hotkeyKey) {
     try {
       if (!Hive.isBoxOpen('settings')) return null;
-      
+
       final settingsBox = Hive.box('settings');
       final hotkeyData = settingsBox.get(hotkeyKey);
-      
+
       if (hotkeyData == null) return null;
-      
-      // Convert the stored hotkey data to a display string
+
+      // Convert the stored hotkey data to a HotKey object and use its display formatting
       if (hotkeyData is Map) {
-        final modifiers = <String>[];
-        
-        // Add modifiers in the correct order for macOS
-        if (hotkeyData['meta'] == true) modifiers.add('⌘');
-        if (hotkeyData['control'] == true) modifiers.add('⌃');
-        if (hotkeyData['alt'] == true) modifiers.add('⌥');
-        if (hotkeyData['shift'] == true) modifiers.add('⇧');
-        
-        final keyLabel = hotkeyData['keyLabel'] as String?;
-        if (keyLabel != null) {
-          modifiers.add(keyLabel.toUpperCase());
+        try {
+          // Use the existing hotkey converter to get a proper HotKey object
+          final hotkey = hotKeyConverter(hotkeyData);
+
+          if (kDebugMode) {
+            print('Converted hotkey: ${hotkey.toJson()}');
+            print('Key type: ${hotkey.key.runtimeType}');
+            print('Key label: ${hotkey.key.keyLabel}');
+          }
+
+          // Format for macOS display
+          String keyText = '';
+
+          // Add modifiers in the correct order for macOS
+          if (hotkey.modifiers?.contains(HotKeyModifier.meta) ?? false) {
+            keyText += '⌘';
+          }
+          if (hotkey.modifiers?.contains(HotKeyModifier.control) ?? false) {
+            keyText += '⌃';
+          }
+          if (hotkey.modifiers?.contains(HotKeyModifier.alt) ?? false) {
+            keyText += '⌥';
+          }
+          if (hotkey.modifiers?.contains(HotKeyModifier.shift) ?? false) {
+            keyText += '⇧';
+          }
+
+          // Add the key itself using Flutter's built-in keyLabel
+          final keySymbol = _getMacKeySymbol(hotkey.key);
+          keyText += keySymbol;
+
+          if (kDebugMode) {
+            print('Final hotkey display string: "$keyText"');
+          }
+
+          return keyText.isNotEmpty ? keyText : null;
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error converting hotkey data to HotKey object: $e');
+          }
+          return null;
         }
-        
-        return modifiers.join('');
       }
-      
+
       return null;
     } catch (e) {
       if (kDebugMode) {
         print('Error getting hotkey display string: $e');
       }
       return null;
+    }
+  }
+
+  /// Convert key to Mac symbol (similar to HotkeyDisplay widget)
+  static String _getMacKeySymbol(KeyboardKey key) {
+    // Convert common keys to their Mac symbols
+    switch (key.keyLabel) {
+      case 'Arrow Up':
+        return '↑';
+      case 'Arrow Down':
+        return '↓';
+      case 'Arrow Left':
+        return '←';
+      case 'Arrow Right':
+        return '→';
+      case 'Enter':
+        return '↩';
+      case 'Tab':
+        return '⇥';
+      case 'Escape':
+        return '⎋';
+      case 'Delete':
+        return '⌫';
+      case 'Page Up':
+        return '⇞';
+      case 'Page Down':
+        return '⇟';
+      case 'Home':
+        return '↖';
+      case 'End':
+        return '↘';
+      case 'Space':
+        return 'Space';
+      default:
+        // For letter keys and others, just use the label
+        return key.keyLabel;
     }
   }
 
