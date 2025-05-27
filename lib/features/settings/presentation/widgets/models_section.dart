@@ -9,29 +9,28 @@ class ModelsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<SettingsBloc, SettingsState>(
-      builder: (context, state) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Models',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+    return BlocBuilder<SettingsBloc, SettingsState>(builder: (context, state) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Models',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
             ),
-            const SizedBox(height: 16),
-            _buildTranscriptionModelDropdown(context, state),
-            const SizedBox(height: 16),
-            _buildAssistantModelDropdown(context, state),
-          ],
-        );
-      }
-    );
+          ),
+          const SizedBox(height: 16),
+          _buildTranscriptionModelDropdown(context, state),
+          const SizedBox(height: 16),
+          _buildAssistantModelDropdown(context, state),
+        ],
+      );
+    });
   }
 
-  Widget _buildTranscriptionModelDropdown(BuildContext context, SettingsState state) {
+  Widget _buildTranscriptionModelDropdown(
+      BuildContext context, SettingsState state) {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey),
@@ -54,14 +53,14 @@ class ModelsSection extends StatelessWidget {
               },
               items: [
                 DropdownMenuItem(
-                  value: 'whisper-large-v3',
+                  value: 'whisper-large-v3-turbo',
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('whisper-large-v3'),
+                      const Text('whisper-large-v3-turbo'),
                       Text(
-                        'multilingual, more accurate',
+                        'multilingual, faster',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],
@@ -71,14 +70,14 @@ class ModelsSection extends StatelessWidget {
                   ),
                 ),
                 DropdownMenuItem(
-                  value: 'whisper-large-v3-turbo',
+                  value: 'whisper-large-v3',
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('whisper-large-v3-turbo'),
+                      const Text('whisper-large-v3'),
                       Text(
-                        'multilingual, faster',
+                        'multilingual, more accurate',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],
@@ -112,7 +111,8 @@ class ModelsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildAssistantModelDropdown(BuildContext context, SettingsState state) {
+  Widget _buildAssistantModelDropdown(
+      BuildContext context, SettingsState state) {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey),

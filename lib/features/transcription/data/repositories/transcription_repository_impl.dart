@@ -10,24 +10,27 @@ import '../../../recording/utils/audio_utils.dart';
 
 class TranscriptionRepositoryImpl implements TranscriptionRepository {
   final TranscriptionLocalDataSource localDataSource;
-  static const String _baseUrl = 'https://api.groq.com/openai/v1/audio/transcriptions';
+  static const String _baseUrl =
+      'https://api.groq.com/openai/v1/audio/transcriptions';
 
   TranscriptionRepositoryImpl({required this.localDataSource});
 
   @override
-  Future<TranscriptionResponse> transcribeAudio(String audioPath, String apiKey) async {
+  Future<TranscriptionResponse> transcribeAudio(
+      String audioPath, String apiKey) async {
     // Validate the audio file before attempting transcription
     final file = File(audioPath);
     if (!await file.exists()) {
       throw Exception('Audio file not found');
     }
-    
+
     // Check file size to ensure it's not empty
     final fileSize = await file.length();
-    if (fileSize < 100) { // Arbitrary minimum size for a valid audio file
+    if (fileSize < 100) {
+      // Arbitrary minimum size for a valid audio file
       throw Exception('Audio file is too small or empty');
     }
-    
+
     // Use AudioUtils to validate the file
     if (!await AudioUtils.validateAudioFile(audioPath)) {
       if (kDebugMode) {
@@ -38,26 +41,28 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
 
     // Get the selected transcription model and language from settings
     final settingsBox = Hive.box('settings');
-    final selectedModel = settingsBox.get('transcription-model') ?? 'whisper-large-v3';
-    final selectedLanguageCode = settingsBox.get('selected_language_code') ?? '';
-    
+    final selectedModel =
+        settingsBox.get('transcription-model') ?? 'whisper-large-v3-turbo';
+    final selectedLanguageCode =
+        settingsBox.get('selected_language_code') ?? '';
+
     // Get dictionary words from settings
     final List<dynamic>? storedDictionary = settingsBox.get('dictionary');
     String? prompt;
-    
+
     // If dictionary has words, create a prompt string with them
     if (storedDictionary != null && storedDictionary.isNotEmpty) {
       final List<String> dictionary = storedDictionary.cast<String>().toList();
       // Join dictionary words with commas to create a prompt
       prompt = 'Vocabulary: ${dictionary.join(', ')}.';
     }
-    
+
     // Log file information for debugging
     if (kDebugMode) {
       print('Transcribing file: $audioPath');
       print('File size: ${await file.length()} bytes');
     }
-    
+
     // Create the API request
     final request = http.MultipartRequest('POST', Uri.parse(_baseUrl))
       ..headers['Authorization'] = 'Bearer $apiKey'
@@ -65,12 +70,12 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
       ..fields['model'] = selectedModel
       ..fields['temperature'] = '0'
       ..fields['response_format'] = 'verbose_json';
-      
+
     // Add language code if a specific language is selected (not auto-detect)
     if (selectedLanguageCode.isNotEmpty) {
       request.fields['language'] = selectedLanguageCode;
     }
-      
+
     // Add prompt if dictionary words exist
     if (prompt != null && prompt.isNotEmpty) {
       request.fields['prompt'] = prompt;
@@ -80,15 +85,16 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
     final responseString = await response.stream.bytesToString();
 
     if (response.statusCode != 200) {
-      throw Exception('Failed to transcribe audio: ${response.statusCode} - $responseString');
+      throw Exception(
+          'Failed to transcribe audio: ${response.statusCode} - $responseString');
     }
 
     final responseJson = json.decode(responseString);
     final transcription = TranscriptionResponse.fromJson(responseJson);
-    
+
     // Save the transcription locally
     await saveTranscription(audioPath, transcription.text);
-    
+
     return transcription;
   }
 

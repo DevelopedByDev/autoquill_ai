@@ -11,31 +11,30 @@ class TranscriptionModelsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<SettingsBloc, SettingsState>(
-      builder: (context, state) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Transcription Models',
-              style: Theme.of(context).textTheme.displaySmall,
-            ),
-            const SizedBox(height: DesignTokens.spaceSM),
-            Text(
-              'Select the model to use for audio transcription.',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: DesignTokens.spaceMD),
-            _buildTranscriptionModelDropdown(context, state),
-          ],
-        );
-      }
-    );
+    return BlocBuilder<SettingsBloc, SettingsState>(builder: (context, state) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Transcription Models',
+            style: Theme.of(context).textTheme.displaySmall,
+          ),
+          const SizedBox(height: DesignTokens.spaceSM),
+          Text(
+            'Select the model to use for audio transcription.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: DesignTokens.spaceMD),
+          _buildTranscriptionModelDropdown(context, state),
+        ],
+      );
+    });
   }
 
-  Widget _buildTranscriptionModelDropdown(BuildContext context, SettingsState state) {
+  Widget _buildTranscriptionModelDropdown(
+      BuildContext context, SettingsState state) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return MinimalistCard(
       padding: const EdgeInsets.all(DesignTokens.spaceMD),
       child: Column(
@@ -44,20 +43,25 @@ class TranscriptionModelsSection extends StatelessWidget {
           Text(
             'Select Model',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: DesignTokens.fontWeightMedium,
-            ),
+                  fontWeight: DesignTokens.fontWeightMedium,
+                ),
           ),
           const SizedBox(height: DesignTokens.spaceSM),
           Text(
             'Choose the model that best suits your needs based on accuracy and speed.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-            ),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.7),
+                ),
           ),
           const SizedBox(height: DesignTokens.spaceMD),
           Container(
             decoration: BoxDecoration(
-              color: isDarkMode ? DesignTokens.darkSurface : DesignTokens.lightSurface,
+              color: isDarkMode
+                  ? DesignTokens.darkSurface
+                  : DesignTokens.lightSurface,
               borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
             ),
             child: _buildModelOptions(context, state),
@@ -66,12 +70,28 @@ class TranscriptionModelsSection extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildModelOptions(BuildContext context, SettingsState state) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Column(
       children: [
+        _buildModelOption(
+          context,
+          'whisper-large-v3-turbo',
+          'Whisper Large v3 Turbo',
+          'Multilingual with faster processing',
+          'Great balance between speed and accuracy',
+          state.transcriptionModel == 'whisper-large-v3-turbo',
+          onTap: () => _selectModel(context, 'whisper-large-v3-turbo'),
+          isFirst: true,
+        ),
+        Divider(
+          height: 1,
+          thickness: 1,
+          color:
+              isDarkMode ? DesignTokens.darkDivider : DesignTokens.lightDivider,
+        ),
         _buildModelOption(
           context,
           'whisper-large-v3',
@@ -80,26 +100,12 @@ class TranscriptionModelsSection extends StatelessWidget {
           'Best for complex audio or multiple languages',
           state.transcriptionModel == 'whisper-large-v3',
           onTap: () => _selectModel(context, 'whisper-large-v3'),
-          isFirst: true,
         ),
         Divider(
           height: 1,
           thickness: 1,
-          color: isDarkMode ? DesignTokens.darkDivider : DesignTokens.lightDivider,
-        ),
-        _buildModelOption(
-          context,
-          'whisper-large-v3-turbo',
-          'Whisper Large v3 Turbo',
-          'Multilingual with faster processing',
-          'Good balance between speed and accuracy',
-          state.transcriptionModel == 'whisper-large-v3-turbo',
-          onTap: () => _selectModel(context, 'whisper-large-v3-turbo'),
-        ),
-        Divider(
-          height: 1,
-          thickness: 1,
-          color: isDarkMode ? DesignTokens.darkDivider : DesignTokens.lightDivider,
+          color:
+              isDarkMode ? DesignTokens.darkDivider : DesignTokens.lightDivider,
         ),
         _buildModelOption(
           context,
@@ -114,18 +120,14 @@ class TranscriptionModelsSection extends StatelessWidget {
       ],
     );
   }
-  
-  Widget _buildModelOption(
-    BuildContext context,
-    String modelId,
-    String title,
-    String subtitle,
-    String description,
-    bool isSelected,
-    {required VoidCallback onTap, bool isFirst = false, bool isLast = false}
-  ) {
+
+  Widget _buildModelOption(BuildContext context, String modelId, String title,
+      String subtitle, String description, bool isSelected,
+      {required VoidCallback onTap,
+      bool isFirst = false,
+      bool isLast = false}) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.vertical(
@@ -143,25 +145,31 @@ class TranscriptionModelsSection extends StatelessWidget {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: DesignTokens.fontWeightMedium,
-                      color: isSelected ? DesignTokens.vibrantCoral : null,
-                    ),
+                          fontWeight: DesignTokens.fontWeightMedium,
+                          color: isSelected ? DesignTokens.vibrantCoral : null,
+                        ),
                   ),
                   const SizedBox(height: DesignTokens.spaceXXS),
                   Text(
                     subtitle,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: isSelected 
-                          ? DesignTokens.vibrantCoral 
-                          : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
-                    ),
+                          color: isSelected
+                              ? DesignTokens.vibrantCoral
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.8),
+                        ),
                   ),
                   const SizedBox(height: DesignTokens.spaceXXS),
                   Text(
                     description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.6),
+                        ),
                   ),
                 ],
               ),
@@ -173,13 +181,15 @@ class TranscriptionModelsSection extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected 
-                      ? DesignTokens.vibrantCoral 
-                      : isDarkMode ? DesignTokens.darkDivider : DesignTokens.lightDivider,
+                  color: isSelected
+                      ? DesignTokens.vibrantCoral
+                      : isDarkMode
+                          ? DesignTokens.darkDivider
+                          : DesignTokens.lightDivider,
                   width: 2,
                 ),
               ),
-              child: isSelected 
+              child: isSelected
                   ? Center(
                       child: Container(
                         width: 12,
@@ -197,7 +207,7 @@ class TranscriptionModelsSection extends StatelessWidget {
       ),
     );
   }
-  
+
   void _selectModel(BuildContext context, String modelId) {
     context.read<SettingsBloc>().add(SaveTranscriptionModel(modelId));
   }

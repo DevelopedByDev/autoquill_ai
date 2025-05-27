@@ -27,24 +27,24 @@ class SettingsService {
   Box<dynamic> get _settingsBox => AppStorage.settingsBox;
 
   // Theme mode listenable
-  ValueListenable<Box<dynamic>> get themeListenable => 
+  ValueListenable<Box<dynamic>> get themeListenable =>
       _settingsBox.listenable(keys: [_themeKey]);
 
   // Auto copy listenable
-  ValueListenable<Box<dynamic>> get autoCopyListenable => 
+  ValueListenable<Box<dynamic>> get autoCopyListenable =>
       _settingsBox.listenable(keys: [_autoCopyKey]);
 
   // Transcription model listenable
-  ValueListenable<Box<dynamic>> get transcriptionModelListenable => 
+  ValueListenable<Box<dynamic>> get transcriptionModelListenable =>
       _settingsBox.listenable(keys: [_transcriptionModelKey]);
 
   // Assistant model listenable
-  ValueListenable<Box<dynamic>> get assistantModelListenable => 
+  ValueListenable<Box<dynamic>> get assistantModelListenable =>
       _settingsBox.listenable(keys: [_assistantModelKey]);
 
   // Hotkeys listenable
-  ValueListenable<Box<dynamic>> get hotkeysListenable => 
-      _settingsBox.listenable(keys: [_transcriptionHotkeyKey, _assistantHotkeyKey]);
+  ValueListenable<Box<dynamic>> get hotkeysListenable => _settingsBox
+      .listenable(keys: [_transcriptionHotkeyKey, _assistantHotkeyKey]);
 
   // Get theme mode
   ThemeMode getThemeMode() {
@@ -70,7 +70,8 @@ class SettingsService {
 
   // Get transcription model
   String getTranscriptionModel() {
-    return _settingsBox.get(_transcriptionModelKey, defaultValue: 'whisper-large-v3') as String;
+    return _settingsBox.get(_transcriptionModelKey,
+        defaultValue: 'whisper-large-v3-turbo') as String;
   }
 
   // Set transcription model
@@ -80,7 +81,8 @@ class SettingsService {
 
   // Get assistant model
   String getAssistantModel() {
-    return _settingsBox.get(_assistantModelKey, defaultValue: 'llama3-70b-8192') as String;
+    return _settingsBox.get(_assistantModelKey, defaultValue: 'llama3-70b-8192')
+        as String;
   }
 
   // Set assistant model
@@ -107,12 +109,12 @@ class SettingsService {
   Future<void> setAssistantHotkey(HotKey hotkey) async {
     await AppStorage.saveHotkey(_assistantHotkeyKey, hotkey.toJson());
   }
-  
+
   // Get API key
   String? getApiKey() {
     return _settingsBox.get(_apiKeyKey) as String?;
   }
-  
+
   // Set API key
   Future<void> setApiKey(String apiKey) async {
     await _settingsBox.put(_apiKeyKey, apiKey);
