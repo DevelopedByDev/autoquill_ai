@@ -33,7 +33,7 @@ class RecordHotKeyDialog extends StatelessWidget {
             content: SingleChildScrollView(
               child: ListBody(
                 children: <Widget>[
-                  const Text('The `HotKeyRecorder` widget will record your hotkey.'),
+                  const Text('Press the hotkey you want to use to start recording:'),
                   Container(
                     width: 100,
                     height: 60,
