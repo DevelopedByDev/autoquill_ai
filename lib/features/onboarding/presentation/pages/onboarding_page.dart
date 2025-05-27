@@ -288,7 +288,10 @@ class _OnboardingPageState extends State<OnboardingPage>
                                       ),
                                       const SizedBox(
                                           width: DesignTokens.spaceXS),
-                                      const Text('Back'),
+                                      const Text('Back',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                          )),
                                     ],
                                   ),
                                 ),
@@ -369,6 +372,7 @@ class _OnboardingPageState extends State<OnboardingPage>
                                       style: const TextStyle(
                                         fontWeight:
                                             DesignTokens.fontWeightSemiBold,
+                                        fontSize: 16,
                                       ),
                                     ),
                                     const SizedBox(width: DesignTokens.spaceXS),
@@ -378,6 +382,7 @@ class _OnboardingPageState extends State<OnboardingPage>
                                           ? Icons.check_rounded
                                           : Icons.arrow_forward_rounded,
                                       size: DesignTokens.iconSizeSM,
+                                      color: DesignTokens.trueWhite,
                                     ),
                                   ],
                                 ),
