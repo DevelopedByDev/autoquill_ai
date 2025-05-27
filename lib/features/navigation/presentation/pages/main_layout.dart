@@ -174,7 +174,7 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
                               ),
                             ),
 
-                            const SizedBox(height: DesignTokens.spaceMD),
+                            const SizedBox(height: DesignTokens.spaceSM),
 
                             // Navigation items
                             Expanded(
