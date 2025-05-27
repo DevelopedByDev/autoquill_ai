@@ -21,23 +21,23 @@ class _SettingsPageState extends State<SettingsPage>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
-  static const List<Map<String, dynamic>> _settingsSections = [
+  static final List<Map<String, dynamic>> _settingsSections = [
     {
       'title': 'General',
       'icon': Icons.settings_rounded,
-      'page': GeneralSettingsPage(),
+      'page': const GeneralSettingsPage(),
       'color': DesignTokens.vibrantCoral,
     },
     {
       'title': 'Transcription',
       'icon': Icons.mic_rounded,
-      'page': TranscriptionSettingsPage(),
+      'page': const TranscriptionSettingsPage(),
       'color': DesignTokens.deepBlue,
     },
     {
       'title': 'Assistant',
       'icon': Icons.smart_toy_rounded,
-      'page': AssistantSettingsPage(),
+      'page': const AssistantSettingsPage(),
       'color': DesignTokens.emeraldGreen,
     },
     {
@@ -134,7 +134,8 @@ class _SettingsPageState extends State<SettingsPage>
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                DesignTokens.vibrantCoral.withValues(alpha: 0.1),
+                                DesignTokens.vibrantCoral
+                                    .withValues(alpha: 0.1),
                                 DesignTokens.deepBlue.withValues(alpha: 0.05),
                               ],
                             ),
@@ -168,7 +169,8 @@ class _SettingsPageState extends State<SettingsPage>
                                         .textTheme
                                         .headlineSmall
                                         ?.copyWith(
-                                          fontWeight: DesignTokens.fontWeightBold,
+                                          fontWeight:
+                                              DesignTokens.fontWeightBold,
                                           color: isDarkMode
                                               ? DesignTokens.trueWhite
                                               : DesignTokens.pureBlack,
@@ -193,9 +195,9 @@ class _SettingsPageState extends State<SettingsPage>
                             ],
                           ),
                         ),
-                  
+
                         const SizedBox(height: DesignTokens.spaceLG),
-                  
+
                         // Navigation List
                         Expanded(
                           child: ListView.builder(
@@ -206,7 +208,7 @@ class _SettingsPageState extends State<SettingsPage>
                               final section = _settingsSections[index];
                               final isSelected = _selectedIndex == index;
                               final sectionColor = section['color'] as Color;
-                  
+
                               return Padding(
                                 padding: const EdgeInsets.only(
                                     bottom: DesignTokens.spaceXS),

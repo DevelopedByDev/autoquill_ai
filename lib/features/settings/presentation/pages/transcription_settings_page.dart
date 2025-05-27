@@ -16,43 +16,37 @@ class TranscriptionSettingsPage extends StatelessWidget {
       listener: (context, state) {
         if (state.error?.isNotEmpty ?? false) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error!)),
+            SnackBar(
+              content: Text(state.error!),
+              backgroundColor: DesignTokens.vibrantCoral,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(DesignTokens.radiusSM),
+              ),
+            ),
           );
         }
       },
       builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(
-              'Transcription Settings',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: DesignTokens.fontWeightMedium,
-                  ),
-            ),
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            elevation: 0,
-            centerTitle: false,
-          ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(DesignTokens.spaceMD),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Transcription Hotkey Settings Section
-                const TranscriptionHotkeySettingsSection(),
-                const SizedBox(height: DesignTokens.spaceLG),
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(DesignTokens.spaceLG),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Transcription Hotkey Settings Section
+              const TranscriptionHotkeySettingsSection(),
+              const SizedBox(height: DesignTokens.spaceXXL),
 
-                // Smart Transcription Section
-                const SmartTranscriptionSection(),
-                const SizedBox(height: DesignTokens.spaceLG),
+              // Smart Transcription Section
+              const SmartTranscriptionSection(),
+              const SizedBox(height: DesignTokens.spaceXXL),
 
-                // Transcription Models Section
-                const TranscriptionModelsSection(),
+              // Transcription Models Section
+              const TranscriptionModelsSection(),
 
-                // Bottom padding for scrolling
-                const SizedBox(height: DesignTokens.spaceLG),
-              ],
-            ),
+              // Bottom padding for scrolling
+              const SizedBox(height: DesignTokens.spaceXXL),
+            ],
           ),
         );
       },
