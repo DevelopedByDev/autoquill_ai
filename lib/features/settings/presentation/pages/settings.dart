@@ -104,215 +104,220 @@ class _SettingsPageState extends State<SettingsPage>
             child: Row(
               children: [
                 // Enhanced Navigation Rail
-                Container(
-                  width: 280,
-                  decoration: BoxDecoration(
-                    color: isDarkMode
-                        ? DesignTokens.darkSurfaceElevated
-                            .withValues(alpha: 0.9)
-                        : DesignTokens.trueWhite.withValues(alpha: 0.95),
-                    boxShadow: isDarkMode
-                        ? DesignTokens.cardShadowDark
-                        : DesignTokens.cardShadow,
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(DesignTokens.radiusLG),
-                      bottomRight: Radius.circular(DesignTokens.radiusLG),
-                    ),
+                Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: DesignTokens.spaceLG,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header
-                      Container(
-                        padding: const EdgeInsets.all(DesignTokens.spaceLG),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              DesignTokens.vibrantCoral.withValues(alpha: 0.1),
-                              DesignTokens.deepBlue.withValues(alpha: 0.05),
-                            ],
-                          ),
-                          borderRadius: const BorderRadius.only(
-                            topRight: Radius.circular(DesignTokens.radiusLG),
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(
-                                      DesignTokens.spaceXS),
-                                  decoration: BoxDecoration(
-                                    gradient: DesignTokens.coralGradient,
-                                    borderRadius: BorderRadius.circular(
-                                        DesignTokens.radiusSM),
-                                  ),
-                                  child: Icon(
-                                    Icons.tune_rounded,
-                                    color: DesignTokens.trueWhite,
-                                    size: DesignTokens.iconSizeMD,
-                                  ),
-                                ),
-                                const SizedBox(width: DesignTokens.spaceSM),
-                                Text(
-                                  'Settings',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineSmall
-                                      ?.copyWith(
-                                        fontWeight: DesignTokens.fontWeightBold,
-                                        color: isDarkMode
-                                            ? DesignTokens.trueWhite
-                                            : DesignTokens.pureBlack,
-                                      ),
-                                ),
+                  child: Container(
+                    width: 280,
+                    decoration: BoxDecoration(
+                      color: isDarkMode
+                          ? DesignTokens.darkSurfaceElevated
+                              .withValues(alpha: 0.9)
+                          : DesignTokens.trueWhite.withValues(alpha: 0.95),
+                      boxShadow: isDarkMode
+                          ? DesignTokens.cardShadowDark
+                          : DesignTokens.cardShadow,
+                      borderRadius: const BorderRadius.only(
+                        topRight: Radius.circular(DesignTokens.radiusLG),
+                        bottomRight: Radius.circular(DesignTokens.radiusLG),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header
+                        Container(
+                          padding: const EdgeInsets.all(DesignTokens.spaceLG),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                DesignTokens.vibrantCoral.withValues(alpha: 0.1),
+                                DesignTokens.deepBlue.withValues(alpha: 0.05),
                               ],
                             ),
-                            const SizedBox(height: DesignTokens.spaceXS),
-                            Text(
-                              'Customize your AutoQuill experience',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: isDarkMode
-                                        ? DesignTokens.trueWhite
-                                            .withValues(alpha: 0.7)
-                                        : DesignTokens.pureBlack
-                                            .withValues(alpha: 0.6),
-                                  ),
+                            borderRadius: const BorderRadius.only(
+                              topRight: Radius.circular(DesignTokens.radiusLG),
                             ),
-                          ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(
+                                        DesignTokens.spaceXS),
+                                    decoration: BoxDecoration(
+                                      gradient: DesignTokens.coralGradient,
+                                      borderRadius: BorderRadius.circular(
+                                          DesignTokens.radiusSM),
+                                    ),
+                                    child: Icon(
+                                      Icons.tune_rounded,
+                                      color: DesignTokens.trueWhite,
+                                      size: DesignTokens.iconSizeMD,
+                                    ),
+                                  ),
+                                  const SizedBox(width: DesignTokens.spaceSM),
+                                  Text(
+                                    'Settings',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineSmall
+                                        ?.copyWith(
+                                          fontWeight: DesignTokens.fontWeightBold,
+                                          color: isDarkMode
+                                              ? DesignTokens.trueWhite
+                                              : DesignTokens.pureBlack,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: DesignTokens.spaceXS),
+                              Text(
+                                'Customize your AutoQuill experience',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: isDarkMode
+                                          ? DesignTokens.trueWhite
+                                              .withValues(alpha: 0.7)
+                                          : DesignTokens.pureBlack
+                                              .withValues(alpha: 0.6),
+                                    ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-
-                      const SizedBox(height: DesignTokens.spaceLG),
-
-                      // Navigation List
-                      Expanded(
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: DesignTokens.spaceMD),
-                          itemCount: _settingsSections.length,
-                          itemBuilder: (context, index) {
-                            final section = _settingsSections[index];
-                            final isSelected = _selectedIndex == index;
-                            final sectionColor = section['color'] as Color;
-
-                            return Padding(
-                              padding: const EdgeInsets.only(
-                                  bottom: DesignTokens.spaceXS),
-                              child: AnimatedContainer(
-                                duration: DesignTokens.durationMedium,
-                                curve: DesignTokens.emphasizedCurve,
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? sectionColor.withValues(alpha: 0.1)
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(
-                                      DesignTokens.radiusMD),
-                                  border: isSelected
-                                      ? Border.all(
-                                          color: sectionColor.withValues(
-                                              alpha: 0.3),
-                                          width: 1,
-                                        )
-                                      : null,
-                                ),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: () {
-                                      setState(() {
-                                        _selectedIndex = index;
-                                      });
-                                      _animationController.reset();
-                                      _animationController.forward();
-                                    },
+                  
+                        const SizedBox(height: DesignTokens.spaceLG),
+                  
+                        // Navigation List
+                        Expanded(
+                          child: ListView.builder(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: DesignTokens.spaceMD),
+                            itemCount: _settingsSections.length,
+                            itemBuilder: (context, index) {
+                              final section = _settingsSections[index];
+                              final isSelected = _selectedIndex == index;
+                              final sectionColor = section['color'] as Color;
+                  
+                              return Padding(
+                                padding: const EdgeInsets.only(
+                                    bottom: DesignTokens.spaceXS),
+                                child: AnimatedContainer(
+                                  duration: DesignTokens.durationMedium,
+                                  curve: DesignTokens.emphasizedCurve,
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? sectionColor.withValues(alpha: 0.1)
+                                        : Colors.transparent,
                                     borderRadius: BorderRadius.circular(
                                         DesignTokens.radiusMD),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(
-                                          DesignTokens.spaceMD),
-                                      child: Row(
-                                        children: [
-                                          AnimatedContainer(
-                                            duration:
-                                                DesignTokens.durationMedium,
-                                            padding: const EdgeInsets.all(
-                                                DesignTokens.spaceXS),
-                                            decoration: BoxDecoration(
-                                              color: isSelected
-                                                  ? sectionColor.withValues(
-                                                      alpha: 0.15)
-                                                  : (isDarkMode
-                                                      ? DesignTokens
-                                                          .darkSurfaceVariant
-                                                      : DesignTokens
-                                                          .lightSurfaceVariant),
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                      DesignTokens.radiusSM),
-                                            ),
-                                            child: Icon(
-                                              section['icon'] as IconData,
-                                              color: isSelected
-                                                  ? sectionColor
-                                                  : (isDarkMode
-                                                      ? DesignTokens.trueWhite
-                                                          .withValues(
-                                                              alpha: 0.6)
-                                                      : DesignTokens.pureBlack
-                                                          .withValues(
-                                                              alpha: 0.6)),
-                                              size: DesignTokens.iconSizeMD,
-                                            ),
-                                          ),
-                                          const SizedBox(
-                                              width: DesignTokens.spaceSM),
-                                          Expanded(
-                                            child: Text(
-                                              section['title'] as String,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .titleMedium
-                                                  ?.copyWith(
-                                                    color: isSelected
-                                                        ? sectionColor
-                                                        : (isDarkMode
-                                                            ? DesignTokens
-                                                                .trueWhite
-                                                            : DesignTokens
-                                                                .pureBlack),
-                                                    fontWeight: isSelected
+                                    border: isSelected
+                                        ? Border.all(
+                                            color: sectionColor.withValues(
+                                                alpha: 0.3),
+                                            width: 1,
+                                          )
+                                        : null,
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedIndex = index;
+                                        });
+                                        _animationController.reset();
+                                        _animationController.forward();
+                                      },
+                                      borderRadius: BorderRadius.circular(
+                                          DesignTokens.radiusMD),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(
+                                            DesignTokens.spaceMD),
+                                        child: Row(
+                                          children: [
+                                            AnimatedContainer(
+                                              duration:
+                                                  DesignTokens.durationMedium,
+                                              padding: const EdgeInsets.all(
+                                                  DesignTokens.spaceXS),
+                                              decoration: BoxDecoration(
+                                                color: isSelected
+                                                    ? sectionColor.withValues(
+                                                        alpha: 0.15)
+                                                    : (isDarkMode
                                                         ? DesignTokens
-                                                            .fontWeightSemiBold
+                                                            .darkSurfaceVariant
                                                         : DesignTokens
-                                                            .fontWeightRegular,
-                                                  ),
+                                                            .lightSurfaceVariant),
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                        DesignTokens.radiusSM),
+                                              ),
+                                              child: Icon(
+                                                section['icon'] as IconData,
+                                                color: isSelected
+                                                    ? sectionColor
+                                                    : (isDarkMode
+                                                        ? DesignTokens.trueWhite
+                                                            .withValues(
+                                                                alpha: 0.6)
+                                                        : DesignTokens.pureBlack
+                                                            .withValues(
+                                                                alpha: 0.6)),
+                                                size: DesignTokens.iconSizeMD,
+                                              ),
                                             ),
-                                          ),
-                                          if (isSelected)
-                                            Icon(
-                                              Icons.chevron_right_rounded,
-                                              color: sectionColor,
-                                              size: DesignTokens.iconSizeSM,
+                                            const SizedBox(
+                                                width: DesignTokens.spaceSM),
+                                            Expanded(
+                                              child: Text(
+                                                section['title'] as String,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleMedium
+                                                    ?.copyWith(
+                                                      color: isSelected
+                                                          ? sectionColor
+                                                          : (isDarkMode
+                                                              ? DesignTokens
+                                                                  .trueWhite
+                                                              : DesignTokens
+                                                                  .pureBlack),
+                                                      fontWeight: isSelected
+                                                          ? DesignTokens
+                                                              .fontWeightSemiBold
+                                                          : DesignTokens
+                                                              .fontWeightRegular,
+                                                    ),
+                                              ),
                                             ),
-                                        ],
+                                            if (isSelected)
+                                              Icon(
+                                                Icons.chevron_right_rounded,
+                                                color: sectionColor,
+                                                size: DesignTokens.iconSizeSM,
+                                              ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
 

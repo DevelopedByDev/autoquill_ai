@@ -144,7 +144,7 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
                         child: Column(
                           children: [
                             // Top padding for draggable area
-                            const SizedBox(height: DesignTokens.spaceXL),
+                            const SizedBox(height: DesignTokens.spaceXXL),
 
                             // App logo with modern styling
                             Container(
@@ -174,7 +174,7 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
                               ),
                             ),
 
-                            const SizedBox(height: DesignTokens.spaceXL),
+                            const SizedBox(height: DesignTokens.spaceMD),
 
                             // Navigation items
                             Expanded(
