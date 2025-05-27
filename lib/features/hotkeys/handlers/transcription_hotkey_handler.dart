@@ -145,17 +145,17 @@ class TranscriptionHotkeyHandler {
         BotToast.showText(text: 'Failed to start recording: $e');
       }
     } else {
-              // Stop recording and transcribe directly
-        try {
-          // Play the stop recording sound
-          await SoundPlayer.playStopRecordingSound();
+      // Stop recording and transcribe directly
+      try {
+        // Play the stop recording sound
+        await SoundPlayer.playStopRecordingSound();
 
-          // Stop recording
-          _hotkeyRecordedFilePath = await _recordingRepository!.stopRecording();
-          _isHotkeyRecordingActive = false;
+        // Stop recording
+        _hotkeyRecordedFilePath = await _recordingRepository!.stopRecording();
+        _isHotkeyRecordingActive = false;
 
-          // Unregister Esc key since recording is done
-          await HotkeyHandler.unregisterEscKeyForRecording();
+        // Unregister Esc key since recording is done
+        await HotkeyHandler.unregisterEscKeyForRecording();
 
         // Calculate recording duration
         if (_recordingStartTime != null) {
