@@ -116,9 +116,25 @@ class ToggleThemeMode extends SettingsEvent {}
 
 class ToggleAssistantScreenshot extends SettingsEvent {}
 
-class SaveLanguage extends SettingsEvent {
+class SaveLanguages extends SettingsEvent {
+  final List<LanguageCode> languages;
+  const SaveLanguages(this.languages);
+
+  @override
+  List<Object?> get props => [languages];
+}
+
+class AddLanguage extends SettingsEvent {
   final LanguageCode language;
-  const SaveLanguage(this.language);
+  const AddLanguage(this.language);
+
+  @override
+  List<Object?> get props => [language];
+}
+
+class RemoveLanguage extends SettingsEvent {
+  final LanguageCode language;
+  const RemoveLanguage(this.language);
 
   @override
   List<Object?> get props => [language];

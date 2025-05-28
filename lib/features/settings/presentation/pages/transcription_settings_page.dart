@@ -4,7 +4,6 @@ import 'package:autoquill_ai/core/theme/design_tokens.dart';
 import 'package:autoquill_ai/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:autoquill_ai/features/settings/presentation/bloc/settings_state.dart';
 import 'package:autoquill_ai/features/settings/presentation/widgets/transcription_hotkey_settings_section.dart';
-import 'package:autoquill_ai/features/settings/presentation/widgets/transcription_models_section.dart';
 import 'package:autoquill_ai/features/settings/presentation/widgets/smart_transcription_section.dart';
 
 class TranscriptionSettingsPage extends StatelessWidget {
@@ -39,10 +38,6 @@ class TranscriptionSettingsPage extends StatelessWidget {
 
               // Smart Transcription Section
               const SmartTranscriptionSection(),
-              const SizedBox(height: DesignTokens.spaceXXL),
-
-              // Transcription Models Section
-              const TranscriptionModelsSection(),
 
               // Bottom padding for scrolling
               const SizedBox(height: DesignTokens.spaceXXL),

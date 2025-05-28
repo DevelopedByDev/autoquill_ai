@@ -87,7 +87,7 @@ class OutputSettingsPage extends StatelessWidget {
         ),
         const SizedBox(height: DesignTokens.spaceSM),
         Text(
-          'Select the language for transcription output and text processing.',
+          'Select languages for transcription. Choose multiple languages to improve accuracy for multilingual content. If only English is selected, the fastest English-only model will be used.',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: isDarkMode
                     ? DesignTokens.trueWhite.withValues(alpha: 0.7)
@@ -101,7 +101,7 @@ class OutputSettingsPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Output Language',
+                'Selected Languages',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: DesignTokens.fontWeightMedium,
                       color: isDarkMode
@@ -110,6 +110,55 @@ class OutputSettingsPage extends StatelessWidget {
                     ),
               ),
               const SizedBox(height: DesignTokens.spaceSM),
+              // Display selected languages
+              Wrap(
+                spacing: DesignTokens.spaceXS,
+                runSpacing: DesignTokens.spaceXS,
+                children: state.selectedLanguages.map((language) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DesignTokens.spaceSM,
+                      vertical: DesignTokens.spaceXS,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: DesignTokens.blueGradient,
+                      borderRadius:
+                          BorderRadius.circular(DesignTokens.radiusSM),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          language.name,
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: DesignTokens.trueWhite,
+                                    fontWeight: DesignTokens.fontWeightMedium,
+                                  ),
+                        ),
+                        if (state.selectedLanguages.length > 1 ||
+                            language.code.isNotEmpty) ...[
+                          const SizedBox(width: DesignTokens.spaceXS),
+                          GestureDetector(
+                            onTap: () {
+                              context
+                                  .read<SettingsBloc>()
+                                  .add(RemoveLanguage(language));
+                            },
+                            child: Icon(
+                              Icons.close_rounded,
+                              size: DesignTokens.iconSizeXS,
+                              color: DesignTokens.trueWhite,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: DesignTokens.spaceMD),
+              // Language selection dropdown
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(DesignTokens.radiusSM),
@@ -120,16 +169,24 @@ class OutputSettingsPage extends StatelessWidget {
                   ),
                 ),
                 child: DropdownButtonFormField<LanguageCode>(
-                  value: state.selectedLanguage,
+                  key: ValueKey(
+                      'language_dropdown_${state.selectedLanguages.map((l) => l.code).join('_')}'),
+                  value: null,
                   decoration: InputDecoration(
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.all(DesignTokens.spaceMD),
                     prefixIcon: Icon(
-                      Icons.translate_rounded,
+                      Icons.add_rounded,
                       color: isDarkMode
                           ? DesignTokens.trueWhite.withValues(alpha: 0.6)
                           : DesignTokens.pureBlack.withValues(alpha: 0.5),
                     ),
+                    hintText: 'Add a language',
+                    hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: isDarkMode
+                              ? DesignTokens.trueWhite.withValues(alpha: 0.5)
+                              : DesignTokens.pureBlack.withValues(alpha: 0.4),
+                        ),
                   ),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: isDarkMode
@@ -140,7 +197,11 @@ class OutputSettingsPage extends StatelessWidget {
                       ? DesignTokens.pureBlack
                       : DesignTokens.trueWhite,
                   items: languageCodes
-                      .map((language) => DropdownMenuItem(
+                      .where((language) => !state.selectedLanguages.any(
+                          (selected) =>
+                              selected.code == language.code &&
+                              selected.name == language.name))
+                      .map((language) => DropdownMenuItem<LanguageCode>(
                             value: language,
                             child: Text(
                               language.name,
@@ -154,9 +215,44 @@ class OutputSettingsPage extends StatelessWidget {
                       .toList(),
                   onChanged: (language) {
                     if (language != null) {
-                      context.read<SettingsBloc>().add(SaveLanguage(language));
+                      context.read<SettingsBloc>().add(AddLanguage(language));
                     }
                   },
+                ),
+              ),
+              const SizedBox(height: DesignTokens.spaceSM),
+              // Model info
+              Container(
+                padding: const EdgeInsets.all(DesignTokens.spaceSM),
+                decoration: BoxDecoration(
+                  color: isDarkMode
+                      ? DesignTokens.trueWhite.withValues(alpha: 0.05)
+                      : DesignTokens.pureBlack.withValues(alpha: 0.03),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusSM),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: DesignTokens.iconSizeXS,
+                      color: isDarkMode
+                          ? DesignTokens.trueWhite.withValues(alpha: 0.6)
+                          : DesignTokens.pureBlack.withValues(alpha: 0.5),
+                    ),
+                    const SizedBox(width: DesignTokens.spaceXS),
+                    Expanded(
+                      child: Text(
+                        'Model: ${state.computedTranscriptionModel}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: isDarkMode
+                                  ? DesignTokens.trueWhite
+                                      .withValues(alpha: 0.7)
+                                  : DesignTokens.pureBlack
+                                      .withValues(alpha: 0.6),
+                            ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -232,14 +328,14 @@ class OutputSettingsPage extends StatelessWidget {
                   const SizedBox(width: DesignTokens.spaceSM),
                   MinimalistButton(
                     label: 'Add',
-                                         onPressed: () {
-                       if (_wordController.text.isNotEmpty) {
-                         context
-                             .read<SettingsBloc>()
-                             .add(AddWordToDictionary(_wordController.text));
-                         _wordController.clear();
-                       }
-                     },
+                    onPressed: () {
+                      if (_wordController.text.isNotEmpty) {
+                        context
+                            .read<SettingsBloc>()
+                            .add(AddWordToDictionary(_wordController.text));
+                        _wordController.clear();
+                      }
+                    },
                     variant: MinimalistButtonVariant.primary,
                   ),
                 ],

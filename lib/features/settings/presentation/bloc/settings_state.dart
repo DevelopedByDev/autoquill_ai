@@ -33,7 +33,9 @@ class SettingsState extends Equatable {
 
   // Screenshot toggle for assistant mode
   final bool assistantScreenshotEnabled;
-  final LanguageCode selectedLanguage;
+
+  // Multiple language selection
+  final List<LanguageCode> selectedLanguages;
 
   // Push-to-talk settings
   final bool pushToTalkEnabled;
@@ -55,10 +57,30 @@ class SettingsState extends Equatable {
     this.dictionary = const [],
     this.phraseReplacements = const {},
     this.assistantScreenshotEnabled = true,
-    this.selectedLanguage = const LanguageCode(name: 'Auto-detect', code: ''),
+    this.selectedLanguages = const [
+      LanguageCode(name: 'Auto-detect', code: '')
+    ],
     this.pushToTalkEnabled = true,
     this.smartTranscriptionEnabled = false,
   });
+
+  // Computed property to get the appropriate transcription model based on selected languages
+  String get computedTranscriptionModel {
+    // If only English is selected (and not auto-detect), use the English-only model
+    if (selectedLanguages.length == 1 && selectedLanguages.first.code == 'en') {
+      return 'distil-whisper-large-v3-en';
+    }
+    // For any other language combination, use the multilingual turbo model
+    return 'whisper-large-v3-turbo';
+  }
+
+  // Get language codes as a list for API requests
+  List<String> get languageCodes {
+    return selectedLanguages
+        .where((lang) => lang.code.isNotEmpty) // Filter out auto-detect
+        .map((lang) => lang.code)
+        .toList();
+  }
 
   SettingsState copyWith({
     String? apiKey,
@@ -74,7 +96,7 @@ class SettingsState extends Equatable {
     List<String>? dictionary,
     Map<String, String>? phraseReplacements,
     bool? assistantScreenshotEnabled,
-    LanguageCode? selectedLanguage,
+    List<LanguageCode>? selectedLanguages,
     bool? pushToTalkEnabled,
     bool? smartTranscriptionEnabled,
   }) {
@@ -94,7 +116,7 @@ class SettingsState extends Equatable {
       phraseReplacements: phraseReplacements ?? this.phraseReplacements,
       assistantScreenshotEnabled:
           assistantScreenshotEnabled ?? this.assistantScreenshotEnabled,
-      selectedLanguage: selectedLanguage ?? this.selectedLanguage,
+      selectedLanguages: selectedLanguages ?? this.selectedLanguages,
       pushToTalkEnabled: pushToTalkEnabled ?? this.pushToTalkEnabled,
       smartTranscriptionEnabled:
           smartTranscriptionEnabled ?? this.smartTranscriptionEnabled,
@@ -117,7 +139,7 @@ class SettingsState extends Equatable {
         storedHotkeys,
         pushToTalkEnabled,
         assistantScreenshotEnabled,
-        selectedLanguage,
+        selectedLanguages,
         smartTranscriptionEnabled,
       ];
 }

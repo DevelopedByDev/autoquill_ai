@@ -8,6 +8,9 @@ class LanguageCode extends Equatable {
 
   @override
   List<Object?> get props => [name, code];
+
+  @override
+  String toString() => 'LanguageCode($name, $code)';
 }
 
 const List<LanguageCode> languageCodes = [

@@ -48,7 +48,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<RemovePhraseReplacement>(_onRemovePhraseReplacement);
 
     // Language selection event
-    on<SaveLanguage>(_onSaveLanguage);
+    on<SaveLanguages>(_onSaveLanguages);
+    on<AddLanguage>(_onAddLanguage);
+    on<RemoveLanguage>(_onRemoveLanguage);
 
     // Push-to-talk events
     on<TogglePushToTalk>(_onTogglePushToTalk);
@@ -88,11 +90,34 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       final pushToTalkEnabled =
           _box.get('push_to_talk_enabled', defaultValue: true) as bool;
 
-      // Load selected language
-      final savedLanguageCode =
-          _box.get('selected_language_code', defaultValue: '') as String;
-      final savedLanguageName = _box.get('selected_language_name',
-          defaultValue: 'Auto-detect') as String;
+      // Load selected languages (support both old single language and new multiple languages)
+      final List<dynamic>? savedLanguagesList = _box.get('selected_languages');
+      List<LanguageCode> selectedLanguages;
+
+      if (savedLanguagesList != null) {
+        // New format: multiple languages
+        selectedLanguages = savedLanguagesList.map((langData) {
+          if (langData is Map) {
+            return LanguageCode(
+              name: langData['name'] ?? 'Auto-detect',
+              code: langData['code'] ?? '',
+            );
+          }
+          return const LanguageCode(name: 'Auto-detect', code: '');
+        }).toList();
+      } else {
+        // Legacy format: single language - migrate to new format
+        final savedLanguageCode =
+            _box.get('selected_language_code', defaultValue: '') as String;
+        final savedLanguageName = _box.get('selected_language_name',
+            defaultValue: 'Auto-detect') as String;
+        selectedLanguages = [
+          LanguageCode(name: savedLanguageName, code: savedLanguageCode)
+        ];
+
+        // Save in new format
+        await _saveLanguagesToStorage(selectedLanguages);
+      }
 
       // Load smart transcription setting
       final smartTranscriptionEnabled =
@@ -110,8 +135,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         themeMode: themeMode,
         assistantScreenshotEnabled: assistantScreenshotEnabled,
         pushToTalkEnabled: pushToTalkEnabled,
-        selectedLanguage:
-            LanguageCode(name: savedLanguageName, code: savedLanguageCode),
+        selectedLanguages: selectedLanguages,
         smartTranscriptionEnabled: smartTranscriptionEnabled,
       ));
     } catch (e) {
@@ -150,15 +174,72 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     emit(state.copyWith(isApiKeyVisible: !state.isApiKeyVisible));
   }
 
-  Future<void> _onSaveLanguage(
-      SaveLanguage event, Emitter<SettingsState> emit) async {
+  Future<void> _onSaveLanguages(
+      SaveLanguages event, Emitter<SettingsState> emit) async {
     try {
-      await _box.put('selected_language_code', event.language.code);
-      await _box.put('selected_language_name', event.language.name);
-      emit(state.copyWith(selectedLanguage: event.language));
+      await _saveLanguagesToStorage(event.languages);
+      emit(state.copyWith(selectedLanguages: event.languages));
     } catch (e) {
       emit(state.copyWith(error: e.toString()));
     }
+  }
+
+  Future<void> _onAddLanguage(
+      AddLanguage event, Emitter<SettingsState> emit) async {
+    try {
+      final currentLanguages = List<LanguageCode>.from(state.selectedLanguages);
+
+      // Don't add if already selected
+      if (currentLanguages.any((lang) => lang.code == event.language.code)) {
+        return;
+      }
+
+      // If adding a specific language and auto-detect is selected, remove auto-detect
+      if (event.language.code.isNotEmpty &&
+          currentLanguages.any((lang) => lang.code.isEmpty)) {
+        currentLanguages.removeWhere((lang) => lang.code.isEmpty);
+      }
+
+      // If adding auto-detect, clear all other languages
+      if (event.language.code.isEmpty) {
+        currentLanguages.clear();
+      }
+
+      currentLanguages.add(event.language);
+
+      await _saveLanguagesToStorage(currentLanguages);
+      emit(state.copyWith(selectedLanguages: currentLanguages));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  Future<void> _onRemoveLanguage(
+      RemoveLanguage event, Emitter<SettingsState> emit) async {
+    try {
+      final currentLanguages = List<LanguageCode>.from(state.selectedLanguages);
+      currentLanguages.removeWhere((lang) => lang.code == event.language.code);
+
+      // If no languages left, add auto-detect
+      if (currentLanguages.isEmpty) {
+        currentLanguages.add(const LanguageCode(name: 'Auto-detect', code: ''));
+      }
+
+      await _saveLanguagesToStorage(currentLanguages);
+      emit(state.copyWith(selectedLanguages: currentLanguages));
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  Future<void> _saveLanguagesToStorage(List<LanguageCode> languages) async {
+    final languagesList = languages
+        .map((lang) => {
+              'name': lang.name,
+              'code': lang.code,
+            })
+        .toList();
+    await _box.put('selected_languages', languagesList);
   }
 
   // Hotkey management methods

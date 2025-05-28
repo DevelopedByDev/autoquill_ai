@@ -50,12 +50,62 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
       throw Exception('Invalid audio file format');
     }
 
-    // Get the selected transcription model and language from settings
+    // Get the selected languages from settings and determine the appropriate model
     final settingsBox = Hive.box('settings');
-    final selectedModel = settingsBox.get('transcription-model') ??
-        'distil-whisper-large-v3-en'; // Default to fastest model
-    final selectedLanguageCode =
-        settingsBox.get('selected_language_code') ?? '';
+
+    // Load selected languages
+    final List<dynamic>? savedLanguagesList =
+        settingsBox.get('selected_languages');
+    String selectedModel;
+
+    if (kDebugMode) {
+      print('Raw saved languages list: $savedLanguagesList');
+    }
+
+    if (savedLanguagesList != null) {
+      // Check if ONLY English is selected
+      bool isOnlyEnglishSelected = false;
+
+      if (savedLanguagesList.length == 1) {
+        final langData = savedLanguagesList.first;
+        if (langData is Map && langData['code'] == 'en') {
+          isOnlyEnglishSelected = true;
+        }
+      }
+
+      if (kDebugMode) {
+        print('Is only English selected: $isOnlyEnglishSelected');
+      }
+
+      // Simplified model selection logic:
+      // Only use English-only model if ONLY English is selected
+      // Use multilingual model for all other cases
+      if (isOnlyEnglishSelected) {
+        selectedModel = 'distil-whisper-large-v3-en';
+        if (kDebugMode) {
+          print(
+              'Using English-only model: $selectedModel (only English selected)');
+        }
+      } else {
+        selectedModel = 'whisper-large-v3-turbo';
+        if (kDebugMode) {
+          print(
+              'Using multilingual model: $selectedModel (auto-detect or multiple/non-English languages)');
+        }
+      }
+    } else {
+      // Legacy format fallback
+      final selectedLanguageCode =
+          settingsBox.get('selected_language_code') ?? '';
+      selectedModel = selectedLanguageCode == 'en'
+          ? 'distil-whisper-large-v3-en'
+          : 'whisper-large-v3-turbo';
+
+      if (kDebugMode) {
+        print(
+            'Using legacy format - Language: $selectedLanguageCode, Model: $selectedModel');
+      }
+    }
 
     // Get dictionary words from settings
     final List<dynamic>? storedDictionary = settingsBox.get('dictionary');
@@ -79,15 +129,19 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
     final request = http.MultipartRequest('POST', Uri.parse(_baseUrl))
       ..headers['Authorization'] = 'Bearer $apiKey'
       ..headers['Connection'] = 'keep-alive' // Enable connection reuse
+      ..headers['Accept'] =
+          'application/json; charset=utf-8' // Ensure UTF-8 response
+      ..headers['Accept-Charset'] = 'utf-8' // Request UTF-8 encoding
       ..files.add(await http.MultipartFile.fromPath('file', audioPath))
       ..fields['model'] = selectedModel
       ..fields['temperature'] = '0'
       ..fields['response_format'] =
           'json'; // Use json instead of verbose_json for faster parsing
 
-    // Add language code if a specific language is selected (not auto-detect)
-    if (selectedLanguageCode.isNotEmpty) {
-      request.fields['language'] = selectedLanguageCode;
+    // No language parameter - let the model auto-detect
+    if (kDebugMode) {
+      print(
+          'API Request - Model: $selectedModel, No language parameter (clean auto-detect request)');
     }
 
     // Add prompt if dictionary words exist
@@ -113,7 +167,9 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
             'Failed to transcribe audio: ${response.statusCode} - ${response.body}');
       }
 
-      final responseJson = json.decode(response.body);
+      // Ensure UTF-8 decoding for proper Unicode character handling
+      final responseBody = utf8.decode(response.bodyBytes);
+      final responseJson = json.decode(responseBody);
 
       // Handle both verbose and simple JSON responses
       final transcriptionText = responseJson['text'] as String;
