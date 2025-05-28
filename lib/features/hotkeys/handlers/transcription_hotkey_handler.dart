@@ -363,26 +363,29 @@ class TranscriptionHotkeyHandler {
             print('Key label: ${hotkey.key.keyLabel}');
           }
 
-          // Format for macOS display
-          String keyText = '';
+          // Format for macOS display with spaces between symbols
+          List<String> keyParts = [];
 
           // Add modifiers in the correct order for macOS
           if (hotkey.modifiers?.contains(HotKeyModifier.meta) ?? false) {
-            keyText += '⌘';
+            keyParts.add('⌘');
           }
           if (hotkey.modifiers?.contains(HotKeyModifier.control) ?? false) {
-            keyText += '⌃';
+            keyParts.add('⌃');
           }
           if (hotkey.modifiers?.contains(HotKeyModifier.alt) ?? false) {
-            keyText += '⌥';
+            keyParts.add('⌥');
           }
           if (hotkey.modifiers?.contains(HotKeyModifier.shift) ?? false) {
-            keyText += '⇧';
+            keyParts.add('⇧');
           }
 
           // Add the key itself using Flutter's built-in keyLabel
           final keySymbol = _getMacKeySymbol(hotkey.key);
-          keyText += keySymbol;
+          keyParts.add(keySymbol);
+
+          // Join with spaces
+          final keyText = keyParts.join(' ');
 
           if (kDebugMode) {
             print('Final hotkey display string: "$keyText"');
