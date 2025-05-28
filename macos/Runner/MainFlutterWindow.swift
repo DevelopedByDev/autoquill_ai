@@ -49,14 +49,14 @@ class BlinkingLabel: NSTextField {
             switch self {
             case .recording(let mode, let finishHotkey, let cancelHotkey):
                 // Format with left padding for the red dot
-                var baseText = "    REC AUDIO"
+                var baseText = "REC AUDIO"
                 
                 // Add hotkey instructions below
                 var instructions = ""
                 if let finish = finishHotkey {
-                    instructions += "    \(finish) to stop"
+                    instructions += "\(finish) to stop"
                 } else {
-                    instructions += "    W to stop"
+                    instructions += "W to stop"
                 }
                 if let cancel = cancelHotkey {
                     if !instructions.isEmpty {
