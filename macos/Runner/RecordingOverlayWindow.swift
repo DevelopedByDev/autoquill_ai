@@ -1,7 +1,7 @@
 import Cocoa
 
 // Enhanced RecordingOverlayWindow with beautiful animated effects
-class RecordingOverlayWindow: NSPanel {
+class RecordingOverlayWindow: NSPanel, BlinkingLabelDelegate {
     static let shared = RecordingOverlayWindow()
     private let blinkingLabel = BlinkingLabel()
     private let modeLabel = NSTextField()
@@ -189,6 +189,7 @@ class RecordingOverlayWindow: NSPanel {
         
         // Setup label
         blinkingLabel.frame = NSRect(x: 20, y: 20, width: windowWidth - 40, height: 60)
+        blinkingLabel.parentDelegate = self
         visualEffectView.addSubview(blinkingLabel)
         
         // No red dot, as requested
@@ -360,5 +361,14 @@ class RecordingOverlayWindow: NSPanel {
         DispatchQueue.main.async {
             self.audioLevelIndicator.setAudioLevel(level)
         }
+    }
+    
+    // MARK: - BlinkingLabelDelegate
+    func blinkingLabel(_ label: BlinkingLabel, didUpdateColors colors: (background: NSColor, accent: NSColor, text: NSColor)) {
+        updateColors(colors)
+    }
+    
+    func blinkingLabel(_ label: BlinkingLabel, didSetModeText mode: String) {
+        setModeText(mode)
     }
 } 

@@ -1,9 +1,16 @@
 import Cocoa
 
+// Protocol for BlinkingLabel to communicate with its parent
+protocol BlinkingLabelDelegate: AnyObject {
+    func blinkingLabel(_ label: BlinkingLabel, didUpdateColors colors: (background: NSColor, accent: NSColor, text: NSColor))
+    func blinkingLabel(_ label: BlinkingLabel, didSetModeText mode: String)
+}
+
 // Blinking label for recording indicator
 class BlinkingLabel: NSTextField {
     private var blinkTimer: Timer?
     private var isVisible = true
+    weak var parentDelegate: BlinkingLabelDelegate?
     
     // Text states for different recording and transcription states
     enum TextState {
@@ -14,33 +21,21 @@ class BlinkingLabel: NSTextField {
         
         var text: String {
             switch self {
-            case .recording(let mode, let finishHotkey, let cancelHotkey):
+            case .recording(_, _, let cancelHotkey):
                 // Format with left padding for the red dot
                 var baseText = "REC AUDIO"
                 
-                // Add hotkey instructions below
+                // Add hotkey instructions below based on mode
                 var instructions = ""
-                if let finish = finishHotkey {
-                    instructions += "\(finish) to stop"
-                } else {
-                    instructions += "W to stop"
-                }
+                
+                // Only add cancel hotkey if provided
                 if let cancel = cancelHotkey {
-                    if !instructions.isEmpty {
-                        instructions += " • "
-                    }
                     instructions += "\(cancel) to cancel"
                 }
                 
                 // Combine main parts
-                baseText += "\n" + instructions
-                
-                // Add mode at the bottom right with explicit positioning
-                if !mode.isEmpty {
-                    // Create a separate label for the mode
-                    DispatchQueue.main.async {
-                        RecordingOverlayWindow.shared.setModeText(mode)
-                    }
+                if !instructions.isEmpty {
+                    baseText += "\n" + instructions
                 }
                 
                 return baseText
@@ -102,6 +97,15 @@ class BlinkingLabel: NSTextField {
                     accent: NSColor.systemGreen,
                     text: NSColor.white
                 )
+            }
+        }
+        
+        var mode: String {
+            switch self {
+            case .recording(let mode, _, _):
+                return mode
+            default:
+                return ""
             }
         }
     }
@@ -176,9 +180,13 @@ class BlinkingLabel: NSTextField {
         // Apply the attributed string with proper styling
         self.attributedStringValue = attributedText
         
-        // Notify parent to update background
-        if let overlayWindow = self.superview?.window as? RecordingOverlayWindow {
-            overlayWindow.updateColors(colors)
+        // Notify delegate about color and mode changes
+        parentDelegate?.blinkingLabel(self, didUpdateColors: colors)
+        
+        // Set mode text via delegate
+        let mode = state.mode
+        if !mode.isEmpty {
+            parentDelegate?.blinkingLabel(self, didSetModeText: mode)
         }
         
         if state.shouldBlink {
