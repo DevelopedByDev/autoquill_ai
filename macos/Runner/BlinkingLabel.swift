@@ -12,6 +12,10 @@ class BlinkingLabel: NSTextField {
     private var isVisible = true
     weak var parentDelegate: BlinkingLabelDelegate?
     
+    // Store the last known hotkeys to preserve them across state updates
+    private var lastKnownFinishHotkey: String?
+    private var lastKnownCancelHotkey: String?
+    
     // Text states for different recording and transcription states
     enum TextState {
         case recording(mode: String, finishHotkey: String?, cancelHotkey: String?)
@@ -21,22 +25,25 @@ class BlinkingLabel: NSTextField {
         
         var text: String {
             switch self {
-            case .recording(_, _, let cancelHotkey):
+            case .recording(let mode, let finishHotkey, let cancelHotkey):
                 // Format with left padding for the red dot
                 var baseText = "REC AUDIO"
                 
-                // Add hotkey instructions below based on mode
+                // Add finish hotkey instruction based on mode
                 var instructions = ""
-                
-                // Only add cancel hotkey if provided
-                if let cancel = cancelHotkey {
-                    instructions += "\(cancel) to cancel"
+                let finishKey = finishHotkey ?? "?"
+                if mode.lowercased().contains("push") {
+                    instructions += "release \(finishKey) to stop"
+                } else {
+                    instructions += "\(finishKey) to stop"
                 }
+                
+                // Add cancel hotkey instruction
+                let cancelKey = cancelHotkey ?? "Esc"
+                instructions += "\n\(cancelKey) to cancel"
                 
                 // Combine main parts
-                if !instructions.isEmpty {
-                    baseText += "\n" + instructions
-                }
+                baseText += "\n" + instructions
                 
                 return baseText
             case .stopped: return "REC STOPPED"
@@ -153,7 +160,26 @@ class BlinkingLabel: NSTextField {
     }
     
     func setState(_ state: TextState) {
-        self.currentState = state
+        // If this is a recording state, preserve the hotkeys
+        if case .recording(let mode, let finishHotkey, let cancelHotkey) = state {
+            // Store hotkeys if they are provided
+            if let finish = finishHotkey {
+                lastKnownFinishHotkey = finish
+            }
+            if let cancel = cancelHotkey {
+                lastKnownCancelHotkey = cancel
+            }
+            
+            // Use stored hotkeys if current ones are nil
+            let effectiveFinishHotkey = finishHotkey ?? lastKnownFinishHotkey
+            let effectiveCancelHotkey = cancelHotkey ?? lastKnownCancelHotkey
+            
+            // Create a new state with the effective hotkeys
+            let effectiveState = TextState.recording(mode: mode, finishHotkey: effectiveFinishHotkey, cancelHotkey: effectiveCancelHotkey)
+            self.currentState = effectiveState
+        } else {
+            self.currentState = state
+        }
         
         // Create attributed string with proper spacing
         let paragraphStyle = NSMutableParagraphStyle()
@@ -161,11 +187,11 @@ class BlinkingLabel: NSTextField {
         paragraphStyle.alignment = .left
         
         // Update text color based on state
-        let colors = state.colors
+        let colors = currentState.colors
         self.textColor = colors.text
         
         // Get the text content
-        let textContent = state.text
+        let textContent = currentState.text
         
         // Create an attributed string with the base styling
         let attributedText = NSMutableAttributedString(
@@ -184,12 +210,12 @@ class BlinkingLabel: NSTextField {
         parentDelegate?.blinkingLabel(self, didUpdateColors: colors)
         
         // Set mode text via delegate
-        let mode = state.mode
+        let mode = currentState.mode
         if !mode.isEmpty {
             parentDelegate?.blinkingLabel(self, didSetModeText: mode)
         }
         
-        if state.shouldBlink {
+        if currentState.shouldBlink {
             startBlinking()
         } else {
             stopBlinking()
