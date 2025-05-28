@@ -16,7 +16,7 @@ class RecordingOverlayWindow: NSPanel, BlinkingLabelDelegate {
 
     // Define window dimensions as class properties
     private let windowWidth: CGFloat = 380
-    private let windowHeight: CGFloat = 100
+    private let windowHeight: CGFloat = 120  // Increased from 100 to accommodate more text
     
     // UserDefaults keys for position persistence
     private let positionXKey = "RecordingOverlayPositionX"
@@ -188,7 +188,7 @@ class RecordingOverlayWindow: NSPanel, BlinkingLabelDelegate {
         visualEffectView.layer?.addSublayer(pulseLayer)
         
         // Setup label
-        blinkingLabel.frame = NSRect(x: 20, y: 20, width: windowWidth - 40, height: 60)
+        blinkingLabel.frame = NSRect(x: 25, y: 25, width: windowWidth - 40, height: 70)  // Moved down from y: 30 to y: 40 for more top spacing
         blinkingLabel.parentDelegate = self
         visualEffectView.addSubview(blinkingLabel)
         

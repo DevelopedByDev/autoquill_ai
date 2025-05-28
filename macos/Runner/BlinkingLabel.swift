@@ -29,18 +29,16 @@ class BlinkingLabel: NSTextField {
                 // Format with left padding for the red dot
                 var baseText = "REC AUDIO"
                 
-                // Add finish hotkey instruction based on mode
+                // Add hotkey instructions on one line with bullet separator
                 var instructions = ""
                 let finishKey = finishHotkey ?? "?"
-                if mode.lowercased().contains("push") {
-                    instructions += "release \(finishKey) to stop"
-                } else {
-                    instructions += "\(finishKey) to stop"
-                }
-                
-                // Add cancel hotkey instruction
                 let cancelKey = cancelHotkey ?? "Esc"
-                instructions += "\n\(cancelKey) to cancel"
+                
+                if mode.lowercased().contains("push") {
+                    instructions = "release \(finishKey) to stop • \(cancelKey) to cancel"
+                } else {
+                    instructions = "\(finishKey) to stop • \(cancelKey) to cancel"
+                }
                 
                 // Combine main parts
                 baseText += "\n" + instructions
@@ -140,6 +138,17 @@ class BlinkingLabel: NSTextField {
         self.font = NSFont.monospacedSystemFont(ofSize: 14, weight: .semibold)
         self.wantsLayer = true
         
+        // Enable multi-line text display
+        self.usesSingleLineMode = false
+        self.maximumNumberOfLines = 0  // Allow unlimited lines
+        self.lineBreakMode = .byWordWrapping
+        
+        // Ensure the cell also supports multi-line
+        if let cell = self.cell {
+            cell.wraps = true
+            cell.isScrollable = false
+        }
+        
         // Add line spacing for better readability
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = 8
@@ -185,6 +194,7 @@ class BlinkingLabel: NSTextField {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = 8
         paragraphStyle.alignment = .left
+        paragraphStyle.lineBreakMode = .byWordWrapping
         
         // Update text color based on state
         let colors = currentState.colors
@@ -202,6 +212,11 @@ class BlinkingLabel: NSTextField {
                 .paragraphStyle: paragraphStyle
             ]
         )
+        
+        // Ensure multi-line display is enabled before setting the text
+        self.usesSingleLineMode = false
+        self.maximumNumberOfLines = 0
+        self.lineBreakMode = .byWordWrapping
         
         // Apply the attributed string with proper styling
         self.attributedStringValue = attributedText
