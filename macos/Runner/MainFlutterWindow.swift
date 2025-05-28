@@ -48,33 +48,38 @@ class BlinkingLabel: NSTextField {
         var text: String {
             switch self {
             case .recording(let mode, let finishHotkey, let cancelHotkey):
-                var baseText = ""
-                if mode.isEmpty {
-                    baseText = "🎙️ Recording..."
-                } else {
-                    baseText = "🎙️ \(mode)\nRecording..."
-                }
+                // Format with left padding for the red dot
+                var baseText = "    REC AUDIO"
                 
-                // Add hotkey instructions with button-like styling
+                // Add hotkey instructions below
                 var instructions = ""
                 if let finish = finishHotkey {
-                    instructions += "Finish [\(finish)]"
+                    instructions += "    \(finish) to stop"
+                } else {
+                    instructions += "    W to stop"
                 }
                 if let cancel = cancelHotkey {
                     if !instructions.isEmpty {
-                        instructions += "  •  "
+                        instructions += " • "
                     }
-                    instructions += "Cancel [\(cancel)]"
+                    instructions += "\(cancel) to cancel"
                 }
                 
-                if !instructions.isEmpty {
-                    baseText += "\n\n\(instructions)"
+                // Combine main parts
+                baseText += "\n" + instructions
+                
+                // Add mode at the bottom right with explicit positioning
+                if !mode.isEmpty {
+                    // Create a separate label for the mode
+                    DispatchQueue.main.async {
+                        RecordingOverlayWindow.shared.setModeText(mode)
+                    }
                 }
                 
                 return baseText
-            case .stopped: return "⏹️ Recording Stopped"
-            case .processing: return "⚡ Processing..."
-            case .completed: return "✅ Complete!"
+            case .stopped: return "REC STOPPED"
+            case .processing: return "PROCESSING"
+            case .completed: return "COMPLETE"
             }
         }
         
@@ -93,40 +98,40 @@ class BlinkingLabel: NSTextField {
                 if mode.lowercased().contains("assistant") {
                     // Purple theme for Assistant
                     return (
-                        background: NSColor.systemPurple.withAlphaComponent(0.15),
+                        background: NSColor.black.withAlphaComponent(0.8),
                         accent: NSColor.systemPurple,
                         text: NSColor.white
                     )
                 } else if mode.lowercased().contains("push") {
                     // Blue theme for Push-to-Talk
                     return (
-                        background: NSColor.systemBlue.withAlphaComponent(0.15),
+                        background: NSColor.black.withAlphaComponent(0.8),
                         accent: NSColor.systemBlue,
                         text: NSColor.white
                     )
                 } else {
                     // Red/Pink theme for Transcription (default)
                     return (
-                        background: NSColor.systemPink.withAlphaComponent(0.15),
-                        accent: NSColor.systemPink,
+                        background: NSColor.black.withAlphaComponent(0.8),
+                        accent: NSColor.systemRed,
                         text: NSColor.white
                     )
                 }
             case .stopped:
                 return (
-                    background: NSColor.systemOrange.withAlphaComponent(0.15),
+                    background: NSColor.black.withAlphaComponent(0.8),
                     accent: NSColor.systemOrange,
                     text: NSColor.white
                 )
             case .processing:
                 return (
-                    background: NSColor.systemYellow.withAlphaComponent(0.15),
+                    background: NSColor.black.withAlphaComponent(0.8),
                     accent: NSColor.systemYellow,
-                    text: NSColor.black
+                    text: NSColor.white
                 )
             case .completed:
                 return (
-                    background: NSColor.systemGreen.withAlphaComponent(0.15),
+                    background: NSColor.black.withAlphaComponent(0.8),
                     accent: NSColor.systemGreen,
                     text: NSColor.white
                 )
@@ -148,14 +153,26 @@ class BlinkingLabel: NSTextField {
     
     private func setup() {
         self.stringValue = TextState.recording(mode: "", finishHotkey: nil, cancelHotkey: nil).text
-        self.alignment = .center
+        self.alignment = .left
         self.isBezeled = false
         self.isEditable = false
         self.isSelectable = false
         self.drawsBackground = false
         self.textColor = NSColor.white
-        self.font = NSFont.systemFont(ofSize: 11, weight: .medium)
+        self.font = NSFont.monospacedSystemFont(ofSize: 14, weight: .semibold)
         self.wantsLayer = true
+        
+        // Add line spacing for better readability
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = 8
+        self.attributedStringValue = NSAttributedString(
+            string: self.stringValue,
+            attributes: [
+                .font: NSFont.monospacedSystemFont(ofSize: 14, weight: .semibold),
+                .foregroundColor: NSColor.white,
+                .paragraphStyle: paragraphStyle
+            ]
+        )
         
         // Add text shadow for better readability
         self.shadow = NSShadow()
@@ -166,11 +183,31 @@ class BlinkingLabel: NSTextField {
     
     func setState(_ state: TextState) {
         self.currentState = state
-        self.stringValue = state.text
+        
+        // Create attributed string with proper spacing
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = 8
+        paragraphStyle.alignment = .left
         
         // Update text color based on state
         let colors = state.colors
         self.textColor = colors.text
+        
+        // Get the text content
+        let textContent = state.text
+        
+        // Create an attributed string with the base styling
+        let attributedText = NSMutableAttributedString(
+            string: textContent,
+            attributes: [
+                .font: NSFont.monospacedSystemFont(ofSize: 14, weight: .semibold),
+                .foregroundColor: colors.text,
+                .paragraphStyle: paragraphStyle
+            ]
+        )
+        
+        // Apply the attributed string with proper styling
+        self.attributedStringValue = attributedText
         
         // Notify parent to update background
         if let overlayWindow = self.superview?.window as? RecordingOverlayWindow {
@@ -308,6 +345,7 @@ class AudioLevelIndicator: NSView {
 class RecordingOverlayWindow: NSPanel {
     static let shared = RecordingOverlayWindow()
     private let blinkingLabel = BlinkingLabel()
+    private let modeLabel = NSTextField()
     private let audioLevelIndicator = AudioLevelIndicator()
     private var visualEffectView: NSVisualEffectView!
     private var backgroundLayer: CAGradientLayer!
@@ -318,8 +356,8 @@ class RecordingOverlayWindow: NSPanel {
     private var dragStartLocation: NSPoint = .zero
 
     // Define window dimensions as class properties
-    private let windowWidth: CGFloat = 280
-    private let windowHeight: CGFloat = 120
+    private let windowWidth: CGFloat = 380
+    private let windowHeight: CGFloat = 100
     
     // UserDefaults keys for position persistence
     private let positionXKey = "RecordingOverlayPositionX"
@@ -466,15 +504,16 @@ class RecordingOverlayWindow: NSPanel {
         }
         visualEffectView.state = .active
         visualEffectView.wantsLayer = true
-        visualEffectView.layer?.cornerRadius = 25
+        visualEffectView.layer?.cornerRadius = 12
         
         // Create gradient background layer
         backgroundLayer = CAGradientLayer()
         backgroundLayer.frame = visualEffectView.bounds
-        backgroundLayer.cornerRadius = 25
+        backgroundLayer.cornerRadius = 12
+        // Use a more subtle dark background
         backgroundLayer.colors = [
-            NSColor.systemPink.withAlphaComponent(0.3).cgColor,
-            NSColor.systemPink.withAlphaComponent(0.1).cgColor
+            NSColor.black.withAlphaComponent(0.8).cgColor,
+            NSColor.black.withAlphaComponent(0.7).cgColor
         ]
         backgroundLayer.startPoint = CGPoint(x: 0, y: 0)
         backgroundLayer.endPoint = CGPoint(x: 1, y: 1)
@@ -482,21 +521,33 @@ class RecordingOverlayWindow: NSPanel {
         
         // Create pulse layer for breathing effect
         pulseLayer = CAShapeLayer()
-        let pulsePath = NSBezierPath(roundedRect: visualEffectView.bounds, xRadius: 25, yRadius: 25)
+        let pulsePath = NSBezierPath(roundedRect: visualEffectView.bounds, xRadius: 12, yRadius: 12)
         pulseLayer.path = pulsePath.cgPath
         pulseLayer.fillColor = NSColor.clear.cgColor
-        pulseLayer.strokeColor = NSColor.white.withAlphaComponent(0.4).cgColor
-        pulseLayer.lineWidth = 2
+        pulseLayer.strokeColor = NSColor.white.withAlphaComponent(0.2).cgColor
+        pulseLayer.lineWidth = 1
         visualEffectView.layer?.addSublayer(pulseLayer)
         
         // Setup label
-        blinkingLabel.frame = NSRect(x: 15, y: 35, width: windowWidth - 30, height: 70)
-        blinkingLabel.font = NSFont.systemFont(ofSize: 11, weight: .medium)
+        blinkingLabel.frame = NSRect(x: 20, y: 20, width: windowWidth - 40, height: 60)
         visualEffectView.addSubview(blinkingLabel)
         
-        // Setup audio level indicator
-        audioLevelIndicator.frame = NSRect(x: 20, y: 10, width: windowWidth - 40, height: 20)
-        visualEffectView.addSubview(audioLevelIndicator)
+        // No red dot, as requested
+        
+        // Setup mode label in the bottom right
+        modeLabel.frame = NSRect(x: 0, y: 10, width: windowWidth - 20, height: 20)
+        modeLabel.alignment = .right
+        modeLabel.isBezeled = false
+        modeLabel.isEditable = false
+        modeLabel.isSelectable = false
+        modeLabel.drawsBackground = false
+        modeLabel.textColor = NSColor.white.withAlphaComponent(0.8)
+        modeLabel.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+        modeLabel.stringValue = ""
+        visualEffectView.addSubview(modeLabel)
+        
+        // Setup audio level indicator - hidden in this minimalist design
+        audioLevelIndicator.isHidden = true
         
         // Add border and shadow
         visualEffectView.layer?.borderColor = NSColor.white.withAlphaComponent(0.3).cgColor
@@ -520,24 +571,26 @@ class RecordingOverlayWindow: NSPanel {
 
     func updateColors(_ colors: (background: NSColor, accent: NSColor, text: NSColor)) {
         CATransaction.begin()
-        CATransaction.setAnimationDuration(0.3)
-        
-        // Update gradient background
+        CATransaction.setDisableActions(true)
         backgroundLayer.colors = [
-            colors.accent.withAlphaComponent(0.4).cgColor,
-            colors.accent.withAlphaComponent(0.1).cgColor
+            colors.background.cgColor,
+            colors.background.cgColor
         ]
-        
-        // Update pulse layer
-        pulseLayer.strokeColor = colors.accent.withAlphaComponent(0.6).cgColor
-        
-        // Update shadow color
-        visualEffectView.layer?.shadowColor = colors.accent.cgColor
-        
+        pulseLayer.strokeColor = colors.accent.withAlphaComponent(0.4).cgColor
         CATransaction.commit()
         
-        // Start pulse animation
+        // Update mode label color
+        modeLabel.textColor = colors.accent.withAlphaComponent(0.9)
+        
+        // Start pulse animation with the accent color
         startPulseAnimation(color: colors.accent)
+    }
+    
+    func setModeText(_ mode: String) {
+        // Set the mode text in the bottom right corner
+        DispatchQueue.main.async {
+            self.modeLabel.stringValue = mode
+        }
     }
     
     private func startPulseAnimation(color: NSColor) {
