@@ -145,8 +145,19 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
         print('Starting transcription for: ${event.audioPath}');
       }
 
-      final response =
-          await repository.transcribeAudio(event.audioPath, apiKey);
+      // Start transcription request immediately
+      final transcriptionFuture =
+          repository.transcribeAudio(event.audioPath, apiKey);
+
+      // Get settings while transcription is in progress
+      final settingsBox = Hive.box('settings');
+      final smartTranscriptionEnabled = settingsBox
+          .get('smart_transcription_enabled', defaultValue: false) as bool;
+      final Map<dynamic, dynamic>? storedReplacements =
+          settingsBox.get('phrase_replacements');
+
+      // Wait for transcription to complete
+      final response = await transcriptionFuture;
 
       if (kDebugMode) {
         print('Transcription API response received: ${response.text}');
@@ -159,13 +170,7 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
         print('Trimmed transcription text: "$transcriptionText"');
       }
 
-      // Check if smart transcription is enabled
-      final settingsBox = Hive.box('settings');
-
-      // Apply phrase replacements before smart transcription
-      final Map<dynamic, dynamic>? storedReplacements =
-          settingsBox.get('phrase_replacements');
-
+      // Apply phrase replacements if available
       if (storedReplacements != null && storedReplacements.isNotEmpty) {
         final Map<String, String> phraseReplacements =
             Map<String, String>.from(storedReplacements);
@@ -182,29 +187,34 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
               'Transcription text after phrase replacements: "$transcriptionText"');
         }
       }
-      final smartTranscriptionEnabled = settingsBox
-          .get('smart_transcription_enabled', defaultValue: false) as bool;
 
-      if (kDebugMode) {
-        print('Smart transcription enabled: $smartTranscriptionEnabled');
-        print('Transcription text length: ${transcriptionText.length}');
-        print(
-            'Checking smart transcription condition: ${smartTranscriptionEnabled && transcriptionText.isNotEmpty}');
+      // If smart transcription is enabled, start it in parallel
+      Future<String>? smartTranscriptionFuture;
+      if (smartTranscriptionEnabled && transcriptionText.isNotEmpty) {
+        if (kDebugMode) {
+          print('Starting smart transcription enhancement');
+        }
+        smartTranscriptionFuture =
+            SmartTranscriptionService.enhanceTranscription(
+                transcriptionText, apiKey);
       }
 
-      if (smartTranscriptionEnabled && transcriptionText.isNotEmpty) {
+      // Update overlay to show transcription is complete
+      await RecordingOverlayPlatform.setTranscriptionCompleted();
+
+      // If smart transcription is running, wait for it to complete
+      if (smartTranscriptionFuture != null) {
         try {
-          // Update overlay to show smart transcription is processing
-          await RecordingOverlayPlatform.setProcessingAudio();
-
-          if (kDebugMode) {
-            print('Applying smart transcription to: $transcriptionText');
-          }
-
-          // Apply smart transcription enhancement
-          transcriptionText =
-              await SmartTranscriptionService.enhanceTranscription(
-                  transcriptionText, apiKey);
+          // Wait for smart transcription with a timeout
+          transcriptionText = await smartTranscriptionFuture.timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              if (kDebugMode) {
+                print('Smart transcription timed out, using original text');
+              }
+              return transcriptionText;
+            },
+          );
 
           if (kDebugMode) {
             print('Smart transcription result: $transcriptionText');
@@ -216,9 +226,6 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
           // Continue with original transcription if smart transcription fails
         }
       }
-
-      // Update overlay to show transcription is complete
-      await RecordingOverlayPlatform.setTranscriptionCompleted();
 
       // Copy the transcription text to clipboard
       await _copyToClipboard(transcriptionText);

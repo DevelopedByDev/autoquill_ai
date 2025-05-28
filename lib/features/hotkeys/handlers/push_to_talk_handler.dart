@@ -218,19 +218,24 @@ class PushToTalkHandler {
       // Update overlay to show we're processing the audio
       await RecordingOverlayPlatform.setProcessingAudio();
 
-      // Transcribe the audio
-      final response =
-          await _transcriptionRepository!.transcribeAudio(audioPath, apiKey);
-      // Trim any leading/trailing whitespace from the transcription text
-      var transcriptionText = response.text.trim();
+      // Start transcription request immediately
+      final transcriptionFuture =
+          _transcriptionRepository!.transcribeAudio(audioPath, apiKey);
 
-      // Check if smart transcription is enabled
+      // Check settings while transcription is in progress
       final settingsBox = Hive.box('settings');
-
-      // Apply phrase replacements before smart transcription
+      final smartTranscriptionEnabled = settingsBox
+          .get('smart_transcription_enabled', defaultValue: false) as bool;
       final Map<dynamic, dynamic>? storedReplacements =
           settingsBox.get('phrase_replacements');
 
+      // Wait for transcription to complete
+      final response = await transcriptionFuture;
+
+      // Trim any leading/trailing whitespace from the transcription text
+      var transcriptionText = response.text.trim();
+
+      // Apply phrase replacements if available
       if (storedReplacements != null && storedReplacements.isNotEmpty) {
         final Map<String, String> phraseReplacements =
             Map<String, String>.from(storedReplacements);
@@ -247,8 +252,6 @@ class PushToTalkHandler {
               'Transcription text after phrase replacements: "$transcriptionText"');
         }
       }
-      final smartTranscriptionEnabled = settingsBox
-          .get('smart_transcription_enabled', defaultValue: false) as bool;
 
       if (kDebugMode) {
         print('Smart transcription enabled: $smartTranscriptionEnabled');
@@ -257,19 +260,29 @@ class PushToTalkHandler {
             'Checking smart transcription condition: ${smartTranscriptionEnabled && transcriptionText.isNotEmpty}');
       }
 
+      // If smart transcription is enabled, start it in parallel
+      Future<String>? smartTranscriptionFuture;
       if (smartTranscriptionEnabled && transcriptionText.isNotEmpty) {
+        if (kDebugMode) {
+          print('Starting smart transcription enhancement');
+        }
+        smartTranscriptionFuture =
+            SmartTranscriptionService.enhanceTranscription(
+                transcriptionText, apiKey);
+      }
+
+      // If smart transcription is running, wait for it with timeout
+      if (smartTranscriptionFuture != null) {
         try {
-          // Update overlay to show smart transcription is processing
-          await RecordingOverlayPlatform.setProcessingAudio();
-
-          if (kDebugMode) {
-            print('Applying smart transcription to: $transcriptionText');
-          }
-
-          // Apply smart transcription enhancement
-          transcriptionText =
-              await SmartTranscriptionService.enhanceTranscription(
-                  transcriptionText, apiKey);
+          transcriptionText = await smartTranscriptionFuture.timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              if (kDebugMode) {
+                print('Smart transcription timed out, using original text');
+              }
+              return transcriptionText;
+            },
+          );
 
           if (kDebugMode) {
             print('Smart transcription result: $transcriptionText');

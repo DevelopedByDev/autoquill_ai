@@ -27,8 +27,8 @@ class RecordingDataSourceImpl implements RecordingDataSource {
   // Track recording start time to calculate duration
   DateTime? _recordingStartTime;
 
-  // Minimum recording duration in seconds
-  static const int _minimumRecordingDuration = 5;
+  // Minimum recording duration in seconds - reduced for faster processing
+  static const int _minimumRecordingDuration = 2;
 
   RecordingDataSourceImpl({required this.recorder});
 
@@ -107,8 +107,9 @@ class RecordingDataSourceImpl implements RecordingDataSource {
 
     final config = RecordConfig(
       encoder: AudioEncoder.wav, // Using WAV format as recommended by Groq API
-      bitRate: 128000,
-      sampleRate: 44100,
+      bitRate: 64000, // Reduced from 128000 for smaller file size
+      sampleRate: 16000, // Reduced from 44100 - optimal for speech recognition
+      numChannels: 1, // Mono instead of stereo for speech
     );
 
     await recorder.start(config, path: _currentRecordingPath!);

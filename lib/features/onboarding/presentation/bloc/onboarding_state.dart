@@ -42,7 +42,7 @@ class OnboardingState extends Equatable {
     this.pushToTalkHotkey,
     this.themeMode = ThemeMode.system,
     this.autoCopyEnabled = true,
-    this.transcriptionModel = 'whisper-large-v3-turbo',
+    this.transcriptionModel = 'distil-whisper-large-v3-en',
     this.assistantScreenshotEnabled = false,
     this.smartTranscriptionEnabled = false,
     this.permissionStatuses = const {},

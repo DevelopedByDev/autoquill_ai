@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/foundation.dart';
@@ -13,11 +14,21 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
   static const String _baseUrl =
       'https://api.groq.com/openai/v1/audio/transcriptions';
 
+  // Static HTTP client for connection pooling
+  static final http.Client _httpClient = http.Client();
+
+  // Optimized timeout durations
+  static const Duration _connectionTimeout = Duration(seconds: 10);
+  static const Duration _responseTimeout = Duration(seconds: 60);
+
   TranscriptionRepositoryImpl({required this.localDataSource});
 
   @override
   Future<TranscriptionResponse> transcribeAudio(
       String audioPath, String apiKey) async {
+    // Start timing for performance monitoring
+    final stopwatch = Stopwatch()..start();
+
     // Validate the audio file before attempting transcription
     final file = File(audioPath);
     if (!await file.exists()) {
@@ -41,8 +52,8 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
 
     // Get the selected transcription model and language from settings
     final settingsBox = Hive.box('settings');
-    final selectedModel =
-        settingsBox.get('transcription-model') ?? 'whisper-large-v3-turbo';
+    final selectedModel = settingsBox.get('transcription-model') ??
+        'distil-whisper-large-v3-en'; // Default to fastest model
     final selectedLanguageCode =
         settingsBox.get('selected_language_code') ?? '';
 
@@ -61,15 +72,18 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
     if (kDebugMode) {
       print('Transcribing file: $audioPath');
       print('File size: ${await file.length()} bytes');
+      print('Model: $selectedModel');
     }
 
-    // Create the API request
+    // Create the API request with optimized settings
     final request = http.MultipartRequest('POST', Uri.parse(_baseUrl))
       ..headers['Authorization'] = 'Bearer $apiKey'
+      ..headers['Connection'] = 'keep-alive' // Enable connection reuse
       ..files.add(await http.MultipartFile.fromPath('file', audioPath))
       ..fields['model'] = selectedModel
       ..fields['temperature'] = '0'
-      ..fields['response_format'] = 'verbose_json';
+      ..fields['response_format'] =
+          'json'; // Use json instead of verbose_json for faster parsing
 
     // Add language code if a specific language is selected (not auto-detect)
     if (selectedLanguageCode.isNotEmpty) {
@@ -81,21 +95,52 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
       request.fields['prompt'] = prompt;
     }
 
-    final response = await request.send();
-    final responseString = await response.stream.bytesToString();
+    try {
+      // Send request with timeout
+      final streamedResponse = await _httpClient
+          .send(request)
+          .timeout(_connectionTimeout, onTimeout: () {
+        throw TimeoutException('Connection timeout after $_connectionTimeout');
+      });
 
-    if (response.statusCode != 200) {
-      throw Exception(
-          'Failed to transcribe audio: ${response.statusCode} - $responseString');
+      final response = await http.Response.fromStream(streamedResponse)
+          .timeout(_responseTimeout, onTimeout: () {
+        throw TimeoutException('Response timeout after $_responseTimeout');
+      });
+
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Failed to transcribe audio: ${response.statusCode} - ${response.body}');
+      }
+
+      final responseJson = json.decode(response.body);
+
+      // Handle both verbose and simple JSON responses
+      final transcriptionText = responseJson['text'] as String;
+      final transcription = TranscriptionResponse(
+        text: transcriptionText,
+        xGroq: GroqMetadata(id: responseJson['x_groq']?['id'] ?? 'unknown'),
+      );
+
+      // Log performance metrics
+      stopwatch.stop();
+      if (kDebugMode) {
+        print('Transcription completed in ${stopwatch.elapsedMilliseconds}ms');
+      }
+
+      // Save the transcription locally (non-blocking)
+      saveTranscription(audioPath, transcription.text).catchError((e) {
+        if (kDebugMode) {
+          print('Error saving transcription locally: $e');
+        }
+      });
+
+      return transcription;
+    } on TimeoutException catch (e) {
+      throw Exception('Request timeout: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to transcribe audio: $e');
     }
-
-    final responseJson = json.decode(responseString);
-    final transcription = TranscriptionResponse.fromJson(responseJson);
-
-    // Save the transcription locally
-    await saveTranscription(audioPath, transcription.text);
-
-    return transcription;
   }
 
   @override
@@ -106,5 +151,10 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
   @override
   Future<void> saveTranscription(String audioPath, String transcription) {
     return localDataSource.saveTranscription(audioPath, transcription);
+  }
+
+  /// Cleanup method to close the HTTP client when done
+  static void dispose() {
+    _httpClient.close();
   }
 }

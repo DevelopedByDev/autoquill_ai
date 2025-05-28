@@ -4,7 +4,8 @@ import 'package:flutter/services.dart';
 import '../../presentation/bloc/recording_bloc.dart';
 
 class RecordingOverlayPlatform {
-  static const MethodChannel _channel = MethodChannel('com.autoquill.recording_overlay');
+  static const MethodChannel _channel =
+      MethodChannel('com.autoquill.recording_overlay');
   static Timer? _levelUpdateTimer;
   static RecordingBloc? _recordingBloc;
 
@@ -13,70 +14,55 @@ class RecordingOverlayPlatform {
 
   /// Shows the recording overlay
   static Future<void> showOverlay() async {
-    // If a recording is already in progress, don't start another one
-    if (isRecordingInProgress) {
-      if (kDebugMode) {
-        print('Recording already in progress, ignoring request to show overlay');
-      }
-      return;
-    }
-    
     try {
-      // Set up method channel handler for button actions
-      _setupMethodHandler();
-      
-      // Set the flag to indicate a recording is in progress
+      // Mark recording as in progress immediately
       isRecordingInProgress = true;
-      
-      await _channel.invokeMethod('showOverlay');
+      // Non-blocking overlay show
+      _channel.invokeMethod('showOverlay').catchError((e) {
+        if (kDebugMode) {
+          print('Failed to show overlay: $e');
+        }
+      });
     } on PlatformException catch (e) {
       if (kDebugMode) {
         print('Failed to show overlay: ${e.message}');
       }
-      isRecordingInProgress = false;
     }
   }
-  
+
   /// Shows the recording overlay with a specific mode label
   static Future<void> showOverlayWithMode(String mode) async {
     await showOverlayWithModeAndHotkeys(mode, null, 'Esc');
   }
-  
+
   /// Shows the recording overlay with a specific mode label and hotkey information
-  static Future<void> showOverlayWithModeAndHotkeys(String mode, String? finishHotkey, String? cancelHotkey) async {
-    // If a recording is already in progress, don't start another one
-    if (isRecordingInProgress) {
-      if (kDebugMode) {
-        print('Recording already in progress, ignoring request to show overlay for $mode mode');
-      }
-      return;
-    }
-    
+  static Future<void> showOverlayWithModeAndHotkeys(
+      String mode, String? finishHotkey, String? cancelHotkey) async {
     try {
-      // Set up method channel handler for button actions
-      _setupMethodHandler();
-      
-      // Set the flag to indicate a recording is in progress
+      // Mark recording as in progress immediately
       isRecordingInProgress = true;
-      
-      await _channel.invokeMethod('showOverlayWithModeAndHotkeys', {
+      // Non-blocking overlay show
+      _channel.invokeMethod('showOverlayWithModeAndHotkeys', {
         'mode': mode,
         'finishHotkey': finishHotkey,
         'cancelHotkey': cancelHotkey,
+      }).catchError((e) {
+        if (kDebugMode) {
+          print('Failed to show overlay with mode and hotkeys: $e');
+        }
       });
     } on PlatformException catch (e) {
       if (kDebugMode) {
         print('Failed to show overlay with mode and hotkeys: ${e.message}');
       }
-      isRecordingInProgress = false;
     }
   }
-  
+
   /// Sets the RecordingBloc instance for handling button actions
   static void setRecordingBloc(RecordingBloc bloc) {
     _recordingBloc = bloc;
   }
-  
+
   /// Sets up the method channel handler for button actions from the overlay window
   static void _setupMethodHandler() {
     _channel.setMethodCallHandler((call) async {
@@ -86,7 +72,7 @@ class RecordingOverlayPlatform {
         }
         return;
       }
-      
+
       switch (call.method) {
         case 'pauseRecording':
           _recordingBloc!.add(PauseRecording());
@@ -110,83 +96,104 @@ class RecordingOverlayPlatform {
   /// Hides the recording overlay
   static Future<void> hideOverlay() async {
     try {
-      await _channel.invokeMethod('hideOverlay');
+      // Reset the recording in progress flag immediately
+      isRecordingInProgress = false;
       // Stop sending audio levels when hiding the overlay
       _stopSendingAudioLevels();
-      // Reset the recording in progress flag
-      isRecordingInProgress = false;
+      // Non-blocking overlay hide
+      _channel.invokeMethod('hideOverlay').catchError((e) {
+        if (kDebugMode) {
+          print('Failed to hide overlay: $e');
+        }
+      });
     } on PlatformException catch (e) {
       if (kDebugMode) {
         print('Failed to hide overlay: ${e.message}');
       }
-      // Reset the flag even if there's an error
-      isRecordingInProgress = false;
     }
   }
-  
+
   /// Sets the overlay text to "Recording stopped"
   static Future<void> setRecordingStopped() async {
     try {
-      await _channel.invokeMethod('setRecordingStopped');
+      // Non-blocking update
+      _channel.invokeMethod('setRecordingStopped').catchError((e) {
+        if (kDebugMode) {
+          print('Failed to set recording stopped state: $e');
+        }
+      });
     } on PlatformException catch (e) {
       if (kDebugMode) {
         print('Failed to set recording stopped state: ${e.message}');
       }
     }
   }
-  
+
   /// Sets the overlay text to "Processing audio"
   static Future<void> setProcessingAudio() async {
     try {
-      await _channel.invokeMethod('setProcessingAudio');
+      // Non-blocking update
+      _channel.invokeMethod('setProcessingAudio').catchError((e) {
+        if (kDebugMode) {
+          print('Failed to set processing audio state: $e');
+        }
+      });
     } on PlatformException catch (e) {
       if (kDebugMode) {
         print('Failed to set processing audio state: ${e.message}');
       }
     }
   }
-  
+
   /// Sets the overlay text to "Transcription copied"
   static Future<void> setTranscriptionCompleted() async {
     try {
-      await _channel.invokeMethod('setTranscriptionCompleted');
+      // Non-blocking update
+      _channel.invokeMethod('setTranscriptionCompleted').catchError((e) {
+        if (kDebugMode) {
+          print('Failed to set transcription completed state: $e');
+        }
+      });
     } on PlatformException catch (e) {
       if (kDebugMode) {
         print('Failed to set transcription completed state: ${e.message}');
       }
     }
   }
-  
+
   /// Updates the audio level in the overlay
   static Future<void> updateAudioLevel(double level) async {
     try {
-      await _channel.invokeMethod('updateAudioLevel', {'level': level});
+      // Non-blocking update - fire and forget
+      _channel
+          .invokeMethod('updateAudioLevel', {'level': level}).catchError((e) {
+        // Silently ignore errors for audio level updates as they're frequent
+      });
     } on PlatformException catch (e) {
-      if (kDebugMode) {
-        print('Failed to update audio level: ${e.message}');
-      }
+      // Silently ignore
     }
   }
-  
+
   /// Starts sending periodic audio level updates
   /// The audioLevelProvider function should return the current audio level (0.0 to 1.0)
-  static void startSendingAudioLevels(Future<double> Function() audioLevelProvider) {
+  static void startSendingAudioLevels(
+      Future<double> Function() audioLevelProvider) {
     // Stop any existing timer
     _stopSendingAudioLevels();
-    
-    // Start a new timer to send audio levels every 100ms
-    _levelUpdateTimer = Timer.periodic(Duration(milliseconds: 100), (timer) async {
+
+    // Start a new timer to send audio levels every 200ms (reduced frequency)
+    _levelUpdateTimer =
+        Timer.periodic(Duration(milliseconds: 200), (timer) async {
       try {
         final level = await audioLevelProvider();
-        await updateAudioLevel(level);
+        // Fire and forget the update
+        updateAudioLevel(level);
       } catch (e) {
-        if (kDebugMode) {
-          print('Error getting audio level: $e');
-        }
+        // Silently ignore errors
       }
     });
   }
-  
+
   /// Stops sending audio level updates
   static void _stopSendingAudioLevels() {
     _levelUpdateTimer?.cancel();

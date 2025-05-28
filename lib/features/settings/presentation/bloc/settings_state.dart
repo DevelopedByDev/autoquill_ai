@@ -49,7 +49,7 @@ class SettingsState extends Equatable {
     this.recordingFor,
     this.currentRecordedHotkey,
     this.storedHotkeys = const {},
-    this.transcriptionModel = 'whisper-large-v3-turbo',
+    this.transcriptionModel = 'distil-whisper-large-v3-en',
     this.assistantModel = 'llama3-70b-8192',
     this.themeMode = ThemeMode.dark,
     this.dictionary = const [],

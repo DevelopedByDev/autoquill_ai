@@ -25,6 +25,21 @@ import 'features/transcription/domain/repositories/transcription_repository.dart
 import 'widgets/hotkey_handler.dart';
 import 'core/utils/sound_player.dart';
 import 'features/hotkeys/utils/hotkey_registration.dart';
+import 'features/transcription/data/repositories/transcription_repository_impl.dart';
+import 'features/transcription/services/smart_transcription_service.dart';
+
+// App lifecycle observer to cleanup when app is closed
+class AppLifecycleObserver extends WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.detached) {
+      // Cleanup resources
+      TranscriptionRepositoryImpl.dispose();
+      SmartTranscriptionService.dispose();
+      SoundPlayer.dispose();
+    }
+  }
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,6 +72,9 @@ void main() async {
 
   // Initialize stats service
   await StatsService().init();
+
+  // Initialize sound player early for faster first playback
+  await SoundPlayer.initialize();
 
   // Load and register hotkeys ASAP before UI renders
   await _loadStoredData();
@@ -112,18 +130,6 @@ Future<void> _cleanupRemovedFeatures() async {
   } catch (e) {
     if (kDebugMode) {
       print('Error cleaning up removed features: $e');
-    }
-  }
-}
-
-/// Observer for app lifecycle events to clean up resources
-class AppLifecycleObserver extends WidgetsBindingObserver {
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.detached ||
-        state == AppLifecycleState.hidden) {
-      // Clean up resources when app is closed or hidden
-      SoundPlayer.dispose();
     }
   }
 }

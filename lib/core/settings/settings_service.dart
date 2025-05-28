@@ -71,7 +71,7 @@ class SettingsService {
   // Get transcription model
   String getTranscriptionModel() {
     return _settingsBox.get(_transcriptionModelKey,
-        defaultValue: 'whisper-large-v3-turbo') as String;
+        defaultValue: 'distil-whisper-large-v3-en') as String;
   }
 
   // Set transcription model
