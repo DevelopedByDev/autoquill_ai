@@ -418,30 +418,12 @@ class HotkeysStep extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 220,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  border: Border.all(
-                    color: hotkey != null
-                        ? Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.5)
-                        : Colors.grey,
+              Flexible(
+                child: Container(
+                  constraints: const BoxConstraints(
+                    minWidth: 200,
+                    maxWidth: 350, // Allow more space for longer hotkeys
                   ),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 3,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 12.0, horizontal: 16.0),
                   child: HotkeyDisplay.forPlatform(
                     hotkey: hotkey,
                     textColor: Theme.of(context).colorScheme.onSurface,
@@ -452,6 +434,8 @@ class HotkeysStep extends StatelessWidget {
                             .primary
                             .withValues(alpha: 0.5)
                         : Colors.grey,
+                    showIcon: false, // Remove icon to save space
+                    fontSize: 13, // Slightly smaller font for longer text
                   ),
                 ),
               ),

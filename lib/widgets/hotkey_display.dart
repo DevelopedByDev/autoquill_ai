@@ -12,6 +12,7 @@ class HotkeyDisplay extends StatelessWidget {
   final Color? backgroundColor;
   final Color? borderColor;
   final EdgeInsetsGeometry padding;
+  final bool compact;
 
   const HotkeyDisplay({
     super.key,
@@ -23,6 +24,7 @@ class HotkeyDisplay extends StatelessWidget {
     this.backgroundColor,
     this.borderColor,
     this.padding = const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+    this.compact = false,
   });
 
   factory HotkeyDisplay.forPlatform({
@@ -34,7 +36,9 @@ class HotkeyDisplay extends StatelessWidget {
     Color? textColor,
     Color? backgroundColor,
     Color? borderColor,
-    EdgeInsetsGeometry padding = const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+    EdgeInsetsGeometry padding =
+        const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+    bool compact = false,
   }) {
     return HotkeyDisplay(
       key: key,
@@ -46,17 +50,20 @@ class HotkeyDisplay extends StatelessWidget {
       backgroundColor: backgroundColor,
       borderColor: borderColor,
       padding: padding,
+      compact: compact,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final defaultTextColor = textColor ?? Theme.of(context).colorScheme.onSurface;
-    final defaultBorderColor = borderColor ?? 
-        (hotkey != null 
+    final defaultTextColor =
+        textColor ?? Theme.of(context).colorScheme.onSurface;
+    final defaultBorderColor = borderColor ??
+        (hotkey != null
             ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)
             : Colors.grey);
-    final defaultBackgroundColor = backgroundColor ?? Theme.of(context).colorScheme.surface;
+    final defaultBackgroundColor =
+        backgroundColor ?? Theme.of(context).colorScheme.surface;
 
     return Container(
       decoration: BoxDecoration(
@@ -77,25 +84,29 @@ class HotkeyDisplay extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (showIcon) ...[              
+            if (showIcon) ...[
               Icon(
                 Icons.keyboard,
                 size: 18,
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.7),
               ),
               const SizedBox(width: 8),
             ],
-            Text(
-              hotkey != null
-                  ? _formatHotkey(hotkey!)
-                  : 'None configured',
-              style: TextStyle(
-                fontWeight: fontWeight,
-                fontSize: fontSize,
-                color: hotkey != null 
-                    ? defaultTextColor
-                    : defaultTextColor.withValues(alpha: 0.7),
-                letterSpacing: 0.3,
+            Flexible(
+              child: Text(
+                hotkey != null ? _formatHotkey(hotkey!) : 'None configured',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: fontWeight,
+                  fontSize: fontSize,
+                  color: hotkey != null
+                      ? defaultTextColor
+                      : defaultTextColor.withValues(alpha: 0.7),
+                  letterSpacing: 0.3,
+                ),
               ),
             ),
           ],
@@ -126,33 +137,36 @@ class HotkeyDisplay extends StatelessWidget {
     if (hotkey.modifiers?.contains(HotKeyModifier.meta) ?? false) {
       keyText += 'Win+';
     }
-    
+
     keyText += hotkey.key.keyLabel;
-    
+
     return keyText;
   }
 
   String _formatMacHotkey(HotKey hotkey) {
-    String keyText = '';
-    
-    // Use Unicode symbols for Mac modifiers
+    List<String> parts = [];
+
+    // Add modifiers with both label and symbol (or just symbols in compact mode)
     if (hotkey.modifiers?.contains(HotKeyModifier.meta) ?? false) {
-      keyText += '⌘ '; // Command symbol
-    }
-    if (hotkey.modifiers?.contains(HotKeyModifier.shift) ?? false) {
-      keyText += '⇧ '; // Shift symbol
-    }
-    if (hotkey.modifiers?.contains(HotKeyModifier.alt) ?? false) {
-      keyText += '⌥ '; // Option/Alt symbol
+      parts.add(compact ? '⌘' : 'Cmd ⌘');
     }
     if (hotkey.modifiers?.contains(HotKeyModifier.control) ?? false) {
-      keyText += '⌃ '; // Control symbol
+      parts.add(compact ? '⌃' : 'Control ⌃');
     }
-    
-    // Add the key itself
-    keyText += _getMacKeySymbol(hotkey.key);
-    
-    return keyText;
+    if (hotkey.modifiers?.contains(HotKeyModifier.alt) ?? false) {
+      parts.add(compact ? '⌥' : 'Option ⌥');
+    }
+    if (hotkey.modifiers?.contains(HotKeyModifier.shift) ?? false) {
+      parts.add(compact ? '⇧' : 'Shift ⇧');
+    }
+
+    // Add the key itself with label and symbol if applicable
+    parts.add(compact
+        ? _getMacKeySymbolCompact(hotkey.key)
+        : _getMacKeySymbol(hotkey.key));
+
+    // Join with " + " separator (or just concatenate in compact mode)
+    return compact ? parts.join('') : parts.join(' + ');
   }
 
   String _getMacKeySymbol(KeyboardKey key) {
@@ -183,7 +197,42 @@ class HotkeyDisplay extends StatelessWidget {
       case 'End':
         return '↘';
       case 'Space':
-        return 'Space';
+        return 'Space ␣';
+      default:
+        // For letter keys and others, just use the label
+        return key.keyLabel;
+    }
+  }
+
+  String _getMacKeySymbolCompact(KeyboardKey key) {
+    // Convert common keys to their Mac symbols
+    switch (key.keyLabel) {
+      case 'Arrow Up':
+        return '↑';
+      case 'Arrow Down':
+        return '↓';
+      case 'Arrow Left':
+        return '←';
+      case 'Arrow Right':
+        return '→';
+      case 'Enter':
+        return '↩';
+      case 'Tab':
+        return '⇥';
+      case 'Escape':
+        return '⎋';
+      case 'Delete':
+        return '⌫';
+      case 'Page Up':
+        return '⇞';
+      case 'Page Down':
+        return '⇟';
+      case 'Home':
+        return '↖';
+      case 'End':
+        return '↘';
+      case 'Space':
+        return '␣';
       default:
         // For letter keys and others, just use the label
         return key.keyLabel;

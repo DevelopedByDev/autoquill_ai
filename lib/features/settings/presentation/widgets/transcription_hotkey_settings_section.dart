@@ -143,6 +143,7 @@ class TranscriptionHotkeySettingsSection extends StatelessWidget {
           Text(
             'Hold down the hotkey to record, release to transcribe',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              
               color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),

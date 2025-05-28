@@ -123,7 +123,8 @@ class _TestHotkeysStepState extends State<TestHotkeysStep> {
                   _buildTestField(
                     context,
                     title: 'Transcription Mode',
-                    description: 'Press your transcription hotkey to start and press again to stop',
+                    description:
+                        'Press your transcription hotkey to start and press again to stop',
                     hotkey: state.transcriptionHotkey!,
                     controller: _transcriptionController,
                     icon: Icons.mic,
@@ -311,27 +312,31 @@ class _TestHotkeysStepState extends State<TestHotkeysStep> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  border: Border.all(
-                    color: Theme.of(context)
+              Flexible(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    border: Border.all(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.5),
+                    ),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: HotkeyDisplay(
+                    hotkey: hotkey,
+                    textColor: Theme.of(context).colorScheme.onSurface,
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    borderColor: Theme.of(context)
                         .colorScheme
                         .primary
                         .withValues(alpha: 0.5),
+                    showIcon: false,
+                    fontSize: 13,
                   ),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: HotkeyDisplay(
-                  hotkey: hotkey,
-                  textColor: Theme.of(context).colorScheme.onSurface,
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                  borderColor: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.5),
                 ),
               ),
             ],

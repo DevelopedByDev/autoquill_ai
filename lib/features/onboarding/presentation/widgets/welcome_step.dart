@@ -62,7 +62,7 @@ class WelcomeStep extends StatelessWidget {
               context,
               icon: Icons.mic,
               title: 'Transcribe Audio',
-              description: 'Convert speech to clean text with a simple hotkey',
+              description: 'Convert speech to clean text with a simple keyboard shortcut',
             ),
             const SizedBox(height: 24),
             
@@ -70,7 +70,7 @@ class WelcomeStep extends StatelessWidget {
               context,
               icon: Icons.chat_bubble_outline,
               title: 'AI Assistant',
-              description: 'Ask questions and get instant answers',
+              description: 'Edit text and generate new text with AI',
             ),
             const SizedBox(height: 24),
             
