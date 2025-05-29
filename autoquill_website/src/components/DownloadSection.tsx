@@ -1,18 +1,19 @@
 'use client'
 
-import React from 'react'
+import React, { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
-import { useRef } from 'react'
-import { Download, Check, Star, Users, Globe, Github, Sparkles, Zap, Shield, Trophy, Target, Rocket } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Download, Github, Sparkles, Users, Star, Globe, Shield, ArrowRight, CheckCircle, Zap, Crown } from 'lucide-react'
 
 export default function DownloadSection() {
   const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: "-100px" })
+  const isInView = useInView(ref, { once: true, amount: 0.2 })
 
   const handleDownload = () => {
-    // Link to the local DMG file
     const link = document.createElement('a')
-    link.href = '/downloads/AutoQuill-installer.dmg'
+    link.href = '/AutoQuill-installer.dmg'
     link.download = 'AutoQuill-installer.dmg'
     document.body.appendChild(link)
     link.click()
@@ -24,21 +25,44 @@ export default function DownloadSection() {
   }
 
   const features = [
-    { text: "Real-time voice transcription", icon: <Zap className="w-4 h-4" /> },
-    { text: "Smart clipboard integration", icon: <Target className="w-4 h-4" /> }, 
-    { text: "Custom keyboard shortcuts", icon: <Rocket className="w-4 h-4" /> },
-    { text: "AI-powered corrections", icon: <Shield className="w-4 h-4" /> },
-    { text: "Complete privacy protection", icon: <Trophy className="w-4 h-4" /> }
+    { text: "Real-time voice transcription", icon: Zap },
+    { text: "Smart clipboard integration", icon: CheckCircle }, 
+    { text: "Custom keyboard shortcuts", icon: Shield },
+    { text: "AI-powered corrections", icon: Sparkles },
+    { text: "Complete privacy protection", icon: Shield }
   ]
 
   const stats = [
-    { icon: <Users className="w-5 h-5" />, value: "15K+", label: "Active Users", color: "from-blue-400 to-blue-600" },
-    { icon: <Star className="w-5 h-5" />, value: "4.9", label: "User Rating", color: "from-yellow-400 to-orange-500" },
-    { icon: <Globe className="w-5 h-5" />, value: "50+", label: "Languages", color: "from-green-400 to-emerald-500" },
-    { icon: <Github className="w-5 h-5" />, value: "Open", label: "Source", color: "from-purple-400 to-pink-500" }
+    { 
+      icon: Users, 
+      value: "15K+", 
+      label: "Active Users", 
+      color: "text-primary",
+      bgColor: "bg-primary/10"
+    },
+    { 
+      icon: Star, 
+      value: "4.9", 
+      label: "User Rating", 
+      color: "text-accent",
+      bgColor: "bg-accent/10"
+    },
+    { 
+      icon: Globe, 
+      value: "50+", 
+      label: "Languages", 
+      color: "text-secondary",
+      bgColor: "bg-secondary/10"
+    },
+    { 
+      icon: Shield, 
+      value: "100%", 
+      label: "Private", 
+      color: "text-primary",
+      bgColor: "bg-primary/10"
+    }
   ]
 
-  // Advanced animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -54,127 +78,112 @@ export default function DownloadSection() {
     hidden: { 
       opacity: 0, 
       y: 30,
-      scale: 0.9,
       filter: "blur(10px)"
     },
     visible: { 
       opacity: 1, 
       y: 0,
-      scale: 1,
       filter: "blur(0px)",
       transition: {
         duration: 0.6,
-        ease: [0.19, 1, 0.22, 1]
-      }
-    }
-  }
-
-  const cardVariants = {
-    hidden: { 
-      opacity: 0, 
-      y: 50,
-      rotateX: -15
-    },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      rotateX: 0,
-      transition: {
-        duration: 0.8,
-        ease: [0.19, 1, 0.22, 1]
+        ease: [0.22, 1, 0.36, 1]
       }
     }
   }
 
   return (
-    <section ref={ref} className="py-32 bg-slate-900 relative overflow-hidden">
-      {/* Advanced animated background */}
+    <section ref={ref} className="py-32 bg-background relative overflow-hidden">
+      {/* Subtle background elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <motion.div 
-          className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-r from-primary-500/15 to-accent-500/15 rounded-full blur-3xl"
-          animate={{ 
-            x: [0, 80, 0], 
-            y: [0, -60, 0],
-            scale: [1, 1.3, 1]
-          }}
-          transition={{ 
-            duration: 28, 
-            repeat: Infinity, 
-            ease: "easeInOut" 
-          }}
-        />
-        <motion.div 
-          className="absolute bottom-0 right-1/4 w-80 h-80 bg-gradient-to-r from-accent-500/15 to-coral/15 rounded-full blur-3xl"
-          animate={{ 
-            x: [0, -60, 0], 
-            y: [0, 40, 0],
-            scale: [1, 0.8, 1]
-          }}
-          transition={{ 
-            duration: 22, 
-            repeat: Infinity, 
-            ease: "easeInOut",
-            delay: 3
-          }}
-        />
-        {/* Mesh gradient overlay */}
-        <div className="absolute inset-0 bg-mesh-gradient opacity-5"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-secondary/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s' }} />
       </div>
 
       <motion.div 
-        className="max-w-6xl mx-auto px-6 relative z-10"
+        className="max-w-7xl mx-auto px-6 relative z-10"
         variants={containerVariants}
         initial="hidden"
         animate={isInView ? "visible" : "hidden"}
       >
-        {/* Enhanced header with stream-in animation */}
+        {/* Section Header */}
         <motion.div
-          className="text-center mb-16"
+          className="text-center mb-20"
           variants={itemVariants}
         >
-          <motion.h2 
-            className="text-fluid-5xl font-display font-bold text-white mb-6"
-            style={{
-              background: 'linear-gradient(135deg, #ffffff 0%, #60a5fa 50%, #d946ef 100%)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              textShadow: '0 4px 20px rgba(0,0,0,0.3)'
-            }}
-          >
+          <motion.div className="mb-6 flex justify-center">
+            <Badge variant="secondary" className="px-4 py-2 text-sm font-medium bg-muted/50 border border-border/50">
+              <Crown className="w-4 h-4 mr-2" />
+              Ready to Get Started?
+            </Badge>
+          </motion.div>
+
+          <h2 className="text-luxury-headline mb-8 text-foreground">
             Ready to Transform Your Workflow?
-          </motion.h2>
-          <motion.p 
-            className="text-fluid-xl text-slate-300 max-w-3xl mx-auto leading-relaxed font-medium"
-            variants={itemVariants}
-          >
-            Join thousands using AutoQuill AI to work faster, smarter, and more efficiently than ever before.
-          </motion.p>
+          </h2>
+          
+          <p className="text-luxury-body text-muted-foreground max-w-4xl mx-auto">
+            Join thousands using AutoQuill AI to work faster, smarter, and more efficiently than ever before. 
+            Experience the future of voice-to-text technology today.
+          </p>
         </motion.div>
 
-        {/* Revolutionary main download card with 3D effects */}
+        {/* Stats Grid */}
         <motion.div
-          className="perspective-1000 mb-16"
-          variants={cardVariants}
+          className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20"
+          variants={containerVariants}
         >
-          <motion.div
-            className="glass-dark rounded-3xl p-8 md:p-12 shadow-premium border border-white/10 backdrop-blur-xl preserve-3d"
-            whileHover={{ 
-              rotateY: 2,
-              rotateX: 2,
-              scale: 1.02,
-              transition: { duration: 0.3 }
-            }}
-          >
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              {/* Enhanced features list */}
+          {stats.map((stat, index) => (
+            <motion.div 
+              key={index}
+              variants={itemVariants}
+              className="text-center"
+            >
+              <Card className="glass-card p-6 hover-lift shadow-subtle">
+                <motion.div 
+                  className={`w-12 h-12 mx-auto mb-4 rounded-xl ${stat.bgColor} flex items-center justify-center ${stat.color}`}
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <stat.icon className="w-6 h-6" strokeWidth={2} />
+                </motion.div>
+                <div className="text-3xl font-bold text-foreground mb-2">{stat.value}</div>
+                <div className="text-sm text-muted-foreground font-medium">{stat.label}</div>
+              </Card>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Main Download Card */}
+        <motion.div
+          variants={itemVariants}
+          className="mb-16"
+        >
+          <Card className="glass-card p-12 shadow-luxury relative overflow-hidden">
+            {/* Animated background pattern */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5"
+              animate={{
+                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+              }}
+              transition={{
+                duration: 10,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+              style={{
+                backgroundSize: '200% 200%'
+              }}
+            />
+            
+            <div className="relative z-10 grid md:grid-cols-2 gap-12 items-center">
+              {/* Features List */}
               <motion.div variants={itemVariants}>
                 <motion.h3 
-                  className="text-2xl font-bold text-white mb-8 flex items-center gap-3"
-                  whileHover={{ scale: 1.05 }}
+                  className="text-luxury-title text-foreground mb-8 flex items-center gap-3"
+                  whileHover={{ scale: 1.02 }}
                 >
                   <motion.div
-                    className="w-8 h-8 bg-gradient-to-r from-primary-400 to-accent-400 rounded-xl flex items-center justify-center"
+                    className="w-8 h-8 bg-gradient-luxury rounded-xl flex items-center justify-center"
                     animate={{ rotate: [0, 360] }}
                     transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                   >
@@ -182,6 +191,7 @@ export default function DownloadSection() {
                   </motion.div>
                   Premium Features Included
                 </motion.h3>
+
                 <div className="space-y-4 mb-8">
                   {features.map((feature, index) => (
                     <motion.div
@@ -190,21 +200,21 @@ export default function DownloadSection() {
                       initial={{ opacity: 0, x: -30 }}
                       animate={isInView ? { opacity: 1, x: 0 } : {}}
                       transition={{ duration: 0.6, delay: 0.6 + index * 0.1 }}
-                      whileHover={{ x: 10, transition: { duration: 0.2 } }}
+                      whileHover={{ x: 8, transition: { duration: 0.2 } }}
                     >
                       <motion.div 
-                        className="w-8 h-8 bg-gradient-to-r from-primary-500 to-accent-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg"
+                        className="w-8 h-8 bg-gradient-luxury rounded-xl flex items-center justify-center shadow-subtle"
                         whileHover={{ 
-                          scale: 1.2,
+                          scale: 1.1,
                           rotate: 180,
                           transition: { duration: 0.3 }
                         }}
                       >
-                        <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                        <CheckCircle className="w-4 h-4 text-white" strokeWidth={2} />
                       </motion.div>
                       <div className="flex items-center gap-2">
-                        {feature.icon}
-                        <span className="text-slate-300 font-medium group-hover:text-white transition-colors duration-300">
+                        <feature.icon className="w-4 h-4 text-primary" />
+                        <span className="text-muted-foreground font-medium group-hover:text-foreground transition-colors duration-300">
                           {feature.text}
                         </span>
                       </div>
@@ -212,38 +222,32 @@ export default function DownloadSection() {
                   ))}
                 </div>
                 
-                {/* Enhanced guarantee badge */}
-                <motion.div 
-                  className="glass rounded-xl p-4 border border-primary-400/20"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                  transition={{ duration: 0.6, delay: 1.2 }}
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <p className="font-semibold text-primary-300 text-center">
+                {/* Guarantee badge */}
+                <Card className="glass-card p-4 bg-muted/30">
+                  <p className="font-semibold text-center text-foreground">
                     ✓ Forever Free • ✓ No Registration • ✓ Open Source • ✓ Privacy First
                   </p>
-                </motion.div>
+                </Card>
               </motion.div>
 
-              {/* Enhanced download section */}
+              {/* Download Section */}
               <motion.div 
                 className="text-center"
                 variants={itemVariants}
               >
-                {/* Fixed pricing display with better visibility */}
+                {/* Pricing display */}
                 <motion.div 
-                  className="mb-8 p-8 glass rounded-3xl border border-white/10 relative overflow-hidden"
-                  whileHover={{ scale: 1.05 }}
+                  className="mb-8 p-8 glass-card rounded-3xl relative overflow-hidden"
+                  whileHover={{ scale: 1.02 }}
                   initial={{ opacity: 0, y: 30 }}
                   animate={isInView ? { opacity: 1, y: 0 } : {}}
                   transition={{ duration: 0.6, delay: 0.8 }}
                 >
                   {/* Animated background glow */}
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-primary-500/20 to-accent-500/20 rounded-3xl"
+                    className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-3xl"
                     animate={{
-                      scale: [1, 1.1, 1],
+                      scale: [1, 1.05, 1],
                       opacity: [0.3, 0.6, 0.3]
                     }}
                     transition={{
@@ -252,216 +256,120 @@ export default function DownloadSection() {
                       ease: "easeInOut"
                     }}
                   />
+                  
                   <div className="relative z-10">
                     <motion.div 
-                      className="text-6xl font-bold text-white mb-2"
-                      style={{
-                        background: 'linear-gradient(135deg, #ffffff 0%, #60a5fa 50%, #d946ef 100%)',
-                        backgroundClip: 'text',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent'
-                      }}
-                      animate={{ scale: [1, 1.05, 1] }}
+                      className="text-6xl font-bold text-foreground mb-2"
+                      animate={{ scale: [1, 1.02, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
                     >
                       Free
                     </motion.div>
-                    <div className="text-slate-300 font-medium text-lg">Forever & Always</div>
+                    <div className="text-muted-foreground font-medium text-lg">Forever & Always</div>
                   </div>
                 </motion.div>
 
-                {/* Revolutionary download button */}
-                <motion.button
+                {/* Download Button */}
+                <Button
+                  size="lg"
                   onClick={handleDownload}
-                  className="group relative w-full bg-gradient-to-r from-primary-500 via-accent-500 to-coral text-white py-6 px-8 rounded-2xl text-xl font-bold shadow-premium border border-white/20 mb-6 overflow-hidden"
-                  whileHover={{ 
-                    scale: 1.05,
-                    boxShadow: "0 30px 60px -12px rgba(59, 130, 246, 0.4)"
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={isInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ duration: 0.6, delay: 1.0 }}
+                  className="w-full gradient-luxury text-white py-6 px-8 text-xl font-semibold shadow-luxury hover:shadow-elegant transition-all duration-300 group mb-6"
                 >
-                  {/* Animated background waves */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-primary-400 to-accent-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    initial={{ x: '-100%' }}
-                    whileHover={{ x: '0%' }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                  />
-                  
-                  <span className="relative flex items-center justify-center gap-3 z-10">
-                    <Download className="w-6 h-6 group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300" />
-                    Download for macOS
-                    <motion.div
-                      animate={{ rotate: [0, 360] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    >
-                      <Sparkles className="w-5 h-5" />
-                    </motion.div>
-                  </span>
+                  <Download className="w-6 h-6 mr-3 group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300" />
+                  Download for macOS
+                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
 
-                  {/* Particle effect */}
-                  <div className="absolute inset-0 pointer-events-none">
-                    {[...Array(8)].map((_, i) => (
-                      <motion.div
-                        key={i}
-                        className="absolute w-1 h-1 bg-white rounded-full opacity-0 group-hover:opacity-100"
-                        style={{
-                          left: `${10 + i * 10}%`,
-                          top: `${20 + (i % 3) * 20}%`,
-                        }}
-                        animate={{
-                          y: [-10, -30, -10],
-                          opacity: [0, 1, 0]
-                        }}
-                        transition={{
-                          duration: 1.5,
-                          delay: i * 0.1,
-                          repeat: Infinity,
-                          ease: "easeInOut"
-                        }}
-                      />
-                    ))}
-                  </div>
-                </motion.button>
-
-                {/* Enhanced version info */}
+                {/* Version info */}
                 <motion.div 
-                  className="text-sm text-slate-400 mb-6 space-y-2"
+                  className="text-sm text-muted-foreground mb-6 space-y-2"
                   initial={{ opacity: 0 }}
                   animate={isInView ? { opacity: 1 } : {}}
                   transition={{ duration: 0.6, delay: 1.2 }}
                 >
                   <p className="font-semibold flex items-center justify-center gap-2">
                     <motion.div
-                      className="w-2 h-2 bg-green-400 rounded-full"
+                      className="w-2 h-2 bg-secondary rounded-full"
                       animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
                     />
-                    Version 2.1.0 • 15 MB
+                    Version 2.1.0 • 15 MB • macOS Monterey+
                   </p>
-                  <p>Intel & Apple Silicon • macOS Monterey+</p>
+                  <p>Intel & Apple Silicon Compatible</p>
                 </motion.div>
 
-                {/* Enhanced source code link */}
-                <motion.button
+                {/* Source code link */}
+                <Button
+                  variant="outline"
                   onClick={handleViewSource}
-                  className="group inline-flex items-center gap-2 text-slate-300 hover:text-primary-400 transition-all duration-300 font-medium"
-                  whileHover={{ scale: 1.05 }}
-                  initial={{ opacity: 0 }}
-                  animate={isInView ? { opacity: 1 } : {}}
-                  transition={{ duration: 0.6, delay: 1.4 }}
+                  className="w-full hover-lift"
                 >
-                  <Github className="w-5 h-5 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
-                  View source code on GitHub
+                  <Github className="w-5 h-5 mr-2" />
+                  View Source Code on GitHub
                   <motion.div
-                    className="w-1 h-1 bg-primary-400 rounded-full"
-                    animate={{ scale: [1, 2, 1] }}
+                    className="w-2 h-2 bg-primary rounded-full ml-2"
+                    animate={{ scale: [1, 1.5, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   />
-                </motion.button>
+                </Button>
               </motion.div>
             </div>
-          </motion.div>
+          </Card>
         </motion.div>
 
-        {/* Enhanced stats grid with glassmorphism */}
+        {/* Bottom CTA */}
         <motion.div
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16"
-          variants={containerVariants}
-        >
-          {stats.map((stat, index) => (
-            <motion.div 
-              key={index} 
-              className="glass-dark rounded-2xl p-6 text-center shadow-medium border border-white/10 backdrop-blur-xl hover:border-white/20 transition-all duration-500 group"
-              variants={itemVariants}
-              whileHover={{ 
-                y: -8,
-                scale: 1.03,
-                transition: { duration: 0.3 }
-              }}
-            >
-              <motion.div 
-                className={`flex items-center justify-center gap-2 mb-3 group-hover:scale-110 transition-transform duration-300`}
-                whileHover={{ rotate: [0, -10, 10, 0] }}
-                transition={{ duration: 0.6 }}
-              >
-                <div className={`w-8 h-8 bg-gradient-to-r ${stat.color} rounded-xl flex items-center justify-center`}>
-                  {stat.icon}
-                </div>
-                <span className="text-3xl font-bold text-white">{stat.value}</span>
-              </motion.div>
-              <div className="text-sm text-slate-400 font-medium group-hover:text-slate-300 transition-colors duration-300">
-                {stat.label}
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Fixed bottom CTA with proper text colors */}
-        <motion.div
-          className="text-center glass-dark rounded-3xl p-12 shadow-premium border border-white/10 backdrop-blur-xl relative overflow-hidden"
           variants={itemVariants}
-          whileHover={{ scale: 1.02 }}
+          className="text-center"
         >
-          {/* Animated background pattern */}
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-primary-500/10 via-accent-500/10 to-coral/10"
-            animate={{
-              backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-            }}
-            transition={{
-              duration: 10,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-            style={{
-              backgroundSize: '200% 200%'
-            }}
-          />
-          
-          <div className="relative z-10">
-            <motion.h3 
-              className="text-fluid-3xl font-bold text-white mb-6"
-              animate={{ scale: [1, 1.02, 1] }}
-              transition={{ duration: 3, repeat: Infinity }}
-            >
-              Experience the Future of Text Creation
-            </motion.h3>
-            <motion.p 
-              className="text-fluid-lg text-slate-300 mb-8 max-w-3xl mx-auto leading-relaxed font-medium"
-              variants={itemVariants}
-            >
-              Join the voice-first revolution. Your most productive workflow awaits with cutting-edge AI technology.
-            </motion.p>
-            <motion.button
-              onClick={handleDownload}
-              className="group bg-gradient-to-r from-primary-500 to-accent-500 text-white px-10 py-5 rounded-2xl font-bold text-lg shadow-premium transition-all duration-300 relative overflow-hidden min-w-[280px]"
-              whileHover={{ 
-                scale: 1.05,
-                boxShadow: "0 25px 50px -12px rgba(59, 130, 246, 0.4)"
+          <Card className="glass-card p-12 shadow-luxury relative overflow-hidden group">
+            {/* Animated background pattern */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-accent/5 via-primary/5 to-secondary/5"
+              animate={{
+                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
               }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <span className="flex items-center justify-center gap-2 relative z-10">
-                Get Started Now
-                <motion.div
-                  animate={{ rotate: [0, 360] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                >
-                  <Sparkles className="w-5 h-5" />
-                </motion.div>
-              </span>
+              transition={{
+                duration: 10,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+              style={{
+                backgroundSize: '200% 200%'
+              }}
+            />
+            
+            <div className="relative z-10">
+              <motion.h3 
+                className="text-luxury-title text-foreground mb-6"
+                animate={{ scale: [1, 1.02, 1] }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                Experience the Future of Text Creation
+              </motion.h3>
               
-              {/* Ripple effect */}
-              <motion.div
-                className="absolute inset-0 bg-white/20 rounded-2xl scale-0 group-hover:scale-100 transition-transform duration-500"
-                style={{ transformOrigin: 'center' }}
-              />
-            </motion.button>
-          </div>
+              <p className="text-luxury-body text-muted-foreground mb-8 max-w-3xl mx-auto">
+                Join the voice-first revolution. Your most productive workflow awaits with cutting-edge AI technology and elegant design.
+              </p>
+              
+              <Button
+                size="lg"
+                onClick={handleDownload}
+                className="gradient-luxury text-white px-10 py-5 text-lg font-semibold shadow-luxury hover:shadow-elegant transition-all duration-300 group min-w-[280px]"
+              >
+                <span className="flex items-center">
+                  Get Started Now
+                  <motion.div
+                    className="ml-2"
+                    animate={{ rotate: [0, 360] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Sparkles className="w-5 h-5" />
+                  </motion.div>
+                </span>
+              </Button>
+            </div>
+          </Card>
         </motion.div>
       </motion.div>
     </section>
