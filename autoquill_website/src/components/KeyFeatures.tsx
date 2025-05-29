@@ -44,7 +44,7 @@ export default function KeyFeatures() {
   ]
 
   return (
-    <section className="py-24 bg-slate-50">
+    <section className="py-24 bg-slate-900">
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
         <motion.div
@@ -54,10 +54,10 @@ export default function KeyFeatures() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
             Everything You Need
           </h2>
-          <p className="text-xl text-slate-700 max-w-3xl mx-auto font-medium leading-relaxed">
+          <p className="text-xl text-slate-300 max-w-3xl mx-auto font-medium leading-relaxed">
             A complete voice-to-text solution designed for professionals who value 
             speed, privacy, and reliability.
           </p>
@@ -74,22 +74,22 @@ export default function KeyFeatures() {
               transition={{ duration: 0.6, delay: index * 0.1 }}
               className="group"
             >
-              <div className="bg-white rounded-3xl p-8 hover:shadow-xl transition-all duration-300 border-2 border-slate-200 hover:border-coral/30 h-full">
+              <div className="bg-slate-800 rounded-3xl p-8 hover:shadow-xl transition-all duration-300 border-2 border-slate-700 hover:border-coral/30 h-full">
                 {/* Icon and highlight */}
                 <div className="flex items-start justify-between mb-6">
                   <div className="w-20 h-20 bg-gradient-to-r from-coral to-red-500 rounded-3xl flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition-all duration-300">
                     {feature.icon}
                   </div>
-                  <div className="bg-gradient-to-r from-coral/10 to-red-500/10 text-coral px-4 py-2 rounded-full text-sm font-bold border border-coral/20">
+                  <div className="bg-gradient-to-r from-coral/20 to-red-500/20 text-coral px-4 py-2 rounded-full text-sm font-bold border border-coral/30">
                     {feature.highlight}
                   </div>
                 </div>
 
                 {/* Content */}
-                <h3 className="text-2xl font-bold text-slate-900 mb-4">
+                <h3 className="text-2xl font-bold text-white mb-4">
                   {feature.title}
                 </h3>
-                <p className="text-slate-700 leading-relaxed font-medium">
+                <p className="text-slate-300 leading-relaxed font-medium">
                   {feature.description}
                 </p>
               </div>
