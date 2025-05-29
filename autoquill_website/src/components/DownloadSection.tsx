@@ -5,7 +5,7 @@ import { motion, useInView } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Download, Github, Sparkles, Users, Star, Globe, Shield, ArrowRight, CheckCircle, Zap, Crown } from 'lucide-react'
+import { Download, Github, Sparkles, CheckCircle, Zap, Crown } from 'lucide-react'
 
 export default function DownloadSection() {
   const ref = useRef(null)
@@ -27,40 +27,9 @@ export default function DownloadSection() {
   const features = [
     { text: "Real-time voice transcription", icon: Zap },
     { text: "Smart clipboard integration", icon: CheckCircle }, 
-    { text: "Custom keyboard shortcuts", icon: Shield },
+    { text: "Custom keyboard shortcuts", icon: Sparkles },
     { text: "AI-powered corrections", icon: Sparkles },
-    { text: "Complete privacy protection", icon: Shield }
-  ]
-
-  const stats = [
-    { 
-      icon: Users, 
-      value: "15K+", 
-      label: "Active Users", 
-      color: "text-primary",
-      bgColor: "bg-primary/10"
-    },
-    { 
-      icon: Star, 
-      value: "4.9", 
-      label: "User Rating", 
-      color: "text-accent",
-      bgColor: "bg-accent/10"
-    },
-    { 
-      icon: Globe, 
-      value: "50+", 
-      label: "Languages", 
-      color: "text-secondary",
-      bgColor: "bg-secondary/10"
-    },
-    { 
-      icon: Shield, 
-      value: "100%", 
-      label: "Private", 
-      color: "text-primary",
-      bgColor: "bg-primary/10"
-    }
+    { text: "Complete privacy protection", icon: CheckCircle }
   ]
 
   const containerVariants = {
@@ -125,32 +94,6 @@ export default function DownloadSection() {
             Join thousands using AutoQuill AI to work faster, smarter, and more efficiently than ever before. 
             Experience the future of voice-to-text technology today.
           </p>
-        </motion.div>
-
-        {/* Stats Grid */}
-        <motion.div
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20"
-          variants={containerVariants}
-        >
-          {stats.map((stat, index) => (
-            <motion.div 
-              key={index}
-              variants={itemVariants}
-              className="text-center"
-            >
-              <Card className="glass-card p-6 hover-lift shadow-subtle">
-                <motion.div 
-                  className={`w-12 h-12 mx-auto mb-4 rounded-xl ${stat.bgColor} flex items-center justify-center ${stat.color}`}
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <stat.icon className="w-6 h-6" strokeWidth={2} />
-                </motion.div>
-                <div className="text-3xl font-bold text-foreground mb-2">{stat.value}</div>
-                <div className="text-sm text-muted-foreground font-medium">{stat.label}</div>
-              </Card>
-            </motion.div>
-          ))}
         </motion.div>
 
         {/* Main Download Card */}
@@ -277,7 +220,13 @@ export default function DownloadSection() {
                 >
                   <Download className="w-6 h-6 mr-3 group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300" />
                   Download for macOS
-                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                  <motion.div
+                    className="ml-2"
+                    animate={{ rotate: [0, 360] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Sparkles className="w-5 h-5" />
+                  </motion.div>
                 </Button>
 
                 {/* Version info */}

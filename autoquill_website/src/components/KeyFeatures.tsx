@@ -5,7 +5,7 @@ import { useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Zap, Clipboard, Settings, Keyboard, Shield, Code2, Download, ArrowRight, Sparkles, Star } from 'lucide-react'
+import { Zap, Clipboard, Settings, Keyboard, Shield, Code2, Download, ArrowRight, Sparkles } from 'lucide-react'
 
 export default function KeyFeatures() {
   const ref = useRef(null)
@@ -25,16 +25,16 @@ export default function KeyFeatures() {
       title: "Smart Clipboard",
       description: "Automatically copies transcribed text to your clipboard with intelligent formatting and context preservation.",
       highlight: "Auto-copy",
-      color: "text-secondary",
-      bgColor: "bg-secondary/10"
+      color: "text-accent",
+      bgColor: "bg-accent/10"
     },
     {
       icon: Settings,
       title: "AI Assistant",
       description: "Get smart completions, grammar corrections, and style suggestions powered by advanced language models.",
       highlight: "AI-powered",
-      color: "text-primary",
-      bgColor: "bg-primary/10"
+      color: "text-accent",
+      bgColor: "bg-accent/10"
     },
     {
       icon: Keyboard,
@@ -49,24 +49,17 @@ export default function KeyFeatures() {
       title: "Privacy First",
       description: "All processing happens locally on your Mac. Your voice data never leaves your device, ensuring complete privacy.",
       highlight: "100% Private",
-      color: "text-secondary",
-      bgColor: "bg-secondary/10"
+      color: "text-accent",
+      bgColor: "bg-accent/10"
     },
     {
       icon: Code2,
       title: "Open Source",
       description: "Completely transparent and open source under MIT license. Inspect, modify, and contribute to the codebase.",
       highlight: "MIT License",
-      color: "text-primary",
-      bgColor: "bg-primary/10"
+      color: "text-accent",
+      bgColor: "bg-accent/10"
     }
-  ]
-
-  const stats = [
-    { value: "15K+", label: "Active Users", icon: Star },
-    { value: "4.9", label: "User Rating", icon: Star },
-    { value: "50+", label: "Languages", icon: Zap },
-    { value: "100%", label: "Uptime", icon: Shield }
   ]
 
   const handleDownload = () => {
@@ -140,32 +133,6 @@ export default function KeyFeatures() {
             A complete voice-to-text solution designed for professionals who value speed, privacy, and reliability. 
             Experience the future of productivity with AI-powered precision.
           </p>
-        </motion.div>
-
-        {/* Stats Section */}
-        <motion.div 
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20"
-          variants={containerVariants}
-        >
-          {stats.map((stat, index) => (
-            <motion.div
-              key={index}
-              variants={itemVariants}
-              className="text-center"
-            >
-              <Card className="glass-card p-6 hover-lift shadow-subtle">
-                <motion.div 
-                  className="w-12 h-12 mx-auto mb-4 rounded-xl bg-primary/10 flex items-center justify-center text-primary"
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <stat.icon className="w-6 h-6" strokeWidth={2} />
-                </motion.div>
-                <div className="text-3xl font-bold text-foreground mb-2">{stat.value}</div>
-                <div className="text-sm text-muted-foreground font-medium">{stat.label}</div>
-              </Card>
-            </motion.div>
-          ))}
         </motion.div>
 
         {/* Features Grid */}
