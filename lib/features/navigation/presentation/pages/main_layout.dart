@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:autoquill_ai/features/home/presentation/pages/home_page.dart';
 import 'package:autoquill_ai/features/settings/presentation/pages/settings.dart';
+import 'package:autoquill_ai/features/info/presentation/pages/info_page.dart';
 import 'package:autoquill_ai/features/recording/presentation/bloc/recording_bloc.dart';
 import 'package:autoquill_ai/features/transcription/presentation/bloc/transcription_bloc.dart';
 import 'package:autoquill_ai/features/recording/domain/repositories/recording_repository.dart';
@@ -26,6 +27,7 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
   final List<Widget> _pages = [
     const HomePage(),
     const SettingsPage(),
+    const InfoPage(),
   ];
 
   final List<NavigationItem> _navigationItems = [
@@ -40,6 +42,12 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
       selectedIcon: Icons.settings,
       label: 'Settings',
       color: DesignTokens.deepBlue,
+    ),
+    NavigationItem(
+      icon: Icons.info_outline,
+      selectedIcon: Icons.info,
+      label: 'Info',
+      color: DesignTokens.emeraldGreen,
     ),
   ];
 

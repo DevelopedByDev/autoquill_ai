@@ -2,10 +2,14 @@
 
 A completely free alternative to superwhisper and Wispr Flow. Use your own Groq API Key (completely free on Groq) to transcribe your audio files using a global shortcut.
 
-last stable commit: d122d35d4c72117b1df7eb8397d990689bffb34d
+MIT License
 
-to implement:
-- tray_manager for linux
-- icons for windows and linux
+Copyright (c) 2025-present, Aiden
 
-- make logo icon pop and the background have rounded corners
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
