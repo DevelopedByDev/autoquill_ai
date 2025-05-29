@@ -1,128 +1,266 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { Zap, Clipboard, Settings, Keyboard, Shield, Code2 } from 'lucide-react'
+import { motion, useInView } from 'framer-motion'
+import { useRef } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Zap, Clipboard, Settings, Keyboard, Shield, Code2, Download, ArrowRight, Sparkles, Star } from 'lucide-react'
 
 export default function KeyFeatures() {
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true, amount: 0.2 })
+
   const features = [
     {
-      icon: <Zap className="w-10 h-10" strokeWidth={2.5} />,
+      icon: Zap,
       title: "Lightning Fast",
-      description: "Real-time transcription with sub-second response times. Your thoughts become text instantly.",
-      highlight: "< 500ms"
+      description: "Real-time transcription with sub-second response times. Your thoughts become text instantly with enterprise-grade performance.",
+      highlight: "< 500ms",
+      color: "text-accent",
+      bgColor: "bg-accent/10"
     },
     {
-      icon: <Clipboard className="w-10 h-10" strokeWidth={2.5} />,
+      icon: Clipboard,
       title: "Smart Clipboard",
-      description: "Automatically copies transcribed text to your clipboard. Paste anywhere, anytime.",
-      highlight: "Auto-copy"
+      description: "Automatically copies transcribed text to your clipboard with intelligent formatting and context preservation.",
+      highlight: "Auto-copy",
+      color: "text-secondary",
+      bgColor: "bg-secondary/10"
     },
     {
-      icon: <Settings className="w-10 h-10" strokeWidth={2.5} />,
-      title: "AI Assistant Mode",
-      description: "Get smart completions, grammar corrections, and style suggestions powered by AI.",
-      highlight: "AI-powered"
+      icon: Settings,
+      title: "AI Assistant",
+      description: "Get smart completions, grammar corrections, and style suggestions powered by advanced language models.",
+      highlight: "AI-powered",
+      color: "text-primary",
+      bgColor: "bg-primary/10"
     },
     {
-      icon: <Keyboard className="w-10 h-10" strokeWidth={2.5} />,
+      icon: Keyboard,
       title: "Custom Hotkeys",
-      description: "Configure your own keyboard shortcuts. Work seamlessly across all applications.",
-      highlight: "Customizable"
+      description: "Configure personalized keyboard shortcuts that seamlessly integrate with your existing workflow and tools.",
+      highlight: "Customizable",
+      color: "text-accent",
+      bgColor: "bg-accent/10"
     },
     {
-      icon: <Shield className="w-10 h-10" strokeWidth={2.5} />,
+      icon: Shield,
       title: "Privacy First",
-      description: "All processing happens locally on your Mac. Your voice data never leaves your device.",
-      highlight: "100% Private"
+      description: "All processing happens locally on your Mac. Your voice data never leaves your device, ensuring complete privacy.",
+      highlight: "100% Private",
+      color: "text-secondary",
+      bgColor: "bg-secondary/10"
     },
     {
-      icon: <Code2 className="w-10 h-10" strokeWidth={2.5} />,
+      icon: Code2,
       title: "Open Source",
-      description: "Completely transparent and open source. Inspect, modify, and contribute to the code.",
-      highlight: "MIT License"
+      description: "Completely transparent and open source under MIT license. Inspect, modify, and contribute to the codebase.",
+      highlight: "MIT License",
+      color: "text-primary",
+      bgColor: "bg-primary/10"
     }
   ]
 
+  const stats = [
+    { value: "15K+", label: "Active Users", icon: Star },
+    { value: "4.9", label: "User Rating", icon: Star },
+    { value: "50+", label: "Languages", icon: Zap },
+    { value: "100%", label: "Uptime", icon: Shield }
+  ]
+
+  const handleDownload = () => {
+    const link = document.createElement('a')
+    link.href = '/AutoQuill-installer.dmg'
+    link.download = 'AutoQuill-installer.dmg'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { 
+      opacity: 0, 
+      y: 30,
+      filter: "blur(10px)"
+    },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      filter: "blur(0px)",
+      transition: {
+        duration: 0.6,
+        ease: [0.22, 1, 0.36, 1]
+      }
+    }
+  }
+
   return (
-    <section className="py-24 bg-slate-900">
-      <div className="max-w-6xl mx-auto px-6">
-        {/* Header */}
+    <section ref={ref} className="py-32 bg-gradient-subtle relative overflow-hidden">
+      {/* Subtle background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 -left-32 w-96 h-96 bg-secondary/5 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-1/4 -right-32 w-80 h-80 bg-accent/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s' }} />
+      </div>
+
+      <motion.div 
+        className="max-w-7xl mx-auto px-6 relative z-10"
+        variants={containerVariants}
+        initial="hidden"
+        animate={isInView ? "visible" : "hidden"}
+      >
+        {/* Section Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-20"
+          variants={itemVariants}
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            Everything You Need
+          <motion.div className="mb-6 flex justify-center">
+            <Badge variant="secondary" className="px-4 py-2 text-sm font-medium bg-muted/50 border border-border/50">
+              <Sparkles className="w-4 h-4 mr-2" />
+              World-Class Features
+            </Badge>
+          </motion.div>
+          
+          <h2 className="text-luxury-headline mb-8 text-foreground">
+            Perfect for Every Workflow
           </h2>
-          <p className="text-xl text-slate-300 max-w-3xl mx-auto font-medium leading-relaxed">
-            A complete voice-to-text solution designed for professionals who value 
-            speed, privacy, and reliability.
+          
+          <p className="text-luxury-body text-muted-foreground max-w-4xl mx-auto">
+            A complete voice-to-text solution designed for professionals who value speed, privacy, and reliability. 
+            Experience the future of productivity with AI-powered precision.
           </p>
         </motion.div>
 
+        {/* Stats Section */}
+        <motion.div 
+          className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20"
+          variants={containerVariants}
+        >
+          {stats.map((stat, index) => (
+            <motion.div
+              key={index}
+              variants={itemVariants}
+              className="text-center"
+            >
+              <Card className="glass-card p-6 hover-lift shadow-subtle">
+                <motion.div 
+                  className="w-12 h-12 mx-auto mb-4 rounded-xl bg-primary/10 flex items-center justify-center text-primary"
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <stat.icon className="w-6 h-6" strokeWidth={2} />
+                </motion.div>
+                <div className="text-3xl font-bold text-foreground mb-2">{stat.value}</div>
+                <div className="text-sm text-muted-foreground font-medium">{stat.label}</div>
+              </Card>
+            </motion.div>
+          ))}
+        </motion.div>
+
         {/* Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <motion.div 
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20"
+          variants={containerVariants}
+        >
           {features.map((feature, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
+              variants={itemVariants}
               className="group"
             >
-              <div className="bg-slate-800 rounded-3xl p-8 hover:shadow-xl transition-all duration-300 border-2 border-slate-700 hover:border-coral/30 h-full">
-                {/* Icon and highlight */}
+              <Card className="glass-card p-8 h-full shadow-subtle hover-lift">
+                {/* Feature Header */}
                 <div className="flex items-start justify-between mb-6">
-                  <div className="w-20 h-20 bg-gradient-to-r from-coral to-red-500 rounded-3xl flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition-all duration-300">
-                    {feature.icon}
-                  </div>
-                  <div className="bg-gradient-to-r from-coral/20 to-red-500/20 text-coral px-4 py-2 rounded-full text-sm font-bold border border-coral/30">
+                  <motion.div 
+                    className={`w-16 h-16 rounded-2xl ${feature.bgColor} flex items-center justify-center ${feature.color} shadow-subtle`}
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <feature.icon className="w-8 h-8" strokeWidth={2} />
+                  </motion.div>
+                  <Badge variant="outline" className="text-xs font-semibold border-border/30">
                     {feature.highlight}
-                  </div>
+                  </Badge>
                 </div>
 
-                {/* Content */}
-                <h3 className="text-2xl font-bold text-white mb-4">
+                {/* Feature Content */}
+                <h3 className="text-xl font-semibold text-foreground mb-4 group-hover:text-primary transition-colors duration-300">
                   {feature.title}
                 </h3>
-                <p className="text-slate-300 leading-relaxed font-medium">
+                <p className="text-muted-foreground leading-relaxed">
                   {feature.description}
                 </p>
-              </div>
+              </Card>
             </motion.div>
           ))}
-        </div>
-
-        {/* Bottom section */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          className="mt-16 text-center bg-gradient-to-r from-coral to-red-500 rounded-3xl p-12 text-white relative overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-black/10"></div>
-          <div className="relative z-10">
-            <h3 className="text-3xl md:text-4xl font-bold mb-6">
-              Ready to Transform Your Workflow?
-            </h3>
-            <p className="text-xl text-white/95 mb-8 max-w-2xl mx-auto leading-relaxed font-medium">
-              Join thousands of professionals who've already made the switch to voice-first productivity.
-            </p>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-white text-coral px-10 py-5 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300"
-            >
-              Download for Free
-            </motion.button>
-          </div>
         </motion.div>
-      </div>
+
+        {/* CTA Section */}
+        <motion.div
+          variants={itemVariants}
+          className="text-center"
+        >
+          <Card className="glass-card p-12 shadow-luxury relative overflow-hidden group">
+            {/* Animated background pattern */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5"
+              animate={{
+                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+              }}
+              transition={{
+                duration: 10,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+              style={{
+                backgroundSize: '200% 200%'
+              }}
+            />
+            
+            <div className="relative z-10">
+              <motion.h3 
+                className="text-luxury-title text-foreground mb-6"
+                animate={{ scale: [1, 1.02, 1] }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                Ready to Transform Your Workflow?
+              </motion.h3>
+              
+              <p className="text-luxury-body text-muted-foreground mb-10 max-w-3xl mx-auto">
+                Join thousands of professionals who've already made the switch to voice-first productivity. 
+                Experience the difference that award-winning design makes.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Button
+                  size="lg"
+                  onClick={handleDownload}
+                  className="gradient-luxury text-white px-10 py-6 text-lg font-semibold shadow-luxury hover:shadow-elegant transition-all duration-300 group min-w-[300px]"
+                >
+                  <Download className="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" />
+                  Download for Free
+                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+                
+                <p className="text-sm text-muted-foreground font-medium">
+                  No account required • Forever free • Open source
+                </p>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+      </motion.div>
     </section>
   )
 } 

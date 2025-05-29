@@ -1,11 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import "./globals.css";
-
-const inter = Inter({ 
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
 
 export const metadata: Metadata = {
   title: "AutoQuill AI - Transform Your Voice Into Perfect Text",
@@ -15,6 +11,14 @@ export const metadata: Metadata = {
   creator: "AutoQuill AI",
   publisher: "AutoQuill AI",
   metadataBase: new URL('https://autoquill.ai'),
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '1024x1024', type: 'image/x-icon' },
+      { url: '/autoquill-logo.png', sizes: '1024x1024', type: 'image/png' }
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/autoquill-logo.png'
+  },
   openGraph: {
     title: "AutoQuill AI - Transform Your Voice Into Perfect Text",
     description: "The most elegant voice-to-text app for macOS. Speak naturally, get perfect text instantly.",
@@ -22,9 +26,9 @@ export const metadata: Metadata = {
     siteName: "AutoQuill AI",
     images: [
       {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
+        url: "/autoquill-logo.png",
+        width: 1024,
+        height: 1024,
         alt: "AutoQuill AI - Voice to Text for macOS",
       },
     ],
@@ -35,7 +39,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "AutoQuill AI - Transform Your Voice Into Perfect Text",
     description: "The most elegant voice-to-text app for macOS. Speak naturally, get perfect text instantly.",
-    images: ["/og-image.png"],
+    images: ["/autoquill-logo.png"],
   },
   robots: {
     index: true,
@@ -53,7 +57,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0f172a",
+  themeColor: "#FFFFFF",
 };
 
 export default function RootLayout({
@@ -62,8 +66,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className={`${inter.className} antialiased bg-slate-900 text-white`}>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/autoquill-logo.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/autoquill-logo.png" />
+      </head>
+      <body className={`${GeistSans.className} antialiased bg-background text-foreground`}>
         {children}
       </body>
     </html>

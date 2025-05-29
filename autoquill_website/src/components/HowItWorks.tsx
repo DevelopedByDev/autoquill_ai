@@ -63,11 +63,6 @@ export default function HowItWorks() {
       icon: <Globe className="w-6 h-6" />, 
       text: "Works in any application",
       color: "text-blue-400"
-    },
-    { 
-      icon: <Clock className="w-6 h-6" />, 
-      text: "Always running in background",
-      color: "text-purple-400"
     }
   ]
 
@@ -182,7 +177,7 @@ export default function HowItWorks() {
         initial="hidden"
         animate={isInView ? "visible" : "hidden"}
       >
-        {/* Enhanced header with advanced typography */}
+        {/* Fixed header with better typography */}
         <motion.div 
           className="text-center mb-20"
           variants={itemVariants}
@@ -200,38 +195,37 @@ export default function HowItWorks() {
             How It Works
           </motion.h2>
           <motion.p 
-            className="text-fluid-xl text-slate-300 max-w-4xl mx-auto leading-relaxed font-medium mb-12"
+            className="text-fluid-xl text-slate-300 max-w-4xl mx-auto leading-relaxed font-medium"
             variants={itemVariants}
           >
-            Four simple steps to transform your voice into perfectly formatted text. 
-            Experience the magic of AI-powered transcription that just works.
+            Four simple steps to transform your voice into perfectly formatted text. Experience the magic of AI-powered transcription that just works.
           </motion.p>
+        </motion.div>
 
-          {/* Feature highlights */}
-          <motion.div 
-            className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto"
-            variants={containerVariants}
-          >
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                className="glass-dark rounded-xl p-4 border border-white/10 backdrop-blur-xl"
-                variants={itemVariants}
-                whileHover={{ 
-                  scale: 1.05,
-                  y: -5,
-                  transition: { duration: 0.2 }
-                }}
-              >
-                <div className={`${feature.color} mb-2 flex justify-center`}>
-                  {feature.icon}
-                </div>
-                <p className="text-sm text-slate-300 font-medium text-center">
-                  {feature.text}
-                </p>
-              </motion.div>
-            ))}
-          </motion.div>
+        {/* Feature highlights */}
+        <motion.div 
+          className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto"
+          variants={containerVariants}
+        >
+          {features.map((feature, index) => (
+            <motion.div
+              key={index}
+              className="glass-dark rounded-xl p-4 border border-white/10 backdrop-blur-xl"
+              variants={itemVariants}
+              whileHover={{ 
+                scale: 1.05,
+                y: -5,
+                transition: { duration: 0.2 }
+              }}
+            >
+              <div className={`${feature.color} mb-2 flex justify-center`}>
+                {feature.icon}
+              </div>
+              <p className="text-sm text-slate-300 font-medium text-center">
+                {feature.text}
+              </p>
+            </motion.div>
+          ))}
         </motion.div>
 
         {/* Revolutionary step-by-step process */}

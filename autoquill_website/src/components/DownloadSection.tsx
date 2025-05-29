@@ -10,7 +10,13 @@ export default function DownloadSection() {
   const isInView = useInView(ref, { once: true, margin: "-100px" })
 
   const handleDownload = () => {
-    window.open('https://github.com/DevelopedByDev/autoquill_ai/releases', '_blank')
+    // Link to the local DMG file
+    const link = document.createElement('a')
+    link.href = '/downloads/AutoQuill-installer.dmg'
+    link.download = 'AutoQuill-installer.dmg'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   const handleViewSource = () => {
@@ -225,7 +231,7 @@ export default function DownloadSection() {
                 className="text-center"
                 variants={itemVariants}
               >
-                {/* Pricing display with animation */}
+                {/* Fixed pricing display with better visibility */}
                 <motion.div 
                   className="mb-8 p-8 glass rounded-3xl border border-white/10 relative overflow-hidden"
                   whileHover={{ scale: 1.05 }}
@@ -248,13 +254,19 @@ export default function DownloadSection() {
                   />
                   <div className="relative z-10">
                     <motion.div 
-                      className="text-6xl font-bold bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent mb-2"
+                      className="text-6xl font-bold text-white mb-2"
+                      style={{
+                        background: 'linear-gradient(135deg, #ffffff 0%, #60a5fa 50%, #d946ef 100%)',
+                        backgroundClip: 'text',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent'
+                      }}
                       animate={{ scale: [1, 1.05, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
                     >
                       Free
                     </motion.div>
-                    <div className="text-slate-400 font-medium">Forever & Always</div>
+                    <div className="text-slate-300 font-medium text-lg">Forever & Always</div>
                   </div>
                 </motion.div>
 
@@ -388,7 +400,7 @@ export default function DownloadSection() {
           ))}
         </motion.div>
 
-        {/* Revolutionary bottom CTA */}
+        {/* Fixed bottom CTA with proper text colors */}
         <motion.div
           className="text-center glass-dark rounded-3xl p-12 shadow-premium border border-white/10 backdrop-blur-xl relative overflow-hidden"
           variants={itemVariants}
@@ -426,14 +438,14 @@ export default function DownloadSection() {
             </motion.p>
             <motion.button
               onClick={handleDownload}
-              className="group bg-gradient-to-r from-primary-500 to-accent-500 text-white px-10 py-5 rounded-2xl font-bold text-lg shadow-premium transition-all duration-300 relative overflow-hidden"
+              className="group bg-gradient-to-r from-primary-500 to-accent-500 text-white px-10 py-5 rounded-2xl font-bold text-lg shadow-premium transition-all duration-300 relative overflow-hidden min-w-[280px]"
               whileHover={{ 
                 scale: 1.05,
                 boxShadow: "0 25px 50px -12px rgba(59, 130, 246, 0.4)"
               }}
               whileTap={{ scale: 0.98 }}
             >
-              <span className="flex items-center gap-2 relative z-10">
+              <span className="flex items-center justify-center gap-2 relative z-10">
                 Get Started Now
                 <motion.div
                   animate={{ rotate: [0, 360] }}
