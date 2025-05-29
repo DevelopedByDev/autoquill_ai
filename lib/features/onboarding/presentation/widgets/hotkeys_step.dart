@@ -455,7 +455,7 @@ class HotkeysStep extends StatelessWidget {
                   //   Icons.keyboard,
                   //   color: Colors.white,
                   // ),
-                  label: const Text('Record Hotkey'),
+                  label: const Text('Change Hotkey'),
                   onPressed: () async {
                     final result = await _showHotkeyRecorderDialog(context);
                     if (result != null) {
