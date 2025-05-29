@@ -1,0 +1,20 @@
+output: dist/
+releases:
+  - name: prod
+    jobs:
+      # Build ZIP package for auto-updates
+      - name: macos-zip
+        package:
+          platform: macos
+          target: zip
+          build_args:
+            dart-define:
+              APP_ENV: prod
+      # Build DMG package for distribution
+      - name: macos-dmg
+        package:
+          platform: macos
+          target: dmg
+          build_args:
+            dart-define:
+              APP_ENV: prod 

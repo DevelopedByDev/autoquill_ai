@@ -1,6 +1,9 @@
 PODS:
   - audio_session (0.0.1):
     - FlutterMacOS
+  - auto_updater_macos (0.0.1):
+    - FlutterMacOS
+    - Sparkle
   - clipboard_watcher (0.0.1):
     - FlutterMacOS
   - desktop_multi_window (0.0.1):
@@ -26,6 +29,7 @@ PODS:
     - FlutterMacOS
   - screen_retriever_macos (0.0.1):
     - FlutterMacOS
+  - Sparkle (2.7.0)
   - url_launcher_macos (0.0.1):
     - FlutterMacOS
   - window_manager (0.2.0):
@@ -33,6 +37,7 @@ PODS:
 
 DEPENDENCIES:
   - audio_session (from `Flutter/ephemeral/.symlinks/plugins/audio_session/macos`)
+  - auto_updater_macos (from `Flutter/ephemeral/.symlinks/plugins/auto_updater_macos/macos`)
   - clipboard_watcher (from `Flutter/ephemeral/.symlinks/plugins/clipboard_watcher/macos`)
   - desktop_multi_window (from `Flutter/ephemeral/.symlinks/plugins/desktop_multi_window/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
@@ -44,16 +49,20 @@ DEPENDENCIES:
   - record_darwin (from `Flutter/ephemeral/.symlinks/plugins/record_darwin/macos`)
   - screen_capturer_macos (from `Flutter/ephemeral/.symlinks/plugins/screen_capturer_macos/macos`)
   - screen_retriever_macos (from `Flutter/ephemeral/.symlinks/plugins/screen_retriever_macos/macos`)
+  - Sparkle (~> 2.5)
   - url_launcher_macos (from `Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos`)
   - window_manager (from `Flutter/ephemeral/.symlinks/plugins/window_manager/macos`)
 
 SPEC REPOS:
   trunk:
     - HotKey
+    - Sparkle
 
 EXTERNAL SOURCES:
   audio_session:
     :path: Flutter/ephemeral/.symlinks/plugins/audio_session/macos
+  auto_updater_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/auto_updater_macos/macos
   clipboard_watcher:
     :path: Flutter/ephemeral/.symlinks/plugins/clipboard_watcher/macos
   desktop_multi_window:
@@ -83,6 +92,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   audio_session: 728ae3823d914f809c485d390274861a24b0904e
+  auto_updater_macos: 3e3462c418fe4e731917eacd8d28eef7af84086d
   clipboard_watcher: a71da520051c24c1b969a411b3e152d4dcc93ca5
   desktop_multi_window: 566489c048b501134f9d7fb6a2354c60a9126486
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
@@ -95,9 +105,10 @@ SPEC CHECKSUMS:
   record_darwin: a0d515a0ef78c440c123ea3ac76184c9927a94d6
   screen_capturer_macos: e91a66e1eeefd5e4fe068bb1bffc053cc34b63b8
   screen_retriever_macos: 776e0fa5d42c6163d2bf772d22478df4b302b161
+  Sparkle: 9c328bdcfbcaf8f030c4b678eadfd0fcb03822d8
   url_launcher_macos: c82c93949963e55b228a30115bd219499a6fe404
   window_manager: 3a1844359a6295ab1e47659b1a777e36773cd6e8
 
-PODFILE CHECKSUM: 54d867c82ac51cbd61b565781b9fada492027009
+PODFILE CHECKSUM: 2c68515e45b200922fd75f1c061143d920fd1aa4
 
 COCOAPODS: 1.16.2

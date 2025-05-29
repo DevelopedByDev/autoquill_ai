@@ -1,0 +1,14 @@
+# AutoQuill AI Notarization Info
+Profile Name: autoquill-notary
+Apple ID: work.dslalwani@gmail.com
+Team ID: 562STT95YC
+Created: Wed May 28 15:40:53 PDT 2025
+
+# To rebuild the profile if needed:
+# xcrun notarytool store-credentials autoquill-notary --apple-id work.dslalwani@gmail.com --password [APP_PASSWORD] --team-id 562STT95YC
+
+# To test the profile:
+# xcrun notarytool history --keychain-profile autoquill-notary
+
+# To delete the profile:
+# xcrun notarytool delete-credentials autoquill-notary

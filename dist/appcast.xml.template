@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+    <channel>
+        <title>AutoQuill AI</title>
+        <description>Most recent updates to AutoQuill AI</description>
+        <language>en</language>
+        <item>
+            <title>Version 1.1.0</title>
+            <!-- For the macOS item, it is recommended to add 'sparkle:version' and 'sparkle:shortVersionString' to the item node -->
+            <sparkle:version>2</sparkle:version>
+            <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+            <sparkle:releaseNotesLink>
+                https://your-domain.com/release_notes.html
+            </sparkle:releaseNotesLink>
+            <pubDate>Sun, 16 Feb 2025 12:00:00 +0800</pubDate>
+            <!-- Replace the URL with your actual download URL and update the signature -->
+            <enclosure url="https://your-domain.com/downloads/1.1.0+2/autoquill_ai-1.1.0+2-macos.zip"
+                       sparkle:edSignature="REPLACE_WITH_ACTUAL_SIGNATURE"
+                       sparkle:os="macos"
+                       length="0"
+                       type="application/octet-stream" />
+        </item>
+        <!-- You can add more versions here for rollback purposes -->
+        <item>
+            <title>Version 1.0.0</title>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
+            <sparkle:releaseNotesLink>
+                https://your-domain.com/release_notes.html
+            </sparkle:releaseNotesLink>
+            <pubDate>Sun, 01 Jan 2025 12:00:00 +0800</pubDate>
+            <enclosure url="https://your-domain.com/downloads/1.0.0+1/autoquill_ai-1.0.0+1-macos.zip"
+                       sparkle:edSignature="REPLACE_WITH_ACTUAL_SIGNATURE"
+                       sparkle:os="macos"
+                       length="0"
+                       type="application/octet-stream" />
+        </item>
+    </channel>
+</rss> 

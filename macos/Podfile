@@ -30,6 +30,10 @@ target 'Runner' do
   use_frameworks!
 
   flutter_install_all_macos_pods File.dirname(File.realpath(__FILE__))
+  
+  # Add Sparkle for auto-updating functionality
+  pod 'Sparkle', '~> 2.5'
+  
   target 'RunnerTests' do
     inherit! :search_paths
   end

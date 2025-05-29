@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+    <channel>
+        <title>AutoQuill AI</title>
+        <description>Most recent updates to AutoQuill AI</description>
+        <language>en</language>
+        <item>
+            <title>Version 1.0.0</title>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
+            <sparkle:releaseNotesLink>
+                http://localhost:5002/release_notes.html
+            </sparkle:releaseNotesLink>
+            <pubDate>Sun, 01 Jan 2025 12:00:00 +0800</pubDate>
+            <enclosure url="http://localhost:5002/1.0.0+1/autoquill_ai-1.0.0+1-macos.zip"
+                       sparkle:edSignature="NZnhuCXaQ7txmz1Jvda3BWSL9x58G49xrYIN1UIGftNurouNIHpOJWsjmFJGHrsbGFr661+MeJEuK8AYmBJbCQ=="
+                       sparkle:os="macos"
+                       length="24783903"
+                       type="application/octet-stream" />
+        </item>
+    </channel>
+</rss> 

@@ -1,0 +1,19 @@
+title: AutoQuill AI
+icon: '../../../assets/icons/with_bg/autoquill_centered_1024_rounded.png'
+format: 'UDZO'
+window:
+  size:
+    width: 540
+    height: 380
+  position:
+    x: 400
+    y: 100
+contents:
+  - x: 140
+    y: 230
+    type: file
+    path: AutoQuill.app
+  - x: 400
+    y: 230
+    type: link
+    path: '/Applications' 

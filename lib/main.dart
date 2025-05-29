@@ -15,6 +15,7 @@ import 'package:window_manager/window_manager.dart';
 import 'core/theme/app_theme.dart';
 import 'core/stats/stats_service.dart';
 import 'core/settings/settings_service.dart';
+import 'core/services/auto_update_service.dart';
 import 'features/settings/presentation/bloc/settings_bloc.dart';
 import 'features/settings/presentation/bloc/settings_event.dart';
 
@@ -84,6 +85,11 @@ void main() async {
 
   // Initialize dependency injection
   await di.init();
+
+  // Initialize auto-updater (temporarily enabled for debug builds for testing)
+  if (kReleaseMode || kDebugMode) {
+    await AutoUpdateService.initialize();
+  }
 
   runApp(const MainApp());
 
