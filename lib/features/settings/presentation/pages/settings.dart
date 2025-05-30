@@ -326,7 +326,11 @@ class _SettingsPageState extends State<SettingsPage>
                 // Main Content with fade transition
                 Expanded(
                   child: Container(
-                    margin: const EdgeInsets.all(DesignTokens.spaceLG),
+                    margin: const EdgeInsets.fromLTRB(
+                        DesignTokens.spaceLG,
+                        DesignTokens.spaceSM,
+                        DesignTokens.spaceLG,
+                        DesignTokens.spaceXXL),
                     decoration: BoxDecoration(
                       color: isDarkMode
                           ? DesignTokens.darkSurfaceElevated
