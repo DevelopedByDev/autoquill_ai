@@ -1,6 +1,7 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
+import 'package:flutter/services.dart';
 
 import '../../recording/presentation/bloc/recording_bloc.dart';
 import '../../transcription/presentation/bloc/transcription_bloc.dart';
@@ -12,6 +13,19 @@ import '../handlers/transcription_hotkey_handler.dart';
 import '../handlers/assistant_hotkey_handler.dart';
 import '../handlers/push_to_talk_handler.dart';
 import '../utils/hotkey_registration.dart';
+
+/// Result of hotkey conflict validation
+class HotkeyConflictResult {
+  final bool hasConflict;
+  final String? conflictingMode;
+  final HotKey? conflictingHotkey;
+
+  const HotkeyConflictResult({
+    required this.hasConflict,
+    this.conflictingMode,
+    this.conflictingHotkey,
+  });
+}
 
 /// A centralized class for handling keyboard hotkeys throughout the application
 class HotkeyHandler {
@@ -27,6 +41,9 @@ class HotkeyHandler {
 
   // Track if any recording is currently active and Esc key is registered
   static bool _isEscKeyRegistered = false;
+
+  // Track if hotkey recording dialog is open to suppress other hotkeys
+  static bool _isHotkeyRecordingDialogOpen = false;
 
   /// Set the blocs and repositories for handling recording and transcription
   static void setBlocs(
@@ -58,6 +75,15 @@ class HotkeyHandler {
       print("Hotkey identifier: '${hotKey.identifier}'");
       print(
           "Blocs initialized: ${_recordingBloc != null && _transcriptionBloc != null}");
+    }
+
+    // If hotkey recording dialog is open, suppress all other hotkeys
+    if (_isHotkeyRecordingDialogOpen) {
+      if (kDebugMode) {
+        print(
+            "Suppressing hotkey ${hotKey.identifier} because recording dialog is open");
+      }
+      return;
     }
 
     // Special handling for push-to-talk hotkey (don't check for duplicates)
@@ -246,6 +272,91 @@ class HotkeyHandler {
 
     if (kDebugMode) {
       print('Escape key cancellation handled');
+    }
+  }
+
+  /// Sets whether the hotkey recording dialog is open
+  static void setHotkeyRecordingDialogOpen(bool isOpen) {
+    _isHotkeyRecordingDialogOpen = isOpen;
+    if (kDebugMode) {
+      print('Hotkey recording dialog ${isOpen ? 'opened' : 'closed'}');
+    }
+  }
+
+  /// Validates if a hotkey is already in use by another function
+  static HotkeyConflictResult validateHotkey(
+      HotKey newHotkey, String? excludeMode) {
+    try {
+      // Get current hotkeys from cache
+      final currentHotkeys = HotkeyRegistration.getCurrentHotkeys();
+
+      for (final entry in currentHotkeys.entries) {
+        final mode = entry.key;
+        final existingHotkey = entry.value;
+
+        // Skip the mode we're updating (allow same hotkey for same mode)
+        if (excludeMode != null && mode == excludeMode) {
+          continue;
+        }
+
+        // Check if the hotkeys are the same
+        if (_areHotkeysEqual(newHotkey, existingHotkey)) {
+          return HotkeyConflictResult(
+            hasConflict: true,
+            conflictingMode: mode,
+            conflictingHotkey: existingHotkey,
+          );
+        }
+      }
+
+      return HotkeyConflictResult(hasConflict: false);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error validating hotkey: $e');
+      }
+      return HotkeyConflictResult(hasConflict: false);
+    }
+  }
+
+  /// Compares two hotkeys to see if they are functionally identical
+  static bool _areHotkeysEqual(HotKey hotkey1, HotKey hotkey2) {
+    // Compare the key - handle both LogicalKeyboardKey and PhysicalKeyboardKey
+    bool keysEqual = false;
+    
+    if (hotkey1.key is LogicalKeyboardKey && hotkey2.key is LogicalKeyboardKey) {
+      keysEqual = (hotkey1.key as LogicalKeyboardKey).keyId == 
+                  (hotkey2.key as LogicalKeyboardKey).keyId;
+    } else if (hotkey1.key is PhysicalKeyboardKey && hotkey2.key is PhysicalKeyboardKey) {
+      keysEqual = (hotkey1.key as PhysicalKeyboardKey).usbHidUsage == 
+                  (hotkey2.key as PhysicalKeyboardKey).usbHidUsage;
+    } else {
+      // Different key types, not equal
+      keysEqual = false;
+    }
+    
+    if (!keysEqual) {
+      return false;
+    }
+    
+    // Compare modifiers (order doesn't matter)
+    final modifiers1 = Set<HotKeyModifier>.from(hotkey1.modifiers ?? []);
+    final modifiers2 = Set<HotKeyModifier>.from(hotkey2.modifiers ?? []);
+    
+    return modifiers1.length == modifiers2.length && 
+           modifiers1.containsAll(modifiers2);
+  }
+
+  /// Gets a human-readable description of the conflicting mode
+  static String getModeFriendlyName(String mode) {
+    switch (mode) {
+      case 'transcription_hotkey':
+        return 'Transcription';
+      case 'assistant_hotkey':
+        return 'Assistant';
+      case 'push_to_talk_hotkey':
+        return 'Push-to-Talk';
+      default:
+        return mode;
     }
   }
 }

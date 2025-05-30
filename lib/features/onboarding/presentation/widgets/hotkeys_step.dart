@@ -486,6 +486,8 @@ class HotkeysStep extends StatelessWidget {
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
         return RecordHotKeyDialog(
+          currentMode:
+              null, // In onboarding, we don't exclude any existing hotkeys
           onHotKeyRecorded: (hotkey) {
             result = hotkey;
           },

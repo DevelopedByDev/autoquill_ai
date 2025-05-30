@@ -108,6 +108,7 @@ class AssistantHotkeySettingsSection extends StatelessWidget {
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
         return RecordHotKeyDialog(
+          currentMode: mode,
           onHotKeyRecorded: (newHotKey) {
             context.read<SettingsBloc>().add(SaveHotkey(newHotKey));
           },

@@ -498,4 +498,9 @@ class HotkeyRegistration {
       }
     }
   }
+
+  /// Gets the current hotkeys from the cache
+  static Map<String, HotKey> getCurrentHotkeys() {
+    return Map<String, HotKey>.from(_hotkeyCache);
+  }
 }

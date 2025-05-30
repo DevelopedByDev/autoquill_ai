@@ -12,29 +12,29 @@ class HotkeySettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<SettingsBloc, SettingsState>(
-      builder: (context, state) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Hotkey Settings',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+    return BlocBuilder<SettingsBloc, SettingsState>(builder: (context, state) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Hotkey Settings',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
             ),
-            const SizedBox(height: 16),
-            _buildHotkeyRow(context, 'Transcription mode', 'transcription_hotkey', state),
-            const SizedBox(height: 16),
-            _buildHotkeyRow(context, 'Assistant mode', 'assistant_hotkey', state),
-          ],
-        );
-      }
-    );
+          ),
+          const SizedBox(height: 16),
+          _buildHotkeyRow(
+              context, 'Transcription mode', 'transcription_hotkey', state),
+          const SizedBox(height: 16),
+          _buildHotkeyRow(context, 'Assistant mode', 'assistant_hotkey', state),
+        ],
+      );
+    });
   }
 
-  Widget _buildHotkeyRow(BuildContext context, String label, String hotkeyKey, SettingsState state) {
+  Widget _buildHotkeyRow(BuildContext context, String label, String hotkeyKey,
+      SettingsState state) {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey),
@@ -71,30 +71,33 @@ class HotkeySettingsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildHotkeyDisplay(BuildContext context, String hotkeyKey, SettingsState state) {
+  Widget _buildHotkeyDisplay(
+      BuildContext context, String hotkeyKey, SettingsState state) {
     final hotkeyData = state.storedHotkeys[hotkeyKey];
     final hotKey = hotkeyData != null ? hotKeyConverter(hotkeyData) : null;
-    
+
     return HotkeyDisplay.forPlatform(
       hotkey: hotKey,
       showIcon: false,
       fontSize: 14.0,
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
       backgroundColor: Theme.of(context).colorScheme.surface,
-      borderColor: hotKey != null 
+      borderColor: hotKey != null
           ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)
           : Colors.grey,
     );
   }
 
-  Future<void> _showRecordHotkeyDialog(BuildContext context, String mode) async {
+  Future<void> _showRecordHotkeyDialog(
+      BuildContext context, String mode) async {
     context.read<SettingsBloc>().add(StartHotkeyRecording(mode));
-    
+
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
         return RecordHotKeyDialog(
+          currentMode: mode,
           onHotKeyRecorded: (newHotKey) {
             context.read<SettingsBloc>().add(SaveHotkey(newHotKey));
           },
