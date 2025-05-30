@@ -1,4 +1,5 @@
 import Cocoa
+import FlutterMacOS
 
 // Enhanced RecordingOverlayWindow with beautiful animated effects
 class RecordingOverlayWindow: NSPanel, BlinkingLabelDelegate {
@@ -9,6 +10,9 @@ class RecordingOverlayWindow: NSPanel, BlinkingLabelDelegate {
     private var visualEffectView: NSVisualEffectView!
     private var backgroundLayer: CAGradientLayer!
     private var pulseLayer: CAShapeLayer!
+    
+    // Close button
+    private var closeButton: NSButton!
     
     // Dragging support
     private var isDragging = false
@@ -141,13 +145,31 @@ class RecordingOverlayWindow: NSPanel, BlinkingLabelDelegate {
     
     // Add cursor tracking for better UX
     override func mouseEntered(with event: NSEvent) {
-        if !isDragging {
+        if let userInfo = event.trackingArea?.userInfo,
+           let buttonType = userInfo["button"] as? String,
+           buttonType == "close" {
+            // Hover effect for close button
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = 0.2
+                closeButton.animator().layer?.backgroundColor = NSColor.red.withAlphaComponent(1.0).cgColor
+                closeButton.animator().layer?.transform = CATransform3DMakeScale(1.1, 1.1, 1.0)
+            })
+        } else if !isDragging {
             NSCursor.openHand.set()
         }
     }
     
     override func mouseExited(with event: NSEvent) {
-        if !isDragging {
+        if let userInfo = event.trackingArea?.userInfo,
+           let buttonType = userInfo["button"] as? String,
+           buttonType == "close" {
+            // Remove hover effect for close button
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = 0.2
+                closeButton.animator().layer?.backgroundColor = NSColor.red.withAlphaComponent(0.8).cgColor
+                closeButton.animator().layer?.transform = CATransform3DIdentity
+            })
+        } else if !isDragging {
             NSCursor.arrow.set()
         }
     }
@@ -186,6 +208,9 @@ class RecordingOverlayWindow: NSPanel, BlinkingLabelDelegate {
         pulseLayer.strokeColor = NSColor.white.withAlphaComponent(0.2).cgColor
         pulseLayer.lineWidth = 1
         visualEffectView.layer?.addSublayer(pulseLayer)
+        
+        // Setup close button
+        setupCloseButton()
         
         // Setup label
         blinkingLabel.frame = NSRect(x: 25, y: 25, width: windowWidth - 40, height: 70)  // Moved down from y: 30 to y: 40 for more top spacing
@@ -227,6 +252,76 @@ class RecordingOverlayWindow: NSPanel, BlinkingLabelDelegate {
             userInfo: nil
         )
         visualEffectView.addTrackingArea(trackingArea)
+    }
+    
+    private func setupCloseButton() {
+        // Create close button
+        closeButton = NSButton(frame: NSRect(x: windowWidth - 35, y: windowHeight - 35, width: 25, height: 25))
+        closeButton.title = "✕"
+        closeButton.font = NSFont.systemFont(ofSize: 14, weight: .medium)
+        closeButton.isBordered = false
+        closeButton.wantsLayer = true
+        closeButton.layer?.cornerRadius = 12.5
+        closeButton.layer?.backgroundColor = NSColor.red.withAlphaComponent(0.8).cgColor
+        closeButton.target = self
+        closeButton.action = #selector(closeButtonClicked)
+        
+        // Make sure the button can receive events
+        closeButton.isEnabled = true
+        closeButton.isHidden = false
+        
+        print("Close button created at frame: \(closeButton.frame)")
+        
+        // Set text color
+        if let attributedTitle = closeButton.attributedTitle.mutableCopy() as? NSMutableAttributedString {
+            attributedTitle.addAttribute(.foregroundColor, value: NSColor.white, range: NSRange(location: 0, length: attributedTitle.length))
+            closeButton.attributedTitle = attributedTitle
+        } else {
+            let attributedTitle = NSAttributedString(string: "✕", attributes: [.foregroundColor: NSColor.white])
+            closeButton.attributedTitle = attributedTitle
+        }
+        
+        // Add hover effects
+        let trackingArea = NSTrackingArea(
+            rect: closeButton.bounds,
+            options: [.mouseEnteredAndExited, .activeInKeyWindow],
+            owner: self,
+            userInfo: ["button": "close"]
+        )
+        closeButton.addTrackingArea(trackingArea)
+        
+        visualEffectView.addSubview(closeButton)
+        
+        print("Close button added to visualEffectView")
+    }
+    
+    @objc private func closeButtonClicked() {
+        print("Close button clicked - starting cancellation")
+        
+        // Animate button press
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = 0.1
+            closeButton.animator().layer?.transform = CATransform3DMakeScale(0.9, 0.9, 1.0)
+        }, completionHandler: {
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = 0.1
+                self.closeButton.animator().layer?.transform = CATransform3DIdentity
+            })
+        })
+        
+        // Call the cancellation method directly
+        MainFlutterWindow.handleOverlayCloseButtonPressed()
+    }
+    
+    private func sendCancelRecordingMessage() {
+        // This will be handled by the method channel in MainFlutterWindow
+        if let flutterViewController = NSApplication.shared.mainWindow?.contentViewController as? FlutterViewController {
+            let channel = FlutterMethodChannel(
+                name: "com.autoquill.recording_overlay",
+                binaryMessenger: flutterViewController.engine.binaryMessenger
+            )
+            channel.invokeMethod("cancelRecording", arguments: nil)
+        }
     }
 
     func updateColors(_ colors: (background: NSColor, accent: NSColor, text: NSColor)) {

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../../presentation/bloc/recording_bloc.dart';
+import '../../../hotkeys/core/hotkey_handler.dart';
 
 class RecordingOverlayPlatform {
   static const MethodChannel _channel =
@@ -61,36 +62,61 @@ class RecordingOverlayPlatform {
   /// Sets the RecordingBloc instance for handling button actions
   static void setRecordingBloc(RecordingBloc bloc) {
     _recordingBloc = bloc;
+    // Set up the method channel handler when a recording bloc is provided
+    _setupMethodHandler();
+  }
+
+  /// Initialize the platform - should be called early in app lifecycle
+  static void initialize() {
+    _setupMethodHandler();
   }
 
   /// Sets up the method channel handler for button actions from the overlay window
   static void _setupMethodHandler() {
     _channel.setMethodCallHandler((call) async {
-      if (_recordingBloc == null) {
-        if (kDebugMode) {
-          print('RecordingBloc not set, cannot handle overlay button actions');
-        }
-        return;
-      }
-
       switch (call.method) {
         case 'pauseRecording':
-          _recordingBloc!.add(PauseRecording());
+          if (_recordingBloc != null) {
+            _recordingBloc!.add(PauseRecording());
+          }
           break;
         case 'resumeRecording':
-          _recordingBloc!.add(ResumeRecording());
+          if (_recordingBloc != null) {
+            _recordingBloc!.add(ResumeRecording());
+          }
           break;
         case 'stopRecording':
-          _recordingBloc!.add(StopRecording());
+          if (_recordingBloc != null) {
+            _recordingBloc!.add(StopRecording());
+          }
           break;
         case 'restartRecording':
-          _recordingBloc!.add(RestartRecording());
+          if (_recordingBloc != null) {
+            _recordingBloc!.add(RestartRecording());
+          }
           break;
         case 'cancelRecording':
-          _recordingBloc!.add(CancelRecording());
+          // Handle close button cancellation using the same logic as Esc key
+          await _handleCloseButtonCancellation();
           break;
       }
     });
+  }
+
+  /// Handles close button cancellation by delegating to the hotkey handler's logic
+  static Future<void> _handleCloseButtonCancellation() async {
+    try {
+      // Use the HotkeyHandler's escape cancellation logic which handles all recording modes
+      HotkeyHandler.handleRecordingCancellation();
+
+      if (kDebugMode) {
+        print('Close button cancellation handled via HotkeyHandler');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error handling close button cancellation: $e');
+      }
+    }
   }
 
   /// Hides the recording overlay

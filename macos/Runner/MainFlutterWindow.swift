@@ -4,6 +4,10 @@ import AVFoundation
 import CoreGraphics
 
 class MainFlutterWindow: NSWindow {
+  
+  // Static reference to the method channel for overlay communication
+  private static var overlayChannel: FlutterMethodChannel?
+  
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
     let windowFrame = self.frame
@@ -22,6 +26,9 @@ class MainFlutterWindow: NSWindow {
     let channel = FlutterMethodChannel(
       name: "com.autoquill.recording_overlay",
       binaryMessenger: flutterViewController.engine.binaryMessenger)
+    
+    // Store the channel reference for use by the close button
+    MainFlutterWindow.overlayChannel = channel
     
     channel.setMethodCallHandler { (call, result) in
       switch call.method {
@@ -73,9 +80,28 @@ class MainFlutterWindow: NSWindow {
       case "setTranscriptionCompleted":
         RecordingOverlayWindow.shared.setTranscriptionCompleted()
         result(nil)
+      case "cancelRecording":
+        // Handle close button press from overlay
+        // Send the cancel message back to Flutter to handle the recording cancellation
+        channel.invokeMethod("cancelRecording", arguments: nil)
+        result(nil)
       // The extractVisibleText case has been removed as we now use the screen_capturer package
       default:
         result(FlutterMethodNotImplemented)
+      }
+    }
+  }
+  
+  /// Static method to handle close button press from overlay
+  static func handleOverlayCloseButtonPressed() {
+    print("MainFlutterWindow: Handling overlay close button press")
+    
+    // Send the cancel message through the method channel
+    overlayChannel?.invokeMethod("cancelRecording", arguments: nil) { result in
+      if let error = result as? FlutterError {
+        print("Error calling cancelRecording: \(error.message ?? "Unknown error")")
+      } else {
+        print("cancelRecording called successfully")
       }
     }
   }
