@@ -311,8 +311,12 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
   /// Copy text to clipboard using pasteboard and then simulate paste command
   Future<void> _copyToClipboard(String text) async {
     try {
+      // Trim any leading/trailing whitespace and add a space at the end
+      // to enable seamless continuation of transcriptions
+      final processedText = text.trim() + ' ';
+
       // Copy plain text to clipboard
-      Pasteboard.writeText(text);
+      Pasteboard.writeText(processedText);
 
       if (kDebugMode) {
         print('Transcription copied to clipboard');
@@ -323,8 +327,10 @@ class TranscriptionBloc extends Bloc<TranscriptionEvent, TranscriptionState> {
       await _simulatePasteCommand();
 
       // After pasting, save as a file in the dedicated transcriptions directory for backup
+      // Note: Save the original trimmed text without the extra space for file storage
       try {
-        final filePath = await TranscriptionStorage.saveTranscription(text);
+        final filePath =
+            await TranscriptionStorage.saveTranscription(text.trim());
 
         if (kDebugMode) {
           print('Transcription saved to file: $filePath');

@@ -14,13 +14,19 @@ class ClipboardService {
   static Future<void> copyToClipboard(String text, {String? mode}) async {
     try {
       // Trim any leading/trailing whitespace before copying to clipboard
-      final trimmedText = text.trim();
+      var processedText = text.trim();
+
+      // Add a space at the end for transcription and push-to-talk modes
+      // to enable seamless continuation of transcriptions
+      if (mode == 'transcription' || mode == 'push_to_talk') {
+        processedText = '$processedText ';
+      }
 
       // Update overlay to show transcription is complete
       await RecordingOverlayPlatform.setTranscriptionCompleted();
 
       // Copy plain text to clipboard
-      Pasteboard.writeText(trimmedText);
+      Pasteboard.writeText(processedText);
 
       if (kDebugMode) {
         print('Transcription copied to clipboard');
@@ -35,17 +41,17 @@ class ClipboardService {
         // Send to appropriate test field based on mode
         switch (mode) {
           case 'push_to_talk':
-            TestPageManager.sendPushToTalkResult(trimmedText);
+            TestPageManager.sendPushToTalkResult(processedText);
             break;
           case 'transcription':
-            TestPageManager.sendTranscriptionResult(trimmedText);
+            TestPageManager.sendTranscriptionResult(processedText);
             break;
           case 'assistant':
-            TestPageManager.sendAssistantResult(trimmedText);
+            TestPageManager.sendAssistantResult(processedText);
             break;
           default:
             // Default to transcription if mode not specified
-            TestPageManager.sendTranscriptionResult(trimmedText);
+            TestPageManager.sendTranscriptionResult(processedText);
             break;
         }
 
@@ -61,9 +67,10 @@ class ClipboardService {
       }
 
       // After processing, save as a file in the dedicated transcriptions directory for backup
+      // Note: Save the original trimmed text without the extra space for file storage
       try {
         final filePath =
-            await TranscriptionStorage.saveTranscription(trimmedText);
+            await TranscriptionStorage.saveTranscription(text.trim());
 
         if (kDebugMode) {
           print('Transcription saved to file: $filePath');
