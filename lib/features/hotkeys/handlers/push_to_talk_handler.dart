@@ -34,6 +34,20 @@ class PushToTalkHandler {
   // Timer for minimum hold duration check
   static Timer? _minimumHoldTimer;
 
+  // Fallback timer for first use cleanup
+  static Timer? _firstUseCleanupTimer;
+
+  // Initialization state tracking
+  static bool _isInitialized = false;
+  static DateTime? _initializationTime;
+  static bool _hasBeenUsedOnce = false;
+  static DateTime? _firstKeyDownTime;
+  static bool _isFirstUseInProgress = false;
+
+  // Race condition handling for first use
+  static bool _isRecordingStartupInProgress = false;
+  static bool _hasQueuedKeyUp = false;
+
   // Stats service for tracking stats
   static final StatsService _statsService = StatsService();
 
@@ -45,6 +59,14 @@ class PushToTalkHandler {
 
     // Initialize stats service without blocking
     _ensureStatsInitialized();
+
+    // Mark as initialized and record the time
+    _isInitialized = true;
+    _initializationTime = DateTime.now();
+
+    if (kDebugMode) {
+      print('PushToTalkHandler initialized at ${_initializationTime}');
+    }
   }
 
   /// Ensure stats box is initialized
@@ -64,11 +86,69 @@ class PushToTalkHandler {
     });
   }
 
+  /// Check if the handler is ready for operations
+  static bool _isSystemReady() {
+    // Must be initialized
+    if (!_isInitialized || _initializationTime == null) {
+      if (kDebugMode) {
+        print('PushToTalkHandler not yet initialized');
+      }
+      return false;
+    }
+
+    // For the first use, require a longer delay to ensure everything is ready
+    final timeSinceInit = DateTime.now().difference(_initializationTime!);
+    final requiredDelay = _hasBeenUsedOnce
+        ? 500
+        : 800; // 5 seconds for first use, 2 seconds after that
+
+    if (timeSinceInit.inMilliseconds < requiredDelay) {
+      if (kDebugMode) {
+        print(
+            'PushToTalkHandler not ready yet (${timeSinceInit.inMilliseconds}ms since init, need ${requiredDelay}ms for ${_hasBeenUsedOnce ? "subsequent" : "first"} use)');
+      }
+      return false;
+    }
+
+    // Must have repositories
+    if (_recordingRepository == null || _transcriptionRepository == null) {
+      if (kDebugMode) {
+        print('PushToTalkHandler repositories not available');
+      }
+      return false;
+    }
+
+    return true;
+  }
+
   /// Handles the push-to-talk key down event
   static void handleKeyDown() async {
-    if (_recordingRepository == null || _transcriptionRepository == null) {
-      BotToast.showText(text: 'Recording system not initialized');
+    if (!_isSystemReady()) {
+      // Show a user-friendly message if attempted too early
+      if (_isInitialized && _initializationTime != null) {
+        final timeSinceInit = DateTime.now().difference(_initializationTime!);
+        final requiredDelay = _hasBeenUsedOnce ? 500 : 800;
+        if (timeSinceInit.inMilliseconds < requiredDelay) {
+          final remainingTime =
+              ((requiredDelay - timeSinceInit.inMilliseconds) / 1000).ceil();
+          BotToast.showText(
+              text: _hasBeenUsedOnce
+                  ? 'System initializing, wait ${remainingTime}s...'
+                  : 'First startup - initializing system, wait ${remainingTime}s...');
+        }
+      }
       return;
+    }
+
+    // Mark that push-to-talk has been used (for subsequent faster startup)
+    if (!_hasBeenUsedOnce) {
+      _hasBeenUsedOnce = true;
+      _isFirstUseInProgress = true;
+      _firstKeyDownTime = DateTime.now();
+      if (kDebugMode) {
+        print(
+            'Marking push-to-talk as having been used once - FIRST USE at ${_firstKeyDownTime}');
+      }
     }
 
     // Check if push-to-talk is enabled
@@ -116,6 +196,10 @@ class PushToTalkHandler {
 
     // Start recording
     try {
+      // Mark that recording startup is in progress to handle race conditions
+      _isRecordingStartupInProgress = true;
+      _hasQueuedKeyUp = false;
+
       // Register Esc key for cancellation
       await HotkeyHandler.registerEscKeyForRecording();
 
@@ -131,6 +215,21 @@ class PushToTalkHandler {
       await _recordingRepository!.startRecording();
       _isPushToTalkRecordingActive = true;
       _recordingStartTime = DateTime.now();
+
+      // Recording startup is complete
+      _isRecordingStartupInProgress = false;
+
+      // Check if keyUp arrived during startup
+      if (_hasQueuedKeyUp) {
+        if (kDebugMode) {
+          print(
+              'Processing queued keyUp that arrived during recording startup');
+        }
+        _hasQueuedKeyUp = false;
+        // Process the queued keyUp immediately
+        handleKeyUp();
+        return;
+      }
 
       // Start minimum hold timer - check if still held after 200ms
       _minimumHoldTimer = Timer(Duration(milliseconds: 200), () {
@@ -151,6 +250,21 @@ class PushToTalkHandler {
         _minimumHoldTimer = null;
       });
 
+      // For first use, add a fallback cleanup timer to handle macOS initialization issues
+      if (_isFirstUseInProgress) {
+        _firstUseCleanupTimer = Timer(Duration(seconds: 3), () {
+          if (_isPushToTalkRecordingActive && _isFirstUseInProgress) {
+            if (kDebugMode) {
+              print(
+                  'FIRST USE: Fallback cleanup triggered - possible macOS hotkey initialization issue');
+            }
+            _ensureRecordingCleanup();
+            _isFirstUseInProgress = false;
+          }
+          _firstUseCleanupTimer = null;
+        });
+      }
+
       BotToast.showText(text: 'Push-to-talk recording started');
 
       if (kDebugMode) {
@@ -167,9 +281,18 @@ class PushToTalkHandler {
         _minimumHoldTimer = null;
       }
 
+      // Cancel the first use cleanup timer if it was started
+      if (_firstUseCleanupTimer != null) {
+        _firstUseCleanupTimer!.cancel();
+        _firstUseCleanupTimer = null;
+      }
+
       // Reset recording state
       _isPushToTalkRecordingActive = false;
       _recordingStartTime = null;
+      _isFirstUseInProgress = false;
+      _isRecordingStartupInProgress = false;
+      _hasQueuedKeyUp = false;
 
       // Unregister Esc key if recording failed to start
       await HotkeyHandler.unregisterEscKeyForRecording();
@@ -181,8 +304,40 @@ class PushToTalkHandler {
 
   /// Handles the push-to-talk key up event
   static void handleKeyUp() async {
+    final keyUpTime = DateTime.now();
+
+    // Add detailed diagnostics for first use
+    if (_isFirstUseInProgress && _firstKeyDownTime != null) {
+      final totalEventTime = keyUpTime.difference(_firstKeyDownTime!);
+      if (kDebugMode) {
+        print(
+            'FIRST USE: keyUp received ${totalEventTime.inMilliseconds}ms after keyDown');
+        print('FIRST USE: Recording active: $_isPushToTalkRecordingActive');
+        print('FIRST USE: Recording start time: $_recordingStartTime');
+        print(
+            'FIRST USE: Recording startup in progress: $_isRecordingStartupInProgress');
+      }
+    }
+
+    // Handle race condition: if recording startup is in progress, queue this keyUp
+    if (_isRecordingStartupInProgress) {
+      if (kDebugMode) {
+        print(
+            'keyUp received during recording startup - queuing for later processing');
+      }
+      _hasQueuedKeyUp = true;
+      return;
+    }
+
     // Only process if we have an active push-to-talk recording
     if (!_isPushToTalkRecordingActive) {
+      if (_isFirstUseInProgress) {
+        if (kDebugMode) {
+          print(
+              'FIRST USE: keyUp received but recording not active - possible macOS initialization issue');
+        }
+        _isFirstUseInProgress = false;
+      }
       return;
     }
 
@@ -190,8 +345,16 @@ class PushToTalkHandler {
     bool wasQuickRelease = false;
     Duration? holdDuration;
     if (_recordingStartTime != null) {
-      holdDuration = DateTime.now().difference(_recordingStartTime!);
+      holdDuration = keyUpTime.difference(_recordingStartTime!);
       wasQuickRelease = holdDuration.inMilliseconds < 200;
+
+      if (_isFirstUseInProgress) {
+        if (kDebugMode) {
+          print(
+              'FIRST USE: Hold duration calculated as ${holdDuration.inMilliseconds}ms');
+          print('FIRST USE: Quick release detected: $wasQuickRelease');
+        }
+      }
     }
 
     // Cancel the minimum hold timer if it's still running
@@ -200,23 +363,35 @@ class PushToTalkHandler {
       _minimumHoldTimer = null;
     }
 
+    // Cancel the first use cleanup timer if it's running
+    if (_firstUseCleanupTimer != null) {
+      _firstUseCleanupTimer!.cancel();
+      _firstUseCleanupTimer = null;
+    }
+
     // If this was a quick release, cancel the recording
     if (wasQuickRelease) {
       if (kDebugMode) {
         print(
-            'Push-to-talk key released too quickly (${holdDuration?.inMilliseconds ?? 0}ms < 200ms), auto-cancelling');
+            'Push-to-talk key released too quickly (${holdDuration?.inMilliseconds ?? 0}ms < 200ms), auto-cancelling${_isFirstUseInProgress ? " [FIRST USE]" : ""}');
       }
 
-      // Add a small delay to let any pending recording operations complete
-      await Future.delayed(Duration(milliseconds: 50));
+      // Add a longer delay for first use to account for macOS initialization
+      final delay = _isFirstUseInProgress ? 200 : 50;
+      await Future.delayed(Duration(milliseconds: delay));
+
       await _ensureRecordingCleanup();
+      _isFirstUseInProgress = false;
       return;
     }
 
     if (kDebugMode) {
       print(
-          'Push-to-talk held for ${holdDuration?.inMilliseconds ?? 0}ms, proceeding with transcription');
+          'Push-to-talk held for ${holdDuration?.inMilliseconds ?? 0}ms, proceeding with transcription${_isFirstUseInProgress ? " [FIRST USE]" : ""}');
     }
+
+    // Mark first use as complete
+    _isFirstUseInProgress = false;
 
     try {
       // Play the stop recording sound
@@ -540,6 +715,12 @@ class PushToTalkHandler {
         _minimumHoldTimer = null;
       }
 
+      // Cancel the first use cleanup timer if it's running
+      if (_firstUseCleanupTimer != null) {
+        _firstUseCleanupTimer!.cancel();
+        _firstUseCleanupTimer = null;
+      }
+
       // Cancel the recording
       await _recordingRepository?.cancelRecording();
       _isPushToTalkRecordingActive = false;
@@ -588,10 +769,24 @@ class PushToTalkHandler {
         print('Starting push-to-talk cleanup due to quick release...');
       }
 
+      // For the first use, add extra delay to let system settle
+      if (!_hasBeenUsedOnce) {
+        if (kDebugMode) {
+          print('First use detected, adding extra delay for cleanup');
+        }
+        await Future.delayed(Duration(milliseconds: 200));
+      }
+
       // First, cancel the minimum hold timer to prevent any race conditions
       if (_minimumHoldTimer != null) {
         _minimumHoldTimer!.cancel();
         _minimumHoldTimer = null;
+      }
+
+      // Cancel the first use cleanup timer if it's running
+      if (_firstUseCleanupTimer != null) {
+        _firstUseCleanupTimer!.cancel();
+        _firstUseCleanupTimer = null;
       }
 
       // Reset recording state BEFORE attempting to cancel recording
@@ -599,9 +794,15 @@ class PushToTalkHandler {
       _isPushToTalkRecordingActive = false;
       _recordingStartTime = null;
       _pushToTalkRecordedFilePath = null;
+      _isFirstUseInProgress = false;
+      _isRecordingStartupInProgress = false;
+      _hasQueuedKeyUp = false;
 
       // Try to cancel recording if it was active, but don't fail the cleanup if this fails
-      if (wasRecordingActive && _recordingRepository != null) {
+      // Also check if system is ready - if not, we might be in early startup
+      if (wasRecordingActive &&
+          _recordingRepository != null &&
+          _isInitialized) {
         try {
           await _recordingRepository!.cancelRecording();
           if (kDebugMode) {
@@ -613,29 +814,51 @@ class PushToTalkHandler {
           }
           // Continue with cleanup even if recording cancellation fails
         }
-      }
-
-      // Unregister Esc key - this should always work
-      try {
-        await HotkeyHandler.unregisterEscKeyForRecording();
+      } else if (wasRecordingActive && !_isInitialized) {
         if (kDebugMode) {
-          print('Esc key unregistered successfully');
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          print('Warning: Esc key unregistration failed: $e');
+          print(
+              'Skipping recording cancellation - system not fully initialized');
         }
       }
 
-      // Force hide the overlay - this is critical
-      try {
-        await RecordingOverlayPlatform.hideOverlay();
-        if (kDebugMode) {
-          print('Overlay hidden successfully');
+      // Unregister Esc key - this should always work if system is initialized
+      if (_isInitialized) {
+        try {
+          await HotkeyHandler.unregisterEscKeyForRecording();
+          if (kDebugMode) {
+            print('Esc key unregistered successfully');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('Warning: Esc key unregistration failed: $e');
+          }
         }
-      } catch (e) {
+      }
+
+      // Force hide the overlay - this is critical and should work even during startup
+      // For first use, try multiple times with delays
+      bool overlayHidden = false;
+      for (int attempt = 1; attempt <= 3; attempt++) {
+        try {
+          await RecordingOverlayPlatform.hideOverlay();
+          overlayHidden = true;
+          if (kDebugMode) {
+            print('Overlay hidden successfully on attempt $attempt');
+          }
+          break;
+        } catch (e) {
+          if (kDebugMode) {
+            print('Warning: Overlay hiding failed on attempt $attempt: $e');
+          }
+          if (attempt < 3) {
+            await Future.delayed(Duration(milliseconds: 100 * attempt));
+          }
+        }
+      }
+
+      if (!overlayHidden) {
         if (kDebugMode) {
-          print('Warning: Overlay hiding failed: $e');
+          print('Error: Failed to hide overlay after 3 attempts');
         }
       }
 
@@ -659,9 +882,12 @@ class PushToTalkHandler {
         _minimumHoldTimer = null;
       }
 
-      // Try one more time to hide the overlay
+      // Try one more time to hide the overlay with force
       try {
-        RecordingOverlayPlatform.hideOverlay();
+        for (int i = 0; i < 3; i++) {
+          RecordingOverlayPlatform.hideOverlay();
+          await Future.delayed(Duration(milliseconds: 50));
+        }
       } catch (_) {
         // Ignore any further errors
       }
