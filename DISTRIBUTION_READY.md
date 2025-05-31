@@ -24,21 +24,39 @@ Located in `dist/signed/20250528_181213/`:
   - Auto-update system
   - Email/file sharing distribution
 
-### 💿 **AutoQuill-installer.dmg** (25MB)  
-- **Status:** ✅ Professional installer
-- **Created by:** Fastforge
-- **Contains:** Signed app bundle with installer UI
+### 💿 **AutoQuill-installer-notarized.dmg** (27MB) **⭐ USE THIS ONE**
+- **Status:** ✅ **FIXED** - Properly notarized DMG installer
+- **Notarization:** ✅ Accepted by Apple (ID: 72130415-7331-40b7-b35f-577eedba80cd)
+- **Contains:** Properly signed and notarized app bundle
+- **Security:** ✅ **No Gatekeeper warnings**
 - **Use for:** 
-  - Main website download
+  - **Main website download (RECOMMENDED)**
   - Professional distribution
   - User-friendly installation
 
+### ~~💿 AutoQuill-installer.dmg (25MB)~~ 
+- **Status:** ❌ **DO NOT USE** - Contains non-notarized app
+- **Issue:** Will show Gatekeeper security warnings
+- **Replaced by:** `AutoQuill-installer-notarized.dmg`
+
+## 🔧 **Issue Fixed: Gatekeeper Security Warning**
+
+**Problem:** The original DMG created by fastforge contained a non-notarized version of the app, causing the "Apple could not verify AutoQuill is free of malware" warning.
+
+**Solution:** Created a new DMG (`AutoQuill-installer-notarized.dmg`) that contains the properly notarized app bundle:
+1. ✅ Used the signed and notarized app bundle
+2. ✅ Created DMG with native macOS tools
+3. ✅ Signed the DMG itself with Developer ID
+4. ✅ Submitted DMG for notarization (ID: 72130415-7331-40b7-b35f-577eedba80cd)
+5. ✅ Stapled notarization ticket to DMG
+6. ✅ Verified: `source=Notarized Developer ID`
+
 ## 🚀 Distribution Methods
 
-### **Method 1: Website Download (Recommended)**
-Upload the DMG to your website and provide download links:
+### **Method 1: DMG Download (Recommended)**
+Upload `AutoQuill-installer-notarized.dmg` to your website:
 ```html
-<a href="https://your-domain.com/downloads/AutoQuill-installer.dmg" 
+<a href="https://your-domain.com/downloads/AutoQuill-installer-notarized.dmg" 
    class="download-btn">
    Download AutoQuill AI for macOS
 </a>
@@ -52,17 +70,20 @@ For quick sharing or auto-updates, use the ZIP file:
 ### **Method 3: Auto-Update System**
 The ZIP is configured for Sparkle auto-updates:
 1. Sign the update: `dart run auto_updater:sign_update AutoQuill-notarized.zip`
-2. Update `dist/appcast.xml` with the signature
-3. Upload both files to your update server
+2. Signature: `hzyOOgUyyR4Lm/8R4d3tgj+Nw+YvfAWhljpBWfr38X+DpHGbl/hCBERxifR2vfZNOTxTllcxCo5qJFRvbiDhAg==`
+3. File size: `25808155` bytes
+4. Update `dist/appcast.xml` (already updated)
+5. Upload both files to your update server
 
 ## 🔒 Security Verification
 
 All security checks passed:
 
 ✅ **Code Signing:** All binaries signed with Developer ID  
-✅ **Notarization:** Accepted by Apple  
-✅ **Stapling:** Notarization ticket attached  
-✅ **Gatekeeper:** `spctl` assessment passed  
+✅ **App Notarization:** Accepted by Apple (ID: d9015c92-4a5d-4a13-8cae-422ca06ab640)
+✅ **DMG Notarization:** Accepted by Apple (ID: 72130415-7331-40b7-b35f-577eedba80cd)
+✅ **Stapling:** Notarization tickets attached to both app and DMG
+✅ **Gatekeeper:** `spctl` assessment passed for both app and DMG
 ✅ **No Security Warnings:** Apps will launch cleanly on user machines  
 
 ## 🎯 Pre-Launch Checklist
@@ -70,12 +91,15 @@ All security checks passed:
 - [x] App builds successfully
 - [x] All frameworks signed  
 - [x] Main app signed with hardened runtime
-- [x] Notarization submitted and accepted
-- [x] Notarization ticket stapled
-- [x] Security assessment passed
-- [x] DMG installer created
-- [x] ZIP package ready
-- [x] Auto-update system configured
+- [x] App notarization submitted and accepted
+- [x] App notarization ticket stapled
+- [x] DMG created with notarized app
+- [x] DMG signed and notarized
+- [x] DMG notarization ticket stapled
+- [x] Security assessment passed for both app and DMG
+- [x] **Gatekeeper issue resolved**
+- [x] ZIP package ready for auto-updates
+- [x] Auto-update signature generated
 
 ## 📋 Distribution Instructions
 
@@ -86,27 +110,27 @@ All security checks passed:
 
 ### **Step 2: Upload Files**
 Upload to your chosen hosting:
-- `AutoQuill-installer.dmg` → Main download
+- `AutoQuill-installer-notarized.dmg` → **Main download (USE THIS)**
 - `AutoQuill-notarized.zip` → Auto-updates  
-- `dist/appcast.xml` → Update feed
+- `dist/appcast.xml` → Update feed (already configured)
 
 ### **Step 3: Update Your Website**
-Add download links pointing to the DMG file:
+Add download links pointing to the **notarized DMG file**:
 ```html
 <!-- Main download -->
-<a href="https://your-domain.com/downloads/AutoQuill-installer.dmg">
+<a href="https://your-domain.com/downloads/AutoQuill-installer-notarized.dmg">
   Download AutoQuill AI v1.0.0
 </a>
 
 <!-- System requirements -->
-<p>Requirements: macOS 10.15 or later • 25 MB</p>
+<p>Requirements: macOS 10.15 or later • 27 MB</p>
 ```
 
 ### **Step 4: Test End-to-End**
-1. Upload files to hosting
+1. Upload the **notarized DMG** to hosting
 2. Download DMG from your website
 3. Install on a clean Mac
-4. Verify no security warnings
+4. ✅ **Verify NO security warnings appear**
 5. Test core functionality
 6. Test auto-update (if configured)
 
@@ -116,8 +140,10 @@ For future releases:
 1. Run `./scripts/build_and_sign.sh`
 2. Submit new ZIP for notarization
 3. Staple notarization to new build
-4. Update version in appcast.xml
-5. Upload new files to hosting
+4. Create new DMG with notarized app
+5. Sign and notarize the DMG
+6. Update version in appcast.xml
+7. Upload new files to hosting
 
 ## 📞 Support
 
@@ -129,11 +155,13 @@ For future releases:
 
 ## 🎉 **Your app is ready for distribution!**
 
-The build process is complete. Your AutoQuill AI app is:
+The build process is complete and the Gatekeeper issue is **FIXED**. Your AutoQuill AI app is:
 - ✅ Properly signed with your Developer ID
-- ✅ Notarized by Apple  
-- ✅ Ready to distribute without security warnings
-- ✅ Packaged professionally in DMG format
+- ✅ Notarized by Apple (both app and DMG)
+- ✅ **Ready to distribute without ANY security warnings**
+- ✅ Packaged professionally in properly notarized DMG format
 - ✅ Configured for auto-updates
 
-**Next step:** Upload the files to your hosting and update your landing page with download links! 
+**Next step:** Upload `AutoQuill-installer-notarized.dmg` to your hosting and update your landing page with download links!
+
+**⚠️ Important:** Use `AutoQuill-installer-notarized.dmg` (27MB) for distribution, NOT the old `AutoQuill-installer.dmg` (25MB). 
