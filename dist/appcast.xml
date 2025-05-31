@@ -9,13 +9,13 @@
             <sparkle:version>1</sparkle:version>
             <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
             <sparkle:releaseNotesLink>
-                http://localhost:5002/release_notes.html
+                https://your-domain.com/updates/release_notes.html
             </sparkle:releaseNotesLink>
-            <pubDate>Sun, 01 Jan 2025 12:00:00 +0800</pubDate>
-            <enclosure url="http://localhost:5002/1.0.0+1/autoquill_ai-1.0.0+1-macos.zip"
-                       sparkle:edSignature="NZnhuCXaQ7txmz1Jvda3BWSL9x58G49xrYIN1UIGftNurouNIHpOJWsjmFJGHrsbGFr661+MeJEuK8AYmBJbCQ=="
+            <pubDate>Sat, 31 May 2025 14:00:00 +0000</pubDate>
+            <enclosure url="https://your-domain.com/downloads/AutoQuill-notarized.zip"
+                       sparkle:edSignature="hzyOOgUyyR4Lm/8R4d3tgj+Nw+YvfAWhljpBWfr38X+DpHGbl/hCBERxifR2vfZNOTxTllcxCo5qJFRvbiDhAg=="
                        sparkle:os="macos"
-                       length="24783903"
+                       length="25808155"
                        type="application/octet-stream" />
         </item>
     </channel>
