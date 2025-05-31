@@ -414,16 +414,12 @@ class HotkeysStep extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // Current hotkey display
+          // Current hotkey display with edit button
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Flexible(
+              Expanded(
                 child: Container(
-                  constraints: const BoxConstraints(
-                    minWidth: 200,
-                    maxWidth: 350, // Allow more space for longer hotkeys
-                  ),
+                  constraints: const BoxConstraints(minHeight: 50),
                   child: HotkeyDisplay.forPlatform(
                     hotkey: hotkey,
                     textColor: Theme.of(context).colorScheme.onSurface,
@@ -434,40 +430,31 @@ class HotkeysStep extends StatelessWidget {
                             .primary
                             .withValues(alpha: 0.5)
                         : Colors.grey,
-                    showIcon: false, // Remove icon to save space
-                    fontSize: 13, // Slightly smaller font for longer text
+                    showIcon: false,
+                    fontSize: 13,
                   ),
                 ),
               ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Action buttons
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 180,
-                child: ElevatedButton.icon(
-                  // icon: const Icon(
-                  //   Icons.keyboard,
-                  //   color: Colors.white,
-                  // ),
-                  label: const Text('Change Hotkey'),
+              const SizedBox(width: 12),
+              Tooltip(
+                message: 'Change Hotkey',
+                child: IconButton(
                   onPressed: () async {
                     final result = await _showHotkeyRecorderDialog(context);
                     if (result != null) {
                       onRecordHotkey(result);
                     }
                   },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                  icon: Icon(
+                    Icons.edit,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.1),
+                    padding: const EdgeInsets.all(8),
                   ),
                 ),
               ),
