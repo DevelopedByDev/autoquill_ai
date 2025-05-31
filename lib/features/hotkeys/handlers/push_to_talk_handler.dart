@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -29,6 +30,9 @@ class PushToTalkHandler {
 
   // Recording start time for tracking duration
   static DateTime? _recordingStartTime;
+
+  // Timer for minimum hold duration check
+  static Timer? _minimumHoldTimer;
 
   // Stats service for tracking stats
   static final StatsService _statsService = StatsService();
@@ -127,6 +131,26 @@ class PushToTalkHandler {
       await _recordingRepository!.startRecording();
       _isPushToTalkRecordingActive = true;
       _recordingStartTime = DateTime.now();
+
+      // Start minimum hold timer - check if still held after 200ms
+      _minimumHoldTimer = Timer(Duration(milliseconds: 200), () {
+        // If recording is no longer active after 200ms, it means the key was released too quickly
+        if (!_isPushToTalkRecordingActive) {
+          if (kDebugMode) {
+            print('Push-to-talk key was released too quickly, auto-cancelling');
+          }
+          // The recording would have already been stopped by handleKeyUp,
+          // but we need to ensure proper cleanup
+          _ensureRecordingCleanup();
+        } else {
+          if (kDebugMode) {
+            print(
+                'Push-to-talk minimum hold duration met, continuing recording');
+          }
+        }
+        _minimumHoldTimer = null;
+      });
+
       BotToast.showText(text: 'Push-to-talk recording started');
 
       if (kDebugMode) {
@@ -136,6 +160,17 @@ class PushToTalkHandler {
       if (kDebugMode) {
         print('Error starting push-to-talk recording: $e');
       }
+
+      // Cancel the minimum hold timer if it was started
+      if (_minimumHoldTimer != null) {
+        _minimumHoldTimer!.cancel();
+        _minimumHoldTimer = null;
+      }
+
+      // Reset recording state
+      _isPushToTalkRecordingActive = false;
+      _recordingStartTime = null;
+
       // Unregister Esc key if recording failed to start
       await HotkeyHandler.unregisterEscKeyForRecording();
       // Play error sound
@@ -149,6 +184,38 @@ class PushToTalkHandler {
     // Only process if we have an active push-to-talk recording
     if (!_isPushToTalkRecordingActive) {
       return;
+    }
+
+    // Check if the minimum hold duration was met
+    bool wasQuickRelease = false;
+    Duration? holdDuration;
+    if (_recordingStartTime != null) {
+      holdDuration = DateTime.now().difference(_recordingStartTime!);
+      wasQuickRelease = holdDuration.inMilliseconds < 200;
+    }
+
+    // Cancel the minimum hold timer if it's still running
+    if (_minimumHoldTimer != null) {
+      _minimumHoldTimer!.cancel();
+      _minimumHoldTimer = null;
+    }
+
+    // If this was a quick release, cancel the recording
+    if (wasQuickRelease) {
+      if (kDebugMode) {
+        print(
+            'Push-to-talk key released too quickly (${holdDuration?.inMilliseconds ?? 0}ms < 200ms), auto-cancelling');
+      }
+
+      // Add a small delay to let any pending recording operations complete
+      await Future.delayed(Duration(milliseconds: 50));
+      await _ensureRecordingCleanup();
+      return;
+    }
+
+    if (kDebugMode) {
+      print(
+          'Push-to-talk held for ${holdDuration?.inMilliseconds ?? 0}ms, proceeding with transcription');
     }
 
     try {
@@ -455,9 +522,24 @@ class PushToTalkHandler {
 
   /// Cancel the current push-to-talk recording
   static Future<void> cancelRecording() async {
-    if (!_isPushToTalkRecordingActive) return;
+    if (!_isPushToTalkRecordingActive) {
+      if (kDebugMode) {
+        print('Push-to-talk cancellation called but recording not active');
+      }
+      return;
+    }
 
     try {
+      if (kDebugMode) {
+        print('Cancelling active push-to-talk recording...');
+      }
+
+      // Cancel the minimum hold timer if it's still running
+      if (_minimumHoldTimer != null) {
+        _minimumHoldTimer!.cancel();
+        _minimumHoldTimer = null;
+      }
+
       // Cancel the recording
       await _recordingRepository?.cancelRecording();
       _isPushToTalkRecordingActive = false;
@@ -473,13 +555,116 @@ class PushToTalkHandler {
       BotToast.showText(text: 'Push-to-talk recording cancelled');
 
       if (kDebugMode) {
-        print('Push-to-talk recording cancelled via Esc key');
+        print('Push-to-talk recording cancelled successfully');
       }
     } catch (e) {
       if (kDebugMode) {
         print('Error cancelling push-to-talk recording: $e');
       }
+
+      // Force cleanup even if cancellation failed
+      _isPushToTalkRecordingActive = false;
+      _recordingStartTime = null;
+      _pushToTalkRecordedFilePath = null;
+      if (_minimumHoldTimer != null) {
+        _minimumHoldTimer!.cancel();
+        _minimumHoldTimer = null;
+      }
+
+      try {
+        await RecordingOverlayPlatform.hideOverlay();
+      } catch (_) {
+        // Ignore overlay errors
+      }
+
       BotToast.showText(text: 'Error cancelling recording');
+    }
+  }
+
+  /// Ensure recording cleanup when key is released too quickly
+  static Future<void> _ensureRecordingCleanup() async {
+    try {
+      if (kDebugMode) {
+        print('Starting push-to-talk cleanup due to quick release...');
+      }
+
+      // First, cancel the minimum hold timer to prevent any race conditions
+      if (_minimumHoldTimer != null) {
+        _minimumHoldTimer!.cancel();
+        _minimumHoldTimer = null;
+      }
+
+      // Reset recording state BEFORE attempting to cancel recording
+      final wasRecordingActive = _isPushToTalkRecordingActive;
+      _isPushToTalkRecordingActive = false;
+      _recordingStartTime = null;
+      _pushToTalkRecordedFilePath = null;
+
+      // Try to cancel recording if it was active, but don't fail the cleanup if this fails
+      if (wasRecordingActive && _recordingRepository != null) {
+        try {
+          await _recordingRepository!.cancelRecording();
+          if (kDebugMode) {
+            print('Recording repository cancellation completed');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('Warning: Recording repository cancellation failed: $e');
+          }
+          // Continue with cleanup even if recording cancellation fails
+        }
+      }
+
+      // Unregister Esc key - this should always work
+      try {
+        await HotkeyHandler.unregisterEscKeyForRecording();
+        if (kDebugMode) {
+          print('Esc key unregistered successfully');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Warning: Esc key unregistration failed: $e');
+        }
+      }
+
+      // Force hide the overlay - this is critical
+      try {
+        await RecordingOverlayPlatform.hideOverlay();
+        if (kDebugMode) {
+          print('Overlay hidden successfully');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Warning: Overlay hiding failed: $e');
+        }
+      }
+
+      // Show user feedback
+      BotToast.showText(text: 'Push-to-talk cancelled (released too quickly)');
+
+      if (kDebugMode) {
+        print('Push-to-talk cleanup completed successfully');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error during push-to-talk cleanup: $e');
+      }
+
+      // Emergency fallback - force reset everything
+      _isPushToTalkRecordingActive = false;
+      _recordingStartTime = null;
+      _pushToTalkRecordedFilePath = null;
+      if (_minimumHoldTimer != null) {
+        _minimumHoldTimer!.cancel();
+        _minimumHoldTimer = null;
+      }
+
+      // Try one more time to hide the overlay
+      try {
+        RecordingOverlayPlatform.hideOverlay();
+      } catch (_) {
+        // Ignore any further errors
+      }
     }
   }
 }
