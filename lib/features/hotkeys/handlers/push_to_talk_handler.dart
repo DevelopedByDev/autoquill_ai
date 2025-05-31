@@ -96,21 +96,8 @@ class PushToTalkHandler {
       return false;
     }
 
-    // For the first use, require a longer delay to ensure everything is ready
-    final timeSinceInit = DateTime.now().difference(_initializationTime!);
-    final requiredDelay = _hasBeenUsedOnce
-        ? 300
-        : 400; // 5 seconds for first use, 2 seconds after that
-
-    if (timeSinceInit.inMilliseconds < requiredDelay) {
-      if (kDebugMode) {
-        print(
-            'PushToTalkHandler not ready yet (${timeSinceInit.inMilliseconds}ms since init, need ${requiredDelay}ms for ${_hasBeenUsedOnce ? "subsequent" : "first"} use)');
-      }
-      return false;
-    }
-
-    // Must have repositories
+    // No delay needed - race condition is handled by queued keyUp mechanism
+    // Just check that repositories are available
     if (_recordingRepository == null || _transcriptionRepository == null) {
       if (kDebugMode) {
         print('PushToTalkHandler repositories not available');
@@ -124,19 +111,6 @@ class PushToTalkHandler {
   /// Handles the push-to-talk key down event
   static void handleKeyDown() async {
     if (!_isSystemReady()) {
-      // Show a user-friendly message if attempted too early
-      if (_isInitialized && _initializationTime != null) {
-        final timeSinceInit = DateTime.now().difference(_initializationTime!);
-        final requiredDelay = _hasBeenUsedOnce ? 300 : 400;
-        if (timeSinceInit.inMilliseconds < requiredDelay) {
-          final remainingTime =
-              ((requiredDelay - timeSinceInit.inMilliseconds) / 1000).ceil();
-          BotToast.showText(
-              text: _hasBeenUsedOnce
-                  ? 'System initializing, wait ${remainingTime}s...'
-                  : 'First startup - initializing system, wait ${remainingTime}s...');
-        }
-      }
       return;
     }
 
