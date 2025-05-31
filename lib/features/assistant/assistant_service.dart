@@ -387,7 +387,7 @@ class AssistantService {
 
       // Check if screenshot feature is enabled
       final screenshotEnabled = Hive.box('settings')
-          .get('assistant_screenshot_enabled', defaultValue: true) as bool;
+          .get('assistant_screenshot_enabled', defaultValue: false) as bool;
 
       // Variables for screenshot handling
       String? screenshotPath;
