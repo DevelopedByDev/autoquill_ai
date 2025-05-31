@@ -99,8 +99,8 @@ class PushToTalkHandler {
     // For the first use, require a longer delay to ensure everything is ready
     final timeSinceInit = DateTime.now().difference(_initializationTime!);
     final requiredDelay = _hasBeenUsedOnce
-        ? 500
-        : 800; // 5 seconds for first use, 2 seconds after that
+        ? 300
+        : 400; // 5 seconds for first use, 2 seconds after that
 
     if (timeSinceInit.inMilliseconds < requiredDelay) {
       if (kDebugMode) {
@@ -127,7 +127,7 @@ class PushToTalkHandler {
       // Show a user-friendly message if attempted too early
       if (_isInitialized && _initializationTime != null) {
         final timeSinceInit = DateTime.now().difference(_initializationTime!);
-        final requiredDelay = _hasBeenUsedOnce ? 500 : 800;
+        final requiredDelay = _hasBeenUsedOnce ? 300 : 400;
         if (timeSinceInit.inMilliseconds < requiredDelay) {
           final remainingTime =
               ((requiredDelay - timeSinceInit.inMilliseconds) / 1000).ceil();
