@@ -31,7 +31,7 @@ class HotkeysStep extends StatelessWidget {
 
             // Description
             Text(
-              'Configure hotkeys to quickly access AutoQuill features',
+              'Here are the default shortcuts for the various modes.\nIf you like them, test them out on the next page.\nFeel free to change them if you want.',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Theme.of(context)
                         .textTheme
@@ -51,7 +51,7 @@ class HotkeysStep extends StatelessWidget {
                 return _buildHotkeyCard(
                   context,
                   icon: Icons.push_pin,
-                  title: 'Push-to-Talk Hotkey',
+                  title: 'Push-to-Talk Shortcut',
                   description:
                       'Hold this combination to record while pressed (default: Option+Space on Mac, Alt+Space on Windows)',
                   hotkey: state.pushToTalkHotkey,
@@ -82,7 +82,7 @@ class HotkeysStep extends StatelessWidget {
                 final hotkeyCard = _buildHotkeyCard(
                   context,
                   icon: Icons.mic,
-                  title: 'Transcription Hotkey',
+                  title: 'Transcription Shortcut',
                   description:
                       'Press this combination to start transcribing audio',
                   hotkey: state.transcriptionHotkey,
@@ -226,7 +226,7 @@ class HotkeysStep extends StatelessWidget {
                 final hotkeyCard = _buildHotkeyCard(
                   context,
                   icon: Icons.chat_bubble_outline,
-                  title: 'Assistant Hotkey',
+                  title: 'Assistant Shortcut',
                   description:
                       'Press this combination to open the AI assistant',
                   hotkey: state.assistantHotkey,

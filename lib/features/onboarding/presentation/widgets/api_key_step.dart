@@ -264,17 +264,22 @@ class _ApiKeyStepState extends State<ApiKeyStep> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    '1. Create a free account at groq.com',
+                    '1. Create a free account at groq.com (click the button below)',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '2. Go to API Keys section in your dashboard',
+                    '2. Go to API Keys section in your dashboard and click "Create API key"',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '3. Create a new API key and copy it',
+                    '3. Name it "AutoQuill", click Submit',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '4. Copy the API key, click Done and paste the key in the field above',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 12),

@@ -49,7 +49,7 @@ class WelcomeStep extends StatelessWidget {
             
             // Description
             Text(
-              'Insanely fast, super secure and free forever',
+              'Engineered for speed. Designed for trust. Free for life.',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
               ),
