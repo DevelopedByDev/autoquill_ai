@@ -416,10 +416,15 @@ class HotkeysStep extends StatelessWidget {
 
           // Current hotkey display with edit button
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Expanded(
+              Flexible(
                 child: Container(
-                  constraints: const BoxConstraints(minHeight: 50),
+                  constraints: const BoxConstraints(
+                    minWidth: 200,
+                    maxWidth: 350, // Allow more space for longer hotkeys
+                    minHeight: 50,
+                  ),
                   child: HotkeyDisplay.forPlatform(
                     hotkey: hotkey,
                     textColor: Theme.of(context).colorScheme.onSurface,
