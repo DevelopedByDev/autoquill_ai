@@ -9,10 +9,10 @@
             <sparkle:version>1</sparkle:version>
             <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
             <sparkle:releaseNotesLink>
-                https://your-domain.com/updates/release_notes.html
+                https://getautoquill.com/release_notes.html
             </sparkle:releaseNotesLink>
             <pubDate>Sat, 31 May 2025 14:00:00 +0000</pubDate>
-            <enclosure url="https://your-domain.com/downloads/AutoQuill-notarized.zip"
+            <enclosure url="https://getautoquill.com/api/downloads/AutoQuill-notarized.zip"
                        sparkle:edSignature="hzyOOgUyyR4Lm/8R4d3tgj+Nw+YvfAWhljpBWfr38X+DpHGbl/hCBERxifR2vfZNOTxTllcxCo5qJFRvbiDhAg=="
                        sparkle:os="macos"
                        length="25808155"
