@@ -59,8 +59,8 @@ void main() async {
   await windowManager.show();
   await windowManager.focus();
 
-  // Initialize Hive in Documents directory
-  final appDir = await getApplicationDocumentsDirectory();
+  // Initialize Hive in application support directory (no special permissions needed)
+  final appDir = await getApplicationSupportDirectory();
   await Hive.initFlutter(appDir.path);
 
   // Initialize AppStorage wrapper for Hive

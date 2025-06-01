@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:record/record.dart';
 import '../platform/recording_overlay_platform.dart';
 import '../../utils/audio_utils.dart';
+import 'package:path_provider/path_provider.dart';
 
 abstract class RecordingDataSource {
   Future<void> startRecording();
@@ -66,11 +67,9 @@ class RecordingDataSourceImpl implements RecordingDataSource {
   }
 
   Future<Directory> _getRecordingsDirectory() async {
-    // Get system Documents directory
-    final home = Platform.environment['HOME'];
-    if (home == null) throw Exception('Could not find home directory');
-
-    return Directory('$home/Documents/AutoQuillAIRecordings');
+    // Use application support directory (no special permissions needed)
+    final appSupportDir = await getApplicationSupportDirectory();
+    return Directory('${appSupportDir.path}/recordings');
   }
 
   Future<String> _getRecordingPath() async {
