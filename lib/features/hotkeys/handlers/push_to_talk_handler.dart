@@ -226,14 +226,29 @@ class PushToTalkHandler {
 
       // For first use, add a fallback cleanup timer to handle macOS initialization issues
       if (_isFirstUseInProgress) {
-        _firstUseCleanupTimer = Timer(Duration(seconds: 3), () {
+        if (kDebugMode) {
+          print('FIRST USE: Setting up fallback cleanup timer for 30 seconds');
+        }
+        _firstUseCleanupTimer = Timer(Duration(seconds: 30), () {
           if (_isPushToTalkRecordingActive && _isFirstUseInProgress) {
             if (kDebugMode) {
               print(
-                  'FIRST USE: Fallback cleanup triggered - possible macOS hotkey initialization issue');
+                  'FIRST USE: 30-second fallback cleanup triggered - likely macOS hotkey stuck issue');
+              print(
+                  'FIRST USE: Recording still active: $_isPushToTalkRecordingActive');
+              print(
+                  'FIRST USE: First use still in progress: $_isFirstUseInProgress');
             }
             _ensureRecordingCleanup();
             _isFirstUseInProgress = false;
+          } else {
+            if (kDebugMode) {
+              print(
+                  'FIRST USE: 30-second fallback timer expired but conditions not met for cleanup');
+              print(
+                  'FIRST USE: Recording active: $_isPushToTalkRecordingActive');
+              print('FIRST USE: First use in progress: $_isFirstUseInProgress');
+            }
           }
           _firstUseCleanupTimer = null;
         });
@@ -333,12 +348,18 @@ class PushToTalkHandler {
 
     // Cancel the minimum hold timer if it's still running
     if (_minimumHoldTimer != null) {
+      if (kDebugMode && _isFirstUseInProgress) {
+        print('FIRST USE: Cancelling minimum hold timer');
+      }
       _minimumHoldTimer!.cancel();
       _minimumHoldTimer = null;
     }
 
     // Cancel the first use cleanup timer if it's running
     if (_firstUseCleanupTimer != null) {
+      if (kDebugMode && _isFirstUseInProgress) {
+        print('FIRST USE: Cancelling 30-second fallback cleanup timer');
+      }
       _firstUseCleanupTimer!.cancel();
       _firstUseCleanupTimer = null;
     }
@@ -365,7 +386,13 @@ class PushToTalkHandler {
     }
 
     // Mark first use as complete
-    _isFirstUseInProgress = false;
+    if (_isFirstUseInProgress) {
+      if (kDebugMode) {
+        print(
+            'FIRST USE: Marking first use as complete, proceeding with normal transcription');
+      }
+      _isFirstUseInProgress = false;
+    }
 
     try {
       // Play the stop recording sound
@@ -739,6 +766,20 @@ class PushToTalkHandler {
   /// Ensure recording cleanup when key is released too quickly
   static Future<void> _ensureRecordingCleanup() async {
     try {
+      if (kDebugMode) {
+        print('==== CLEANUP CALLED ====');
+        print('Cleanup reason: Quick release or fallback timer');
+        print('Recording active: $_isPushToTalkRecordingActive');
+        print('First use in progress: $_isFirstUseInProgress');
+        print('Has been used once: $_hasBeenUsedOnce');
+        print('Recording start time: $_recordingStartTime');
+        if (_recordingStartTime != null) {
+          final elapsed = DateTime.now().difference(_recordingStartTime!);
+          print('Elapsed since recording start: ${elapsed.inMilliseconds}ms');
+        }
+        print('========================');
+      }
+
       if (kDebugMode) {
         print('Starting push-to-talk cleanup due to quick release...');
       }
