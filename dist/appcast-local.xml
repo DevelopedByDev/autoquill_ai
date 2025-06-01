@@ -5,13 +5,13 @@
         <description>Most recent updates to AutoQuill AI</description>
         <language>en</language>
         <item>
-            <title>Version 1.1.0 - Bug Fixes and Improvements</title>
-            <sparkle:version>2</sparkle:version>
-            <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+            <title>Version 1.0.0</title>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
             <sparkle:releaseNotesLink>
                 https://www.getautoquill.com/release-notes
             </sparkle:releaseNotesLink>
-            <pubDate>Sun, 01 Jun 2025 02:00:00 +0000</pubDate>
+            <pubDate>Sat, 31 May 2025 14:00:00 +0000</pubDate>
             <enclosure url="https://www.getautoquill.com/downloads/AutoQuill-notarized.zip"
                        sparkle:edSignature="hzyOOgUyyR4Lm/8R4d3tgj+Nw+YvfAWhljpBWfr38X+DpHGbl/hCBERxifR2vfZNOTxTllcxCo5qJFRvbiDhAg=="
                        sparkle:os="macos"

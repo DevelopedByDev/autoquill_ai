@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 
 class AutoUpdateService {
   static const String _feedURL =
-      'http://localhost:5002/appcast.xml'; // For testing - replace with your actual appcast URL
+      'https://www.getautoquill.com/updates/appcast.xml'; // Production URL
   static bool _isInitialized = false;
 
   /// Initialize the auto-updater with the appcast URL
@@ -49,6 +49,8 @@ class AutoUpdateService {
       if (kDebugMode) {
         print('Failed to check for updates: $e');
       }
+      // TODO: Show user-friendly message when update server is not available
+      // For now, fail silently until the update server is deployed
     }
   }
 
