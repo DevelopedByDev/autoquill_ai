@@ -34,9 +34,6 @@ class PushToTalkHandler {
   // Timer for minimum hold duration check
   static Timer? _minimumHoldTimer;
 
-  // Fallback timer for first use cleanup
-  static Timer? _firstUseCleanupTimer;
-
   // Initialization state tracking
   static bool _isInitialized = false;
   static DateTime? _initializationTime;
@@ -224,36 +221,6 @@ class PushToTalkHandler {
         _minimumHoldTimer = null;
       });
 
-      // For first use, add a fallback cleanup timer to handle macOS initialization issues
-      if (_isFirstUseInProgress) {
-        if (kDebugMode) {
-          print('FIRST USE: Setting up fallback cleanup timer for 30 seconds');
-        }
-        _firstUseCleanupTimer = Timer(Duration(seconds: 30), () {
-          if (_isPushToTalkRecordingActive && _isFirstUseInProgress) {
-            if (kDebugMode) {
-              print(
-                  'FIRST USE: 30-second fallback cleanup triggered - likely macOS hotkey stuck issue');
-              print(
-                  'FIRST USE: Recording still active: $_isPushToTalkRecordingActive');
-              print(
-                  'FIRST USE: First use still in progress: $_isFirstUseInProgress');
-            }
-            _ensureRecordingCleanup();
-            _isFirstUseInProgress = false;
-          } else {
-            if (kDebugMode) {
-              print(
-                  'FIRST USE: 30-second fallback timer expired but conditions not met for cleanup');
-              print(
-                  'FIRST USE: Recording active: $_isPushToTalkRecordingActive');
-              print('FIRST USE: First use in progress: $_isFirstUseInProgress');
-            }
-          }
-          _firstUseCleanupTimer = null;
-        });
-      }
-
       BotToast.showText(text: 'Push-to-talk recording started');
 
       if (kDebugMode) {
@@ -268,12 +235,6 @@ class PushToTalkHandler {
       if (_minimumHoldTimer != null) {
         _minimumHoldTimer!.cancel();
         _minimumHoldTimer = null;
-      }
-
-      // Cancel the first use cleanup timer if it was started
-      if (_firstUseCleanupTimer != null) {
-        _firstUseCleanupTimer!.cancel();
-        _firstUseCleanupTimer = null;
       }
 
       // Reset recording state
@@ -355,15 +316,6 @@ class PushToTalkHandler {
       _minimumHoldTimer = null;
     }
 
-    // Cancel the first use cleanup timer if it's running
-    if (_firstUseCleanupTimer != null) {
-      if (kDebugMode && _isFirstUseInProgress) {
-        print('FIRST USE: Cancelling 30-second fallback cleanup timer');
-      }
-      _firstUseCleanupTimer!.cancel();
-      _firstUseCleanupTimer = null;
-    }
-
     // If this was a quick release, cancel the recording
     if (wasQuickRelease) {
       if (kDebugMode) {
@@ -432,6 +384,12 @@ class PushToTalkHandler {
         } finally {
           _recordingStartTime = null;
         }
+      }
+
+      // Cancel the minimum hold timer after duration calculation
+      if (_minimumHoldTimer != null) {
+        _minimumHoldTimer!.cancel();
+        _minimumHoldTimer = null;
       }
 
       BotToast.showText(text: 'Recording stopped, transcribing...');
@@ -716,12 +674,6 @@ class PushToTalkHandler {
         _minimumHoldTimer = null;
       }
 
-      // Cancel the first use cleanup timer if it's running
-      if (_firstUseCleanupTimer != null) {
-        _firstUseCleanupTimer!.cancel();
-        _firstUseCleanupTimer = null;
-      }
-
       // Cancel the recording
       await _recordingRepository?.cancelRecording();
       _isPushToTalkRecordingActive = false;
@@ -796,12 +748,6 @@ class PushToTalkHandler {
       if (_minimumHoldTimer != null) {
         _minimumHoldTimer!.cancel();
         _minimumHoldTimer = null;
-      }
-
-      // Cancel the first use cleanup timer if it's running
-      if (_firstUseCleanupTimer != null) {
-        _firstUseCleanupTimer!.cancel();
-        _firstUseCleanupTimer = null;
       }
 
       // Reset recording state BEFORE attempting to cancel recording
