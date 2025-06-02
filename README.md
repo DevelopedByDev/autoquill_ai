@@ -5,6 +5,7 @@
   
   **Professional AI-Powered Audio Transcription for macOS**
   
+  [![Website](https://img.shields.io/badge/Website-getautoquill.com-2ea44f?style=flat-square)](https://www.getautoquill.com)
   [![Flutter](https://img.shields.io/badge/Flutter-3.1.3+-02569B?style=flat-square&logo=flutter)](https://flutter.dev)
   [![macOS](https://img.shields.io/badge/macOS-10.14+-000000?style=flat-square&logo=apple)](https://www.apple.com/macos)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](https://opensource.org/licenses/MIT)
