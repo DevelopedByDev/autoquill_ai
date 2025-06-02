@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:autoquill_ai/features/transcription/presentation/bloc/transcription_bloc.dart';
 import 'package:autoquill_ai/features/recording/domain/repositories/recording_repository.dart';
 import 'package:autoquill_ai/features/navigation/presentation/pages/main_layout.dart';
@@ -29,6 +30,9 @@ import 'features/hotkeys/utils/hotkey_registration.dart';
 import 'features/transcription/data/repositories/transcription_repository_impl.dart';
 import 'features/transcription/services/smart_transcription_service.dart';
 
+// Import mobile main for iOS
+import 'mobile_main.dart' as mobile_main;
+
 // App lifecycle observer to cleanup when app is closed
 class AppLifecycleObserver extends WidgetsBindingObserver {
   @override
@@ -43,9 +47,21 @@ class AppLifecycleObserver extends WidgetsBindingObserver {
 }
 
 void main() async {
+  debugPrint(
+      '🔍 MAIN: Platform check - iOS: ${Platform.isIOS}, Android: ${Platform.isAndroid}, macOS: ${Platform.isMacOS}');
+
+  // If running on iOS, delegate to mobile main
+  if (Platform.isIOS) {
+    debugPrint('📱 MAIN: Detected iOS, delegating to mobile_main.dart');
+    return mobile_main.main();
+  }
+
+  debugPrint(
+      '🖥️ MAIN: Detected desktop platform, continuing with desktop app');
+
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize window manager to hide title bar
+  // Initialize window manager to hide title bar (desktop only)
   await windowManager.ensureInitialized();
 
   // Apply window options
