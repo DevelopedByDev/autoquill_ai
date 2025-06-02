@@ -2,9 +2,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 class MobileAppStorage {
   static const String _settingsBoxName = 'settings';
-  static const String _groqKey = 'groq_api_key';
-  static const String _apiKey =
-      'api_key'; // Alternative key used by SettingsService
+  static const String _groqApiKey = 'groq_api_key';
   static const String _isOnboardingCompletedKey = 'is_onboarding_completed';
 
   static late Box<dynamic> _settingsBox;
@@ -16,30 +14,16 @@ class MobileAppStorage {
   }
 
   static Future<void> saveApiKey(String apiKey) async {
-    // Save to both keys for compatibility
-    await _settingsBox.put(_groqKey, apiKey);
-    await _settingsBox.put(_apiKey, apiKey);
+    await _settingsBox.put(_groqApiKey, apiKey);
   }
 
   static Future<String?> getApiKey() async {
-    // Check the primary key first
-    if (_settingsBox.containsKey(_groqKey)) {
-      final value = _settingsBox.get(_groqKey) as String?;
-      if (value?.isNotEmpty == true) return value;
-    }
-
-    // Fallback to the alternative key
-    if (_settingsBox.containsKey(_apiKey)) {
-      final value = _settingsBox.get(_apiKey) as String?;
-      if (value?.isNotEmpty == true) return value;
-    }
-
-    return null;
+    final value = _settingsBox.get(_groqApiKey) as String?;
+    return (value?.isNotEmpty == true) ? value : null;
   }
 
   static Future<void> deleteApiKey() async {
-    await _settingsBox.delete(_groqKey);
-    await _settingsBox.delete(_apiKey);
+    await _settingsBox.delete(_groqApiKey);
   }
 
   static Future<void> setOnboardingCompleted(bool completed) async {
