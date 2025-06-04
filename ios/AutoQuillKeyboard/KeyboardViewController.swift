@@ -41,7 +41,7 @@ class KeyboardViewController: UIInputViewController {
         
         var color: UIColor {
             switch self {
-            case .handsFree: return UIColor.systemRed
+            case .handsFree: return UIColor.systemGreen
             case .pushToTalk: return UIColor.systemBlue
             case .assistant: return UIColor.systemPurple
             }
@@ -68,6 +68,10 @@ class KeyboardViewController: UIInputViewController {
     // Stack Views for layout
     private let modeStackView = UIStackView()
     private let controlStackView = UIStackView()
+    
+    // Push-to-talk gesture tracking
+    private var pushToTalkStartTime: Date?
+    private let minimumPushToTalkDuration: TimeInterval = 0.1 // 100ms minimum
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -184,14 +188,18 @@ class KeyboardViewController: UIInputViewController {
                           icon: mode.icon, 
                           color: mode.color)
             
-            button.addTarget(self, action: #selector(modeButtonTapped(_:)), for: .touchUpInside)
+            // Only add regular tap action for hands-free and assistant buttons
+            // Push-to-talk only responds to long press
+            if mode != .pushToTalk {
+                button.addTarget(self, action: #selector(modeButtonTapped(_:)), for: .touchUpInside)
+            }
             button.tag = index
             print("✅ DEBUG: Button \(index) configured successfully")
         }
         
         // Add long press gesture to push-to-talk button
         let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(pushToTalkLongPress(_:)))
-        longPressGesture.minimumPressDuration = 0.1
+        longPressGesture.minimumPressDuration = 0.1 // Slightly less than minimum duration
         pushToTalkModeButton.addGestureRecognizer(longPressGesture)
         print("✅ DEBUG: Long press gesture added to push-to-talk button")
         
@@ -313,12 +321,12 @@ class KeyboardViewController: UIInputViewController {
         print("📊 DEBUG: Current state before: \(currentState)")
         
         currentState = .modeSelection
-        titleLabel.text = "Choose Recording Mode"
+        titleLabel.text = "Choose Mode"
         print("✅ DEBUG: State set to modeSelection, title updated")
         
         print("📐 DEBUG: Before animation - modeStackView.alpha: \(modeStackView.alpha), controlStackView.alpha: \(controlStackView.alpha)")
         
-        UIView.animate(withDuration: 0.3, animations: {
+        UIView.animate(withDuration: 0.1, animations: {
             self.modeStackView.alpha = 1.0
             self.modeStackView.transform = .identity
             self.controlStackView.alpha = 0.0
@@ -345,7 +353,7 @@ class KeyboardViewController: UIInputViewController {
         controlStackView.isHidden = false
         print("✅ DEBUG: Stack view visibility toggled")
         
-        UIView.animate(withDuration: 0.3, animations: {
+        UIView.animate(withDuration: 0.1, animations: {
             self.controlStackView.alpha = 1.0
             self.controlStackView.transform = .identity
             self.modeStackView.alpha = 0.0
@@ -424,8 +432,11 @@ class KeyboardViewController: UIInputViewController {
     @objc private func pushToTalkLongPress(_ gesture: UILongPressGestureRecognizer) {
         switch gesture.state {
         case .began:
+            pushToTalkStartTime = Date()
+            print("🎙️ Push-to-talk gesture began at: \(pushToTalkStartTime!)")
+            
             // Hide other buttons and change color to red
-            UIView.animate(withDuration: 0.2) {
+            UIView.animate(withDuration: 0.1) {
                 self.handsFreeModeButton.alpha = 0.0
                 self.assistantModeButton.alpha = 0.0
                 self.pushToTalkModeButton.backgroundColor = UIColor.systemRed
@@ -438,14 +449,51 @@ class KeyboardViewController: UIInputViewController {
             print("🎙️ Push-to-talk recording started")
             
         case .ended, .cancelled:
-            // Show other buttons and restore original color
-            UIView.animate(withDuration: 0.2) {
+            let endTime = Date()
+            let duration = pushToTalkStartTime?.timeIntervalSince(endTime) ?? 0
+            let actualDuration = abs(duration)
+            
+            print("🎙️ Push-to-talk gesture ended. Duration: \(actualDuration)s")
+            
+            // Always show other buttons and restore original color when released
+            UIView.animate(withDuration: 0.1) {
                 self.handsFreeModeButton.alpha = 1.0
                 self.assistantModeButton.alpha = 1.0
                 self.pushToTalkModeButton.backgroundColor = UIColor.systemBlue
             }
             
-            print("🎙️ Push-to-talk recording ended")
+            if actualDuration < minimumPushToTalkDuration {
+                print("⚠️ Push-to-talk cancelled: duration (\(actualDuration)s) less than minimum (\(minimumPushToTalkDuration)s)")
+                
+                // Provide error haptic feedback
+                let errorFeedback = UINotificationFeedbackGenerator()
+                errorFeedback.notificationOccurred(.error)
+                
+                // Brief flash to indicate cancellation
+                UIView.animate(withDuration: 0.1, animations: {
+                    self.pushToTalkModeButton.backgroundColor = UIColor.systemOrange
+                }) { _ in
+                    UIView.animate(withDuration: 0.1) {
+                        self.pushToTalkModeButton.backgroundColor = UIColor.systemBlue
+                    }
+                }
+                
+                print("🔄 Push-to-talk cancelled - staying in mode selection")
+                
+            } else {
+                print("✅ Push-to-talk recording completed successfully")
+                
+                // Provide success haptic feedback
+                let successFeedback = UINotificationFeedbackGenerator()
+                successFeedback.notificationOccurred(.success)
+                
+                print("🔄 Push-to-talk finished - returning to mode selection")
+                
+                // For push-to-talk, we don't transition to recording controls
+                // We stay in mode selection for the next recording
+            }
+            
+            pushToTalkStartTime = nil
             
         default:
             break
