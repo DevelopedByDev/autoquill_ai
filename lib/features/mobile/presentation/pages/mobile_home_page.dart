@@ -301,95 +301,75 @@ class _MobileHomePageState extends State<MobileHomePage>
                       builder: (context, child) {
                         return Column(
                           children: [
-                            // Row 1: Transcribed and Generated words
-                            Row(
-                              children: [
-                                // Transcription Words Card
-                                Expanded(
-                                  child: ValueListenableBuilder<int>(
-                                    valueListenable: _transcriptionWordsCount,
-                                    builder: (context, count, _) {
-                                      return MobileEnhancedStatsCard(
-                                        icon: Icons.mic_rounded,
-                                        title: 'Transcribed',
-                                        value: count.toString(),
-                                        subtitle: 'words captured',
-                                        gradient: DesignTokens.coralGradient,
-                                        iconColor: DesignTokens.vibrantCoral,
-                                        showAnimation:
-                                            _cardsAnimationController.value >
-                                                0.25,
-                                      );
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: DesignTokens.spaceSM),
-                                // Generation Words Card
-                                Expanded(
-                                  child: ValueListenableBuilder<int>(
-                                    valueListenable: _generationWordsCount,
-                                    builder: (context, count, _) {
-                                      return MobileEnhancedStatsCard(
-                                        icon: Icons.auto_awesome_rounded,
-                                        title: 'Generated',
-                                        value: count.toString(),
-                                        subtitle: 'words created',
-                                        gradient: DesignTokens.blueGradient,
-                                        iconColor: DesignTokens.deepBlue,
-                                        showAnimation:
-                                            _cardsAnimationController.value >
-                                                0.5,
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
+                            // Transcription Words Card
+                            ValueListenableBuilder<int>(
+                              valueListenable: _transcriptionWordsCount,
+                              builder: (context, count, _) {
+                                return MobileEnhancedStatsCard(
+                                  icon: Icons.mic_rounded,
+                                  title: 'Transcribed',
+                                  value: count.toString(),
+                                  subtitle: 'words captured',
+                                  gradient: DesignTokens.coralGradient,
+                                  iconColor: DesignTokens.vibrantCoral,
+                                  showAnimation:
+                                      _cardsAnimationController.value > 0.25,
+                                );
+                              },
                             ),
                             const SizedBox(height: DesignTokens.spaceSM),
 
-                            // Row 2: Recording Time and Efficiency
-                            Row(
-                              children: [
-                                // Recording Time Card
-                                Expanded(
-                                  child: ValueListenableBuilder<int>(
-                                    valueListenable: _transcriptionTimeSeconds,
-                                    builder: (context, timeSeconds, _) {
-                                      return MobileEnhancedStatsCard(
-                                        icon: Icons.timer_rounded,
-                                        title: 'Recording Time',
-                                        value: _formatTime(timeSeconds),
-                                        subtitle: 'total duration',
-                                        gradient: DesignTokens.greenGradient,
-                                        iconColor: DesignTokens.emeraldGreen,
-                                        showAnimation:
-                                            _cardsAnimationController.value >
-                                                0.75,
-                                      );
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: DesignTokens.spaceSM),
-                                // Words Per Minute Card
-                                Expanded(
-                                  child: ValueListenableBuilder<double>(
-                                    valueListenable: _wordsPerMinute,
-                                    builder: (context, wpm, _) {
-                                      return MobileEnhancedStatsCard(
-                                        icon: Icons.speed_rounded,
-                                        title: 'Efficiency',
-                                        value: wpm.toStringAsFixed(1),
-                                        subtitle: 'words per minute',
-                                        gradient: DesignTokens.purpleGradient,
-                                        iconColor: DesignTokens.purpleViolet,
-                                        showAnimation:
-                                            _cardsAnimationController.value >
-                                                1.0,
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
+                            // Generation Words Card
+                            ValueListenableBuilder<int>(
+                              valueListenable: _generationWordsCount,
+                              builder: (context, count, _) {
+                                return MobileEnhancedStatsCard(
+                                  icon: Icons.auto_awesome_rounded,
+                                  title: 'Generated',
+                                  value: count.toString(),
+                                  subtitle: 'words created',
+                                  gradient: DesignTokens.blueGradient,
+                                  iconColor: DesignTokens.deepBlue,
+                                  showAnimation:
+                                      _cardsAnimationController.value > 0.5,
+                                );
+                              },
+                            ),
+                            const SizedBox(height: DesignTokens.spaceSM),
+
+                            // Recording Time Card
+                            ValueListenableBuilder<int>(
+                              valueListenable: _transcriptionTimeSeconds,
+                              builder: (context, timeSeconds, _) {
+                                return MobileEnhancedStatsCard(
+                                  icon: Icons.timer_rounded,
+                                  title: 'Recording Time',
+                                  value: _formatTime(timeSeconds),
+                                  subtitle: 'total duration',
+                                  gradient: DesignTokens.greenGradient,
+                                  iconColor: DesignTokens.emeraldGreen,
+                                  showAnimation:
+                                      _cardsAnimationController.value > 0.75,
+                                );
+                              },
+                            ),
+                            const SizedBox(height: DesignTokens.spaceSM),
+
+                            // Words Per Minute Card
+                            ValueListenableBuilder<double>(
+                              valueListenable: _wordsPerMinute,
+                              builder: (context, wpm, _) {
+                                return MobileEnhancedStatsCard(
+                                  icon: Icons.speed_rounded,
+                                  title: 'Efficiency',
+                                  value: wpm.toStringAsFixed(1),
+                                  subtitle: 'words per minute',
+                                  gradient: DesignTokens.purpleGradient,
+                                  iconColor: DesignTokens.purpleViolet,
+                                  showAnimation:
+                                      _cardsAnimationController.value > 1.0,
+                                );
+                              },
                             ),
                           ],
                         );
