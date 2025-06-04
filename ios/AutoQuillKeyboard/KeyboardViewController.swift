@@ -72,6 +72,9 @@ class KeyboardViewController: UIInputViewController {
     // Push-to-talk gesture tracking
     private var pushToTalkStartTime: Date?
     private let minimumPushToTalkDuration: TimeInterval = 0.1 // 100ms minimum
+
+    /// Handles all audio recording operations.
+    private let recordingManager = RecordingManager()
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -371,6 +374,15 @@ class KeyboardViewController: UIInputViewController {
         let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
         impactFeedback.impactOccurred()
         
+        if selectedMode == .handsFree {
+            do {
+                try recordingManager.startRecording()
+            } catch {
+                print("Error starting recording: \(error)")
+                return
+            }
+        }
+
         showRecordingControls(for: selectedMode)
     }
     
@@ -382,13 +394,26 @@ class KeyboardViewController: UIInputViewController {
         let impactFeedback = UIImpactFeedbackGenerator(style: .light)
         impactFeedback.impactOccurred()
         
-        // For now, just print the action (we'll implement backend logic later)
-        print("🎯 \(buttonName) button tapped!")
-        
-        // If cancel or stop, go back to mode selection
-        if sender.tag == 1 || sender.tag == 2 { // Stop or Cancel
+        switch sender.tag {
+        case 0: // Pause
+            recordingManager.pauseRecording()
+        case 1: // Stop
+            recordingManager.stopRecording()
             showModeSelection()
+        case 2: // Cancel
+            recordingManager.cancelRecording()
+            showModeSelection()
+        case 3: // Restart
+            do {
+                try recordingManager.restartRecording()
+            } catch {
+                print("Error restarting recording: \(error)")
+            }
+        default:
+            break
         }
+
+        print("🎯 \(buttonName) button tapped!")
     }
     
     // MARK: - Button Animations
