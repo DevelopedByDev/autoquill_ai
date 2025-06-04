@@ -36,6 +36,12 @@ target 'Runner' do
   end
 end
 
+# AutoQuill Keyboard Extension target
+target 'AutoQuillKeyboard' do
+  use_frameworks!
+  # Keyboard extensions have limited capabilities, so we only include essential pods
+end
+
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)

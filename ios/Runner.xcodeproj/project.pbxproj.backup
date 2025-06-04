@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -16,7 +16,6 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
-		C804B2C02DEFC2D50009E1B8 /* AutoQuillKeyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C804B2B92DEFC2D50009E1B8 /* AutoQuillKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F405D5B11DC7E9C2DE2CA24A /* Pods_AutoQuillKeyboard.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A4923B72444E27CCE98EFA2 /* Pods_AutoQuillKeyboard.framework */; };
 /* End PBXBuildFile section */
 
@@ -54,7 +53,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				C804B2C02DEFC2D50009E1B8 /* AutoQuillKeyboard.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -130,7 +128,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		C804B2C12DEFC2D50009E1B8 /* Exceptions for "AutoQuillKeyboard" folder in "AutoQuillKeyboard" target */ = {
+		C804B2C12DEFC2D50009E1B8 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -140,18 +138,7 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		C804B2BA2DEFC2D50009E1B8 /* AutoQuillKeyboard */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				C804B2C12DEFC2D50009E1B8 /* Exceptions for "AutoQuillKeyboard" folder in "AutoQuillKeyboard" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = AutoQuillKeyboard;
-			sourceTree = "<group>";
-		};
+		C804B2BA2DEFC2D50009E1B8 /* AutoQuillKeyboard */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (C804B2C12DEFC2D50009E1B8 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = AutoQuillKeyboard; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -298,9 +285,9 @@
 				97C146EB1CF9000F007C117D /* Frameworks */,
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
-				C804B2C62DEFC2D50009E1B8 /* Embed Foundation Extensions */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				508A8CE6CA125FC18FE3A3DD /* [CP] Embed Pods Frameworks */,
+				C804B2C62DEFC2D50009E1B8 /* Embed Foundation Extensions */,
 				C8F0EA9B2DEFDE19009AEF6F /* CopyFiles */,
 				C8F0EA9C2DEFDE2D009AEF6F /* CopyFiles */,
 				C8F0EA9D2DEFDE47009AEF6F /* CopyFiles */,
@@ -434,9 +421,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;

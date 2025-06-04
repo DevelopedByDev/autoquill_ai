@@ -27,32 +27,54 @@ void main() async {
     final appDir = await getApplicationSupportDirectory();
     debugPrint('📁 MOBILE: App directory: ${appDir.path}');
 
-    await Hive.initFlutter(appDir.path);
-    debugPrint('✅ MOBILE: Hive initialized');
+    // Only initialize Hive if not already initialized
+    if (!Hive.isAdapterRegistered(0)) {
+      await Hive.initFlutter(appDir.path);
+      debugPrint('✅ MOBILE: Hive initialized');
+    } else {
+      debugPrint('✅ MOBILE: Hive already initialized');
+    }
 
     // Initialize AppStorage wrapper for Hive (needed by SettingsService)
     debugPrint('💾 MOBILE: Initializing AppStorage...');
-    await AppStorage.init();
-    debugPrint('✅ MOBILE: AppStorage initialized');
+    try {
+      await AppStorage.init();
+      debugPrint('✅ MOBILE: AppStorage initialized');
+    } catch (e) {
+      debugPrint('⚠️ MOBILE: AppStorage already initialized or error: $e');
+    }
 
     // Initialize MobileAppStorage wrapper for Hive (mobile-specific)
     debugPrint('📱 MOBILE: Initializing MobileAppStorage...');
-    await MobileAppStorage.init();
-    debugPrint('✅ MOBILE: MobileAppStorage initialized');
+    try {
+      await MobileAppStorage.init();
+      debugPrint('✅ MOBILE: MobileAppStorage initialized');
+    } catch (e) {
+      debugPrint(
+          '⚠️ MOBILE: MobileAppStorage already initialized or error: $e');
+    }
 
     // Ensure stats box is open
     debugPrint('📊 MOBILE: Opening stats box...');
-    if (!Hive.isBoxOpen('stats')) {
-      await Hive.openBox('stats');
-      debugPrint('✅ MOBILE: Stats box opened');
-    } else {
-      debugPrint('✅ MOBILE: Stats box already open');
+    try {
+      if (!Hive.isBoxOpen('stats')) {
+        await Hive.openBox('stats');
+        debugPrint('✅ MOBILE: Stats box opened');
+      } else {
+        debugPrint('✅ MOBILE: Stats box already open');
+      }
+    } catch (e) {
+      debugPrint('⚠️ MOBILE: Stats box error: $e');
     }
 
     // Initialize stats service
     debugPrint('⚙️ MOBILE: Initializing stats service...');
-    await StatsService().init();
-    debugPrint('✅ MOBILE: Stats service initialized');
+    try {
+      await StatsService().init();
+      debugPrint('✅ MOBILE: Stats service initialized');
+    } catch (e) {
+      debugPrint('⚠️ MOBILE: Stats service error: $e');
+    }
 
     debugPrint('🎉 MOBILE: All initialization complete, starting app...');
     runApp(const MobileApp());
@@ -173,7 +195,8 @@ class MobileAppWrapper extends StatefulWidget {
   State<MobileAppWrapper> createState() => _MobileAppWrapperState();
 }
 
-class _MobileAppWrapperState extends State<MobileAppWrapper> {
+class _MobileAppWrapperState extends State<MobileAppWrapper>
+    with WidgetsBindingObserver {
   bool _isLoading = true;
   bool _hasApiKey = false;
   String? _error;
@@ -182,7 +205,46 @@ class _MobileAppWrapperState extends State<MobileAppWrapper> {
   void initState() {
     super.initState();
     debugPrint('🔄 MOBILE: MobileAppWrapper initState called');
+
+    // Add lifecycle observer
+    WidgetsBinding.instance.addObserver(this);
+
     _checkApiKey();
+  }
+
+  @override
+  void dispose() {
+    debugPrint('🧹 MOBILE: MobileAppWrapper dispose called');
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    debugPrint('🔄 MOBILE: App lifecycle state changed to: $state');
+
+    switch (state) {
+      case AppLifecycleState.resumed:
+        debugPrint('🏠 MOBILE: App resumed from background');
+        // Refresh API key status when app comes back to foreground
+        if (!_isLoading) {
+          _checkApiKey();
+        }
+        break;
+      case AppLifecycleState.paused:
+        debugPrint('⏸️ MOBILE: App paused/going to background');
+        break;
+      case AppLifecycleState.detached:
+        debugPrint('🔚 MOBILE: App detached');
+        break;
+      case AppLifecycleState.inactive:
+        debugPrint('💤 MOBILE: App inactive');
+        break;
+      case AppLifecycleState.hidden:
+        debugPrint('👻 MOBILE: App hidden');
+        break;
+    }
   }
 
   Future<void> _checkApiKey() async {
