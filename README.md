@@ -1,7 +1,7 @@
-# AutoQuill AI
+# AutoQuill
 
 <div align="center">
-  <img src="assets/icons/with_bg/AQOL.png" alt="AutoQuill AI Logo" width="200"/>
+  <img src="assets/icons/with_bg/AQOL.png" alt="AutoQuill Logo" width="200"/>
   
   **Professional AI-Powered Audio Transcription for macOS**
   
@@ -14,7 +14,7 @@
 
 ## 📖 Overview
 
-AutoQuill AI is a powerful, system-wide audio transcription application for macOS that transforms speech into text instantly. With advanced AI-powered transcription, intelligent text processing, and seamless system integration, AutoQuill streamlines your workflow whether you're writing documents, coding, or communicating.
+AutoQuill is a powerful, system-wide audio transcription application for macOS that transforms speech into text instantly. With advanced AI-powered transcription, intelligent text processing, and seamless system integration, AutoQuill streamlines your workflow whether you're writing documents, coding, or communicating.
 
 ### 🎯 Key Benefits
 
@@ -96,7 +96,7 @@ AutoQuill AI is a powerful, system-wide audio transcription application for macO
 ## 🚀 Installation
 
 ### **Option 1: Download DMG (Recommended)**
-1. Visit [AutoQuill AI Releases](https://github.com/DevelopedByDev/autoquill_ai/releases)
+1. Visit [AutoQuill Releases](https://github.com/DevelopedByDev/autoquill_ai/releases)
 2. Download the latest `AutoQuill-v{version}.dmg` file
 3. Open the DMG and drag AutoQuill to Applications
 4. Launch AutoQuill from Applications folder
@@ -249,7 +249,7 @@ macos/                        # macOS-specific code
 
 ### **Architecture**
 
-AutoQuill AI follows **Clean Architecture** principles with **BLoC pattern**:
+AutoQuill follows **Clean Architecture** principles with **BLoC pattern**:
 
 - **Presentation Layer**: Flutter widgets and BLoC state management
 - **Domain Layer**: Business logic and repository interfaces  
@@ -267,7 +267,7 @@ AutoQuill AI follows **Clean Architecture** principles with **BLoC pattern**:
 
 ## 🤝 Contributing
 
-We welcome contributions from the community! Here's how you can help make AutoQuill AI better:
+We welcome contributions from the community! Here's how you can help make AutoQuill better:
 
 ### **Getting Started**
 
@@ -449,7 +449,7 @@ flutter build macos
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 ```
-MIT License - Copyright (c) 2024 Divyansh Lalwani
+MIT License - Copyright (c) 2025 Divyansh Lalwani
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

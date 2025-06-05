@@ -1,10 +1,10 @@
-# AutoQuill AI Auto-Update Setup Guide
+# AutoQuill Auto-Update Setup Guide
 
-This guide explains how to set up and use the auto-updating functionality for AutoQuill AI using the `auto_updater` package and Fastforge for distribution.
+This guide explains how to set up and use the auto-updating functionality for AutoQuill using the `auto_updater` package and Fastforge for distribution.
 
 ## Overview
 
-AutoQuill AI now supports automatic updates using Sparkle framework on macOS. The app will automatically check for updates every 24 hours and notify users when new versions are available.
+AutoQuill now supports automatic updates using Sparkle framework on macOS. The app will automatically check for updates every 24 hours and notify users when new versions are available.
 
 **Distribution Options:**
 - **DMG Files**: For initial distribution outside the Mac App Store
@@ -106,11 +106,11 @@ dart run auto_updater:sign_update dist/1.0.0+1/autoquill_ai-1.0.0+1-macos.zip
 
 #### Initial Installation
 1. Download the DMG file from your distribution website
-2. Open the DMG and drag AutoQuill AI to Applications folder
+2. Open the DMG and drag AutoQuill to Applications folder
 3. Launch the app - it will automatically check for updates going forward
 
 #### Manual Update Check
-1. Open AutoQuill AI
+1. Open AutoQuill
 2. Go to Settings (gear icon)
 3. Select "General" tab
 4. Click "Check for Updates" button

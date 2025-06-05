@@ -1,4 +1,4 @@
-# Performance Optimizations for AutoQuill AI
+# Performance Optimizations for AutoQuill
 
 This document outlines all the performance optimizations implemented to reduce latency between recording audio and receiving transcriptions.
 
