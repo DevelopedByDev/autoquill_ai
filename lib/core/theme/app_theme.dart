@@ -146,7 +146,7 @@ final ThemeData minimalistDarkTheme = ThemeData(
       ),
     ),
   ),
-  cardTheme: CardTheme(
+  cardTheme: CardThemeData(
     color: DesignTokens.darkSurface,
     elevation: DesignTokens.elevationNone,
     shape: RoundedRectangleBorder(
@@ -154,7 +154,7 @@ final ThemeData minimalistDarkTheme = ThemeData(
     ),
     margin: EdgeInsets.zero,
   ),
-  dialogTheme: DialogTheme(
+  dialogTheme: DialogThemeData(
     backgroundColor: DesignTokens.darkSurface,
     elevation: DesignTokens.elevationNone,
     shape: RoundedRectangleBorder(
@@ -183,22 +183,22 @@ final ThemeData minimalistDarkTheme = ThemeData(
     ),
   ),
   switchTheme: SwitchThemeData(
-    thumbColor: MaterialStateProperty.resolveWith((states) {
-      if (states.contains(MaterialState.selected)) {
+    thumbColor: WidgetStateProperty.resolveWith((states) {
+      if (states.contains(WidgetState.selected)) {
         return DesignTokens.vibrantCoral;
       }
       return DesignTokens.darkDivider;
     }),
-    trackColor: MaterialStateProperty.resolveWith((states) {
-      if (states.contains(MaterialState.selected)) {
+    trackColor: WidgetStateProperty.resolveWith((states) {
+      if (states.contains(WidgetState.selected)) {
         return Color.fromRGBO(245, 80, 54, DesignTokens.opacityFaint);
       }
       return DesignTokens.darkSurface;
     }),
   ),
   checkboxTheme: CheckboxThemeData(
-    fillColor: MaterialStateProperty.resolveWith((states) {
-      if (states.contains(MaterialState.selected)) {
+    fillColor: WidgetStateProperty.resolveWith((states) {
+      if (states.contains(WidgetState.selected)) {
         return DesignTokens.vibrantCoral;
       }
       return DesignTokens.darkSurface;
@@ -366,7 +366,7 @@ final ThemeData minimalistLightTheme = ThemeData(
       ),
     ),
   ),
-  cardTheme: CardTheme(
+  cardTheme: CardThemeData(
     color: DesignTokens.softGray,
     elevation: DesignTokens.elevationNone,
     shape: RoundedRectangleBorder(
@@ -374,7 +374,7 @@ final ThemeData minimalistLightTheme = ThemeData(
     ),
     margin: EdgeInsets.zero,
   ),
-  dialogTheme: DialogTheme(
+  dialogTheme: DialogThemeData(
     backgroundColor: DesignTokens.trueWhite,
     elevation: DesignTokens.elevationNone,
     shape: RoundedRectangleBorder(
@@ -403,22 +403,22 @@ final ThemeData minimalistLightTheme = ThemeData(
     ),
   ),
   switchTheme: SwitchThemeData(
-    thumbColor: MaterialStateProperty.resolveWith((states) {
-      if (states.contains(MaterialState.selected)) {
+    thumbColor: WidgetStateProperty.resolveWith((states) {
+      if (states.contains(WidgetState.selected)) {
         return DesignTokens.vibrantCoral;
       }
       return DesignTokens.vibrantCoral; // Using vibrant coral for better visibility in light mode
     }),
-    trackColor: MaterialStateProperty.resolveWith((states) {
-      if (states.contains(MaterialState.selected)) {
+    trackColor: WidgetStateProperty.resolveWith((states) {
+      if (states.contains(WidgetState.selected)) {
         return Color.fromRGBO(245, 80, 54, DesignTokens.opacityFaint);
       }
       return DesignTokens.softGray;
     }),
   ),
   checkboxTheme: CheckboxThemeData(
-    fillColor: MaterialStateProperty.resolveWith((states) {
-      if (states.contains(MaterialState.selected)) {
+    fillColor: WidgetStateProperty.resolveWith((states) {
+      if (states.contains(WidgetState.selected)) {
         return DesignTokens.vibrantCoral;
       }
       return DesignTokens.softGray;
