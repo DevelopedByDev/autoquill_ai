@@ -75,6 +75,3 @@ print_warning "- System Preferences > Security & Privacy > Privacy > Microphone"
 print_warning "- System Preferences > Security & Privacy > Privacy > Screen Recording"
 print_warning "- System Preferences > Security & Privacy > Privacy > Accessibility"
 print_warning "- System Preferences > Security & Privacy > Privacy > Input Monitoring"
-
-echo ""
-print_status "Would you like to run the app now to test permissions? (y/n)" 
