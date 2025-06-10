@@ -218,6 +218,8 @@ class AppDelegate: FlutterAppDelegate, FlutterStreamHandler {
       handleGetModelSize(call: call, result: result)
     case "getModelsDirectory":
       handleGetModelsDirectory(call: call, result: result)
+    case "openModelsDirectory":
+      handleOpenModelsDirectory(call: call, result: result)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -307,6 +309,11 @@ class AppDelegate: FlutterAppDelegate, FlutterStreamHandler {
   private func handleGetModelsDirectory(call: FlutterMethodCall, result: @escaping FlutterResult) {
     let directory = whisperKitService.getModelsDirectory()
     result(directory)
+  }
+  
+  private func handleOpenModelsDirectory(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    let success = whisperKitService.openModelsDirectory()
+    result(success)
   }
   
   // MARK: - FlutterStreamHandler

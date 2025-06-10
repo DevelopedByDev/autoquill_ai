@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -121,6 +120,19 @@ class WhisperKitService {
         print('Error getting models directory: $e');
       }
       return null;
+    }
+  }
+
+  /// Opens the models directory in Finder
+  static Future<bool> openModelsDirectory() async {
+    try {
+      final result = await _channel.invokeMethod('openModelsDirectory');
+      return result as bool? ?? false;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error opening models directory: $e');
+      }
+      return false;
     }
   }
 

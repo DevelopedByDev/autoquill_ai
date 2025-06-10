@@ -158,6 +158,29 @@ class WhisperKitService: NSObject {
         return documentsPath.appendingPathComponent(modelStorage).path
     }
     
+    /// Opens the models directory in Finder
+    func openModelsDirectory() -> Bool {
+        guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            return false
+        }
+        
+        let modelPath = documentsPath.appendingPathComponent(modelStorage)
+        
+        // Create directory if it doesn't exist
+        if !FileManager.default.fileExists(atPath: modelPath.path) {
+            do {
+                try FileManager.default.createDirectory(at: modelPath, withIntermediateDirectories: true)
+            } catch {
+                print("Error creating models directory: \(error)")
+                return false
+            }
+        }
+        
+        // Open the directory in Finder
+        NSWorkspace.shared.open(modelPath)
+        return true
+    }
+    
     /// Initializes WhisperKit
     func initialize() async throws {
         print("Initializing WhisperKit service...")

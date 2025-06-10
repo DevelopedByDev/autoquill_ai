@@ -7,6 +7,7 @@ import 'package:autoquill_ai/features/settings/presentation/bloc/settings_event.
 import 'package:autoquill_ai/features/settings/presentation/widgets/api_key_section.dart';
 import 'package:autoquill_ai/features/settings/presentation/widgets/theme_settings_section.dart';
 import 'package:autoquill_ai/core/services/auto_update_service.dart';
+import 'package:autoquill_ai/core/services/whisper_kit_service.dart';
 import 'package:autoquill_ai/core/theme/design_tokens.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:path_provider/path_provider.dart';
@@ -415,6 +416,8 @@ class GeneralSettingsPage extends StatelessWidget {
             }).toList(),
           ),
         ),
+        const SizedBox(height: DesignTokens.spaceMD),
+        _buildOpenModelsDirectoryButton(context, isDarkMode),
       ],
     );
   }
@@ -533,6 +536,50 @@ class GeneralSettingsPage extends StatelessWidget {
         ),
       );
     }
+  }
+
+  Widget _buildOpenModelsDirectoryButton(
+      BuildContext context, bool isDarkMode) {
+    return BlocBuilder<SettingsBloc, SettingsState>(
+      builder: (context, state) {
+        return Container(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () => _openModelsDirectory(context),
+            icon: Icon(
+              Icons.folder_open_rounded,
+              size: DesignTokens.iconSizeSM,
+            ),
+            label: Text(
+              'Open Models Folder',
+              style: TextStyle(
+                fontWeight: DesignTokens.fontWeightMedium,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isDarkMode
+                  ? DesignTokens.trueWhite.withValues(alpha: 0.1)
+                  : DesignTokens.pureBlack.withValues(alpha: 0.08),
+              foregroundColor:
+                  isDarkMode ? DesignTokens.trueWhite : DesignTokens.pureBlack,
+              padding: const EdgeInsets.symmetric(
+                vertical: DesignTokens.spaceSM,
+                horizontal: DesignTokens.spaceMD,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(DesignTokens.radiusSM),
+                side: BorderSide(
+                  color: isDarkMode
+                      ? DesignTokens.trueWhite.withValues(alpha: 0.2)
+                      : DesignTokens.pureBlack.withValues(alpha: 0.1),
+                ),
+              ),
+              elevation: 0,
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildDataLocationSection(BuildContext context) {
@@ -787,6 +834,26 @@ class GeneralSettingsPage extends StatelessWidget {
     } catch (e) {
       BotToast.showText(
         text: 'Failed to open data folder: $e',
+        duration: const Duration(seconds: 3),
+      );
+    }
+  }
+
+  void _openModelsDirectory(BuildContext context) async {
+    try {
+      final success = await WhisperKitService.openModelsDirectory();
+
+      if (success) {
+        BotToast.showText(
+          text: 'Models folder opened successfully',
+          duration: const Duration(seconds: 2),
+        );
+      } else {
+        throw Exception('Failed to open models directory');
+      }
+    } catch (e) {
+      BotToast.showText(
+        text: 'Failed to open models folder: $e',
         duration: const Duration(seconds: 3),
       );
     }
