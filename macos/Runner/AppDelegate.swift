@@ -3,7 +3,9 @@ import FlutterMacOS
 import AudioToolbox
 
 @main
-class AppDelegate: FlutterAppDelegate {
+class AppDelegate: FlutterAppDelegate, FlutterStreamHandler {
+  private let whisperKitService = WhisperKitService()
+  private var progressEventSink: FlutterEventSink?
   
   override func applicationDidFinishLaunching(_ notification: Notification) {
     // Get the main Flutter view controller
@@ -28,6 +30,24 @@ class AppDelegate: FlutterAppDelegate {
     soundChannel.setMethodCallHandler { [weak self] (call, result) in
       self?.handleSoundMethodCall(call: call, result: result)
     }
+    
+    // Set up the WhisperKit method channel
+    let whisperKitChannel = FlutterMethodChannel(
+      name: "com.autoquill.whisperkit",
+      binaryMessenger: controller.engine.binaryMessenger
+    )
+    
+    whisperKitChannel.setMethodCallHandler { [weak self] (call, result) in
+      self?.handleWhisperKitMethodCall(call: call, result: result)
+    }
+    
+    // Set up the WhisperKit progress event channel
+    let progressEventChannel = FlutterEventChannel(
+      name: "com.autoquill.whisperkit.progress",
+      binaryMessenger: controller.engine.binaryMessenger
+    )
+    
+    progressEventChannel.setStreamHandler(self)
     
     super.applicationDidFinishLaunching(notification)
   }
@@ -178,5 +198,126 @@ class AppDelegate: FlutterAppDelegate {
     }
     
     result(nil)
+  }
+  
+  // MARK: - WhisperKit Method Call Handler
+  
+  private func handleWhisperKitMethodCall(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    switch call.method {
+    case "initialize":
+      handleInitializeWhisperKit(call: call, result: result)
+    case "downloadModel":
+      handleDownloadModel(call: call, result: result)
+    case "getDownloadedModels":
+      handleGetDownloadedModels(call: call, result: result)
+    case "isModelDownloaded":
+      handleIsModelDownloaded(call: call, result: result)
+    case "deleteModel":
+      handleDeleteModel(call: call, result: result)
+    case "getModelSize":
+      handleGetModelSize(call: call, result: result)
+    case "getModelsDirectory":
+      handleGetModelsDirectory(call: call, result: result)
+    default:
+      result(FlutterMethodNotImplemented)
+    }
+  }
+  
+  private func handleInitializeWhisperKit(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    Task {
+      do {
+        try await whisperKitService.initialize()
+        DispatchQueue.main.async {
+          result(nil)
+        }
+      } catch {
+        DispatchQueue.main.async {
+          result(FlutterError(code: "INITIALIZATION_ERROR", message: "Failed to initialize WhisperKit: \(error)", details: nil))
+        }
+      }
+    }
+  }
+  
+  private func handleDownloadModel(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard let args = call.arguments as? [String: Any],
+          let modelName = args["modelName"] as? String else {
+      result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid model name", details: nil))
+      return
+    }
+    
+    Task {
+      do {
+        try await whisperKitService.downloadModel(modelName) { [weak self] progress in
+          DispatchQueue.main.async {
+            self?.progressEventSink?([
+              "modelName": modelName,
+              "progress": progress
+            ])
+          }
+        }
+        DispatchQueue.main.async {
+          result(nil)
+        }
+      } catch {
+        DispatchQueue.main.async {
+          result(FlutterError(code: "DOWNLOAD_ERROR", message: "Failed to download model \(modelName): \(error)", details: nil))
+        }
+      }
+    }
+  }
+  
+  private func handleGetDownloadedModels(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    let downloadedModels = whisperKitService.getDownloadedModels()
+    result(downloadedModels)
+  }
+  
+  private func handleIsModelDownloaded(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard let args = call.arguments as? [String: Any],
+          let modelName = args["modelName"] as? String else {
+      result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid model name", details: nil))
+      return
+    }
+    
+    let isDownloaded = whisperKitService.isModelDownloaded(modelName)
+    result(isDownloaded)
+  }
+  
+  private func handleDeleteModel(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard let args = call.arguments as? [String: Any],
+          let modelName = args["modelName"] as? String else {
+      result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid model name", details: nil))
+      return
+    }
+    
+    let success = whisperKitService.deleteModel(modelName)
+    result(success)
+  }
+  
+  private func handleGetModelSize(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard let args = call.arguments as? [String: Any],
+          let modelName = args["modelName"] as? String else {
+      result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid model name", details: nil))
+      return
+    }
+    
+    let size = whisperKitService.getModelSize(modelName)
+    result(size)
+  }
+  
+  private func handleGetModelsDirectory(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    let directory = whisperKitService.getModelsDirectory()
+    result(directory)
+  }
+  
+  // MARK: - FlutterStreamHandler
+  
+  func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    progressEventSink = events
+    return nil
+  }
+  
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    progressEventSink = nil
+    return nil
   }
 }

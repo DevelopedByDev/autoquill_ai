@@ -49,6 +49,10 @@ class SettingsState extends Equatable {
   // Local transcription settings
   final bool localTranscriptionEnabled;
   final String selectedLocalModel;
+  final Map<String, double>
+      modelDownloadProgress; // modelName -> progress (0.0 to 1.0)
+  final List<String> downloadedModels;
+  final Map<String, String> modelDownloadErrors; // modelName -> error message
 
   const SettingsState({
     this.apiKey,
@@ -72,6 +76,9 @@ class SettingsState extends Equatable {
     this.soundEnabled = true,
     this.localTranscriptionEnabled = false,
     this.selectedLocalModel = 'base',
+    this.modelDownloadProgress = const {},
+    this.downloadedModels = const [],
+    this.modelDownloadErrors = const {},
   });
 
   // Computed property to get the appropriate transcription model based on selected languages
@@ -112,6 +119,9 @@ class SettingsState extends Equatable {
     bool? soundEnabled,
     bool? localTranscriptionEnabled,
     String? selectedLocalModel,
+    Map<String, double>? modelDownloadProgress,
+    List<String>? downloadedModels,
+    Map<String, String>? modelDownloadErrors,
   }) {
     return SettingsState(
       apiKey: apiKey ?? this.apiKey,
@@ -137,6 +147,10 @@ class SettingsState extends Equatable {
       localTranscriptionEnabled:
           localTranscriptionEnabled ?? this.localTranscriptionEnabled,
       selectedLocalModel: selectedLocalModel ?? this.selectedLocalModel,
+      modelDownloadProgress:
+          modelDownloadProgress ?? this.modelDownloadProgress,
+      downloadedModels: downloadedModels ?? this.downloadedModels,
+      modelDownloadErrors: modelDownloadErrors ?? this.modelDownloadErrors,
     );
   }
 
@@ -161,5 +175,8 @@ class SettingsState extends Equatable {
         soundEnabled,
         localTranscriptionEnabled,
         selectedLocalModel,
+        modelDownloadProgress,
+        downloadedModels,
+        modelDownloadErrors,
       ];
 }

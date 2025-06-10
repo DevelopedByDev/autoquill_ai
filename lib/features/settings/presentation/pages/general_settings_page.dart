@@ -397,33 +397,8 @@ class GeneralSettingsPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: DesignTokens.spaceMD),
-                      Container(
-                        decoration: BoxDecoration(
-                          color:
-                              DesignTokens.vibrantCoral.withValues(alpha: 0.1),
-                          borderRadius:
-                              BorderRadius.circular(DesignTokens.radiusXS),
-                        ),
-                        child: IconButton(
-                          onPressed: () {
-                            // TODO: Implement download functionality
-                            if (kDebugMode) {
-                              print('Download ${model['name']} model');
-                            }
-                          },
-                          icon: Icon(
-                            Icons.download_rounded,
-                            color: DesignTokens.vibrantCoral,
-                            size: DesignTokens.iconSizeSM,
-                          ),
-                          iconSize: DesignTokens.iconSizeSM,
-                          constraints: const BoxConstraints(
-                            minWidth: 32,
-                            minHeight: 32,
-                          ),
-                          padding: const EdgeInsets.all(DesignTokens.spaceXS),
-                        ),
-                      ),
+                      _buildModelActionButton(
+                          context, model['name']!, state, isDarkMode),
                     ],
                   ),
                   value: model['name']!,
@@ -442,6 +417,122 @@ class GeneralSettingsPage extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Widget _buildModelActionButton(BuildContext context, String modelName,
+      SettingsState state, bool isDarkMode) {
+    final isDownloaded = state.downloadedModels.contains(modelName);
+    final isDownloading = state.modelDownloadProgress.containsKey(modelName);
+    final downloadProgress = state.modelDownloadProgress[modelName] ?? 0.0;
+    final hasError = state.modelDownloadErrors.containsKey(modelName);
+
+    if (isDownloading) {
+      // Show progress indicator
+      return Container(
+        decoration: BoxDecoration(
+          color: DesignTokens.vibrantCoral.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
+        ),
+        width: 60,
+        height: 32,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            CircularProgressIndicator(
+              value: downloadProgress,
+              strokeWidth: 2,
+              backgroundColor: DesignTokens.vibrantCoral.withValues(alpha: 0.2),
+              valueColor:
+                  AlwaysStoppedAnimation<Color>(DesignTokens.vibrantCoral),
+            ),
+            Text(
+              '${(downloadProgress * 100).toInt()}%',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: DesignTokens.fontWeightMedium,
+                color: DesignTokens.vibrantCoral,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (isDownloaded) {
+      // Show downloaded indicator with delete option
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: DesignTokens.emeraldGreen.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
+            ),
+            child: IconButton(
+              onPressed: null, // Just shows status
+              icon: Icon(
+                Icons.check_circle_rounded,
+                color: DesignTokens.emeraldGreen,
+                size: DesignTokens.iconSizeSM,
+              ),
+              iconSize: DesignTokens.iconSizeSM,
+              constraints: const BoxConstraints(
+                minWidth: 32,
+                minHeight: 32,
+              ),
+              padding: const EdgeInsets.all(DesignTokens.spaceXS),
+            ),
+          ),
+          const SizedBox(width: DesignTokens.spaceXS),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.red.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
+            ),
+            child: IconButton(
+              onPressed: () {
+                context.read<SettingsBloc>().add(DeleteLocalModel(modelName));
+              },
+              icon: Icon(
+                Icons.delete_rounded,
+                color: Colors.red,
+                size: DesignTokens.iconSizeSM,
+              ),
+              iconSize: DesignTokens.iconSizeSM,
+              constraints: const BoxConstraints(
+                minWidth: 32,
+                minHeight: 32,
+              ),
+              padding: const EdgeInsets.all(DesignTokens.spaceXS),
+            ),
+          ),
+        ],
+      );
+    } else {
+      // Show download button
+      return Container(
+        decoration: BoxDecoration(
+          color: hasError
+              ? Colors.red.withValues(alpha: 0.1)
+              : DesignTokens.vibrantCoral.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
+        ),
+        child: IconButton(
+          onPressed: () {
+            context.read<SettingsBloc>().add(DownloadModel(modelName));
+          },
+          icon: Icon(
+            hasError ? Icons.error_rounded : Icons.download_rounded,
+            color: hasError ? Colors.red : DesignTokens.vibrantCoral,
+            size: DesignTokens.iconSizeSM,
+          ),
+          iconSize: DesignTokens.iconSizeSM,
+          constraints: const BoxConstraints(
+            minWidth: 32,
+            minHeight: 32,
+          ),
+          padding: const EdgeInsets.all(DesignTokens.spaceXS),
+        ),
+      );
+    }
   }
 
   Widget _buildDataLocationSection(BuildContext context) {

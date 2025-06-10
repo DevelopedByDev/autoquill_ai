@@ -7,6 +7,7 @@ import '../../../../core/constants/language_codes.dart';
 
 import '../../../../core/settings/settings_service.dart';
 import '../../../../core/services/sound_service.dart';
+import '../../../../core/services/whisper_kit_service.dart';
 import '../../../../core/storage/app_storage.dart';
 import '../../../../widgets/hotkey_handler.dart';
 import 'settings_event.dart';
@@ -68,6 +69,12 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     // Local transcription events
     on<ToggleLocalTranscription>(_onToggleLocalTranscription);
     on<SelectLocalModel>(_onSelectLocalModel);
+    on<DownloadModel>(_onDownloadModel);
+    on<UpdateModelDownloadProgress>(_onUpdateModelDownloadProgress);
+    on<ModelDownloadCompleted>(_onModelDownloadCompleted);
+    on<ModelDownloadFailed>(_onModelDownloadFailed);
+    on<LoadDownloadedModels>(_onLoadDownloadedModels);
+    on<DeleteLocalModel>(_onDeleteLocalModel);
   }
 
   Future<void> _onLoadSettings(
@@ -143,11 +150,20 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       // Sync with platform-specific sound setting
       await SoundService.setSoundEnabled(soundEnabled);
 
+      // Initialize WhisperKit service
+      await WhisperKitService.initialize();
+
       // Load local transcription settings
       final localTranscriptionEnabled =
           _box.get('local_transcription_enabled', defaultValue: false) as bool;
       final selectedLocalModel =
           _box.get('selected_local_model', defaultValue: 'base') as String;
+
+      // Load downloaded models
+      final savedDownloadedModels =
+          _box.get('downloaded_models') as List<dynamic>?;
+      final downloadedModels =
+          savedDownloadedModels?.cast<String>() ?? <String>[];
 
       emit(state.copyWith(
         apiKey: apiKey,
@@ -161,7 +177,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         soundEnabled: soundEnabled,
         localTranscriptionEnabled: localTranscriptionEnabled,
         selectedLocalModel: selectedLocalModel,
+        downloadedModels: downloadedModels,
       ));
+
+      // Load current downloaded models from WhisperKit
+      add(LoadDownloadedModels());
     } catch (e) {
       emit(state.copyWith(error: e.toString()));
     }
@@ -793,6 +813,205 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         print('Error selecting local model: $e');
       }
       emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  // Model download handler
+  Future<void> _onDownloadModel(
+      DownloadModel event, Emitter<SettingsState> emit) async {
+    try {
+      if (kDebugMode) {
+        print('Starting download for model: ${event.modelName}');
+      }
+
+      // Clear any previous errors for this model
+      final updatedErrors = Map<String, String>.from(state.modelDownloadErrors);
+      updatedErrors.remove(event.modelName);
+
+      emit(state.copyWith(
+        modelDownloadErrors: updatedErrors,
+        error: null,
+      ));
+
+      // Start the download and listen to progress
+      await for (final progress
+          in WhisperKitService.downloadModel(event.modelName)) {
+        add(UpdateModelDownloadProgress(event.modelName, progress));
+
+        if (progress >= 1.0) {
+          add(ModelDownloadCompleted(event.modelName));
+          break;
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error downloading model ${event.modelName}: $e');
+      }
+      add(ModelDownloadFailed(event.modelName, e.toString()));
+    }
+  }
+
+  // Model download progress update handler
+  void _onUpdateModelDownloadProgress(
+      UpdateModelDownloadProgress event, Emitter<SettingsState> emit) {
+    final updatedProgress =
+        Map<String, double>.from(state.modelDownloadProgress);
+    updatedProgress[event.modelName] = event.progress;
+
+    if (kDebugMode) {
+      print(
+          'Download progress for ${event.modelName}: ${(event.progress * 100).toStringAsFixed(1)}%');
+    }
+
+    emit(state.copyWith(
+      modelDownloadProgress: updatedProgress,
+      error: null,
+    ));
+  }
+
+  // Model download completed handler
+  Future<void> _onModelDownloadCompleted(
+      ModelDownloadCompleted event, Emitter<SettingsState> emit) async {
+    try {
+      if (kDebugMode) {
+        print('Model download completed: ${event.modelName}');
+      }
+
+      // Remove from progress tracking
+      final updatedProgress =
+          Map<String, double>.from(state.modelDownloadProgress);
+      updatedProgress.remove(event.modelName);
+
+      // Add to downloaded models
+      final updatedDownloaded = List<String>.from(state.downloadedModels);
+      if (!updatedDownloaded.contains(event.modelName)) {
+        updatedDownloaded.add(event.modelName);
+      }
+
+      // Save to Hive
+      final settingsBox = Hive.box('settings');
+      await settingsBox.put('downloaded_models', updatedDownloaded);
+
+      emit(state.copyWith(
+        modelDownloadProgress: updatedProgress,
+        downloadedModels: updatedDownloaded,
+        error: null,
+      ));
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error handling model download completion: $e');
+      }
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  // Model download failed handler
+  void _onModelDownloadFailed(
+      ModelDownloadFailed event, Emitter<SettingsState> emit) {
+    if (kDebugMode) {
+      print('Model download failed: ${event.modelName} - ${event.error}');
+    }
+
+    // Remove from progress tracking
+    final updatedProgress =
+        Map<String, double>.from(state.modelDownloadProgress);
+    updatedProgress.remove(event.modelName);
+
+    // Add error
+    final updatedErrors = Map<String, String>.from(state.modelDownloadErrors);
+    updatedErrors[event.modelName] = event.error;
+
+    emit(state.copyWith(
+      modelDownloadProgress: updatedProgress,
+      modelDownloadErrors: updatedErrors,
+      error: 'Failed to download ${event.modelName}: ${event.error}',
+    ));
+  }
+
+  // Load downloaded models handler
+  Future<void> _onLoadDownloadedModels(
+      LoadDownloadedModels event, Emitter<SettingsState> emit) async {
+    try {
+      if (kDebugMode) {
+        print('Loading downloaded models');
+      }
+
+      // Get models from WhisperKit service
+      final downloadedModels = await WhisperKitService.getDownloadedModels();
+
+      // Load from Hive as fallback
+      final settingsBox = Hive.box('settings');
+      final savedModels =
+          settingsBox.get('downloaded_models') as List<dynamic>?;
+      final fallbackModels = savedModels?.cast<String>() ?? <String>[];
+
+      // Combine and deduplicate
+      final allModels =
+          <String>{...downloadedModels, ...fallbackModels}.toList();
+
+      // Save updated list to Hive
+      await settingsBox.put('downloaded_models', allModels);
+
+      emit(state.copyWith(
+        downloadedModels: allModels,
+        error: null,
+      ));
+
+      if (kDebugMode) {
+        print('Loaded downloaded models: $allModels');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading downloaded models: $e');
+      }
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  // Delete local model handler
+  Future<void> _onDeleteLocalModel(
+      DeleteLocalModel event, Emitter<SettingsState> emit) async {
+    try {
+      if (kDebugMode) {
+        print('Deleting model: ${event.modelName}');
+      }
+
+      // Delete via WhisperKit service
+      final success = await WhisperKitService.deleteModel(event.modelName);
+
+      if (success) {
+        // Remove from downloaded models list
+        final updatedDownloaded = List<String>.from(state.downloadedModels);
+        updatedDownloaded.remove(event.modelName);
+
+        // Save to Hive
+        final settingsBox = Hive.box('settings');
+        await settingsBox.put('downloaded_models', updatedDownloaded);
+
+        // If this was the selected model, reset to default
+        String newSelectedModel = state.selectedLocalModel;
+        if (state.selectedLocalModel == event.modelName) {
+          newSelectedModel = 'base';
+          await settingsBox.put('selected_local_model', newSelectedModel);
+        }
+
+        emit(state.copyWith(
+          downloadedModels: updatedDownloaded,
+          selectedLocalModel: newSelectedModel,
+          error: null,
+        ));
+
+        if (kDebugMode) {
+          print('Successfully deleted model: ${event.modelName}');
+        }
+      } else {
+        throw Exception('Failed to delete model');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error deleting model ${event.modelName}: $e');
+      }
+      emit(state.copyWith(error: 'Failed to delete ${event.modelName}: $e'));
     }
   }
 }

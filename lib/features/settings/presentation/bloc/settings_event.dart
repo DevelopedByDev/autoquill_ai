@@ -167,3 +167,47 @@ class SelectLocalModel extends SettingsEvent {
   @override
   List<Object?> get props => [model];
 }
+
+class DownloadModel extends SettingsEvent {
+  final String modelName;
+  const DownloadModel(this.modelName);
+
+  @override
+  List<Object?> get props => [modelName];
+}
+
+class UpdateModelDownloadProgress extends SettingsEvent {
+  final String modelName;
+  final double progress;
+  const UpdateModelDownloadProgress(this.modelName, this.progress);
+
+  @override
+  List<Object?> get props => [modelName, progress];
+}
+
+class ModelDownloadCompleted extends SettingsEvent {
+  final String modelName;
+  const ModelDownloadCompleted(this.modelName);
+
+  @override
+  List<Object?> get props => [modelName];
+}
+
+class ModelDownloadFailed extends SettingsEvent {
+  final String modelName;
+  final String error;
+  const ModelDownloadFailed(this.modelName, this.error);
+
+  @override
+  List<Object?> get props => [modelName, error];
+}
+
+class LoadDownloadedModels extends SettingsEvent {}
+
+class DeleteLocalModel extends SettingsEvent {
+  final String modelName;
+  const DeleteLocalModel(this.modelName);
+
+  @override
+  List<Object?> get props => [modelName];
+}

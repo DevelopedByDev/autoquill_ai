@@ -33,6 +33,7 @@
 		33CC11172044BFA00003C049 /* NSBezierPath+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C049 /* NSBezierPath+Extensions.swift */; };
 		33D1A9E52044C6BA0003C045 /* PermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33D1A9E42044C6BA0003C045 /* PermissionService.swift */; };
 		C82F99D72DF8E7AD00067F27 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = C82F99D62DF8E7AD00067F27 /* WhisperKit */; };
+		C82F99DB2DF8EED000067F27 /* WhisperKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C82F99DA2DF8EED000067F27 /* WhisperKitService.swift */; };
 		EC2E9580B2ACC9051B674725 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FF1EE010FFE31F0BC6E00AE /* Pods_Runner.framework */; };
 		F310D5A7ADE261E2C5773EE3 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E4D97F88F50BA3AD89BB593 /* Pods_RunnerTests.framework */; };
 /* End PBXBuildFile section */
@@ -98,6 +99,7 @@
 		96935F6C16683F032E6F07B2 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		9E4D97F88F50BA3AD89BB593 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C82F99DA2DF8EED000067F27 /* WhisperKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhisperKitService.swift; sourceTree = "<group>"; };
 		EB43CBCBC00202C00D042680 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -188,6 +190,7 @@
 			isa = PBXGroup;
 			children = (
 				33CC10F02044A3C60003C045 /* AppDelegate.swift */,
+				C82F99DA2DF8EED000067F27 /* WhisperKitService.swift */,
 				33CC11122044BFA00003C045 /* MainFlutterWindow.swift */,
 				33CC11122044BFA00003C046 /* RecordingOverlayWindow.swift */,
 				33CC11122044BFA00003C047 /* BlinkingLabel.swift */,
@@ -410,13 +413,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -462,6 +461,7 @@
 			files = (
 				33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */,
 				33CC11142044BFA00003C046 /* RecordingOverlayWindow.swift in Sources */,
+				C82F99DB2DF8EED000067F27 /* WhisperKitService.swift in Sources */,
 				33CC11152044BFA00003C047 /* BlinkingLabel.swift in Sources */,
 				33CC11162044BFA00003C048 /* AudioLevelIndicator.swift in Sources */,
 				33CC11172044BFA00003C049 /* NSBezierPath+Extensions.swift in Sources */,
