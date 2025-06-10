@@ -220,6 +220,8 @@ class AppDelegate: FlutterAppDelegate, FlutterStreamHandler {
       handleGetModelsDirectory(call: call, result: result)
     case "openModelsDirectory":
       handleOpenModelsDirectory(call: call, result: result)
+    case "transcribeAudio":
+      handleTranscribeAudio(call: call, result: result)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -314,6 +316,28 @@ class AppDelegate: FlutterAppDelegate, FlutterStreamHandler {
   private func handleOpenModelsDirectory(call: FlutterMethodCall, result: @escaping FlutterResult) {
     let success = whisperKitService.openModelsDirectory()
     result(success)
+  }
+  
+  private func handleTranscribeAudio(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard let args = call.arguments as? [String: Any],
+          let audioPath = args["audioPath"] as? String,
+          let modelName = args["modelName"] as? String else {
+      result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid audioPath or modelName", details: nil))
+      return
+    }
+    
+    Task {
+      do {
+        let transcribedText = try await whisperKitService.transcribeAudio(audioPath: audioPath, modelName: modelName)
+        DispatchQueue.main.async {
+          result(transcribedText)
+        }
+      } catch {
+        DispatchQueue.main.async {
+          result(FlutterError(code: "TRANSCRIPTION_ERROR", message: "Failed to transcribe audio: \(error)", details: nil))
+        }
+      }
+    }
   }
   
   // MARK: - FlutterStreamHandler

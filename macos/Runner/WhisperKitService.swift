@@ -181,6 +181,62 @@ class WhisperKitService: NSObject {
         return true
     }
     
+    /// Transcribes audio using a local WhisperKit model
+    func transcribeAudio(audioPath: String, modelName: String) async throws -> String {
+        print("Starting local transcription with model: \(modelName)")
+        
+        // Check if the model exists
+        if !isModelDownloaded(modelName) {
+            throw NSError(domain: "WhisperKitService", code: 1, userInfo: [
+                NSLocalizedDescriptionKey: "Model \(modelName) is not downloaded"
+            ])
+        }
+        
+        // Initialize WhisperKit
+        let config = WhisperKitConfig(
+            verbose: true,
+            logLevel: .debug,
+            prewarm: false,
+            load: false,
+            download: false
+        )
+        
+        whisperKit = try await WhisperKit(config)
+        
+        // Set the model folder to the specific downloaded model
+        let modelVariant = "openai_whisper-\(modelName)"
+        guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            throw NSError(domain: "WhisperKitService", code: 3, userInfo: [
+                NSLocalizedDescriptionKey: "Could not access documents directory"
+            ])
+        }
+        
+        let modelFolderPath = documentsPath.appendingPathComponent(modelStorage).appendingPathComponent(modelVariant)
+        whisperKit!.modelFolder = modelFolderPath
+        
+        // Load the models
+        try await whisperKit!.prewarmModels()
+        try await whisperKit!.loadModels()
+        
+        print("WhisperKit initialized and loaded model: \(modelVariant)")
+        
+        // Transcribe the audio file
+        guard FileManager.default.fileExists(atPath: audioPath) else {
+            throw NSError(domain: "WhisperKitService", code: 2, userInfo: [
+                NSLocalizedDescriptionKey: "Audio file not found at path: \(audioPath)"
+            ])
+        }
+        
+        let results = try await whisperKit!.transcribe(audioPath: audioPath)
+        
+        // Extract the transcribed text from the results array
+        let transcribedText = results.map { $0.text }.joined(separator: " ")
+        
+        print("Local transcription completed: \(transcribedText)")
+        
+        return transcribedText
+    }
+    
     /// Initializes WhisperKit
     func initialize() async throws {
         print("Initializing WhisperKit service...")

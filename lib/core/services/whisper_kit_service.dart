@@ -136,6 +136,23 @@ class WhisperKitService {
     }
   }
 
+  /// Transcribes audio using a local WhisperKit model
+  static Future<String> transcribeAudio(
+      String audioPath, String modelName) async {
+    try {
+      final result = await _channel.invokeMethod('transcribeAudio', {
+        'audioPath': audioPath,
+        'modelName': modelName,
+      });
+      return result as String? ?? '';
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error transcribing audio with local model: $e');
+      }
+      throw Exception('Local transcription failed: $e');
+    }
+  }
+
   /// Initializes WhisperKit (loads available models, etc.)
   static Future<void> initialize() async {
     try {

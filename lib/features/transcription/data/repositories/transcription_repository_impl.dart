@@ -8,6 +8,7 @@ import '../datasources/transcription_local_datasource.dart';
 import '../../domain/repositories/transcription_repository.dart';
 import '../models/transcription_response.dart';
 import '../../../recording/utils/audio_utils.dart';
+import '../../../../core/services/whisper_kit_service.dart';
 
 class TranscriptionRepositoryImpl implements TranscriptionRepository {
   final TranscriptionLocalDataSource localDataSource;
@@ -50,8 +51,82 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
       throw Exception('Invalid audio file format');
     }
 
-    // Get the selected languages from settings and determine the appropriate model
+    // Get settings to check local transcription preference
     final settingsBox = Hive.box('settings');
+
+    // Check if local transcription is enabled
+    final localTranscriptionEnabled = settingsBox
+        .get('local_transcription_enabled', defaultValue: false) as bool;
+
+    if (localTranscriptionEnabled) {
+      // Use local WhisperKit transcription
+      return await _transcribeAudioLocally(audioPath, settingsBox, stopwatch);
+    } else {
+      // Use remote API transcription
+      return await _transcribeAudioRemotely(
+          audioPath, apiKey, settingsBox, stopwatch);
+    }
+  }
+
+  /// Transcribe audio using local WhisperKit models
+  Future<TranscriptionResponse> _transcribeAudioLocally(
+      String audioPath, Box settingsBox, Stopwatch stopwatch) async {
+    if (kDebugMode) {
+      print('Using local transcription with WhisperKit');
+    }
+
+    // Get the selected local model
+    final selectedLocalModel =
+        settingsBox.get('selected_local_model', defaultValue: 'base') as String;
+
+    if (kDebugMode) {
+      print('Local transcription using model: $selectedLocalModel');
+    }
+
+    try {
+      // Check if the selected model is downloaded
+      final isModelDownloaded =
+          await WhisperKitService.isModelDownloaded(selectedLocalModel);
+      if (!isModelDownloaded) {
+        throw Exception(
+            'Selected model "$selectedLocalModel" is not downloaded. Please download it first.');
+      }
+
+      // Transcribe using WhisperKit
+      final transcriptionText = await WhisperKitService.transcribeAudio(
+          audioPath, selectedLocalModel);
+
+      // Log performance metrics
+      stopwatch.stop();
+      if (kDebugMode) {
+        print(
+            'Local transcription completed in ${stopwatch.elapsedMilliseconds}ms');
+      }
+
+      final transcription = TranscriptionResponse(
+        text: transcriptionText,
+        xGroq: GroqMetadata(id: 'local-whisperkit-$selectedLocalModel'),
+      );
+
+      // Save the transcription locally (non-blocking)
+      saveTranscription(audioPath, transcription.text).catchError((e) {
+        if (kDebugMode) {
+          print('Error saving transcription locally: $e');
+        }
+      });
+
+      return transcription;
+    } catch (e) {
+      throw Exception('Local transcription failed: $e');
+    }
+  }
+
+  /// Transcribe audio using remote API (original implementation)
+  Future<TranscriptionResponse> _transcribeAudioRemotely(String audioPath,
+      String apiKey, Box settingsBox, Stopwatch stopwatch) async {
+    if (kDebugMode) {
+      print('Using remote API transcription');
+    }
 
     // Load selected languages
     final List<dynamic>? savedLanguagesList =
@@ -121,6 +196,7 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
     // Log file information for debugging
     if (kDebugMode) {
       print('Transcribing file: $audioPath');
+      final file = File(audioPath);
       print('File size: ${await file.length()} bytes');
       print('Model: $selectedModel');
     }
