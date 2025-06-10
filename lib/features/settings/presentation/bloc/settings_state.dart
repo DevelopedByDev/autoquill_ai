@@ -43,6 +43,9 @@ class SettingsState extends Equatable {
   // Smart transcription setting
   final bool smartTranscriptionEnabled;
 
+  // Sound settings
+  final bool soundEnabled;
+
   const SettingsState({
     this.apiKey,
     this.isApiKeyVisible = false,
@@ -62,6 +65,7 @@ class SettingsState extends Equatable {
     ],
     this.pushToTalkEnabled = true,
     this.smartTranscriptionEnabled = false,
+    this.soundEnabled = true,
   });
 
   // Computed property to get the appropriate transcription model based on selected languages
@@ -99,6 +103,7 @@ class SettingsState extends Equatable {
     List<LanguageCode>? selectedLanguages,
     bool? pushToTalkEnabled,
     bool? smartTranscriptionEnabled,
+    bool? soundEnabled,
   }) {
     return SettingsState(
       apiKey: apiKey ?? this.apiKey,
@@ -120,6 +125,7 @@ class SettingsState extends Equatable {
       pushToTalkEnabled: pushToTalkEnabled ?? this.pushToTalkEnabled,
       smartTranscriptionEnabled:
           smartTranscriptionEnabled ?? this.smartTranscriptionEnabled,
+      soundEnabled: soundEnabled ?? this.soundEnabled,
     );
   }
 
@@ -141,5 +147,6 @@ class SettingsState extends Equatable {
         assistantScreenshotEnabled,
         selectedLanguages,
         smartTranscriptionEnabled,
+        soundEnabled,
       ];
 }

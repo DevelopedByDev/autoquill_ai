@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 /// Utility class for playing sound effects in the app
 class SoundPlayer {
@@ -81,6 +82,18 @@ class SoundPlayer {
     // Use a future to handle the async operations without awaiting
     Future(() async {
       try {
+        // Check if sounds are enabled in settings
+        final settingsBox = Hive.box('settings');
+        final soundEnabled =
+            settingsBox.get('sound_enabled', defaultValue: true) as bool;
+
+        if (!soundEnabled) {
+          if (kDebugMode) {
+            print('Sound disabled in settings, skipping: $assetPath');
+          }
+          return;
+        }
+
         // Ensure players are initialized
         if (!await _ensureInitialized()) {
           return;

@@ -6,6 +6,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../../../core/constants/language_codes.dart';
 
 import '../../../../core/settings/settings_service.dart';
+import '../../../../core/services/sound_service.dart';
 import '../../../../core/storage/app_storage.dart';
 import '../../../../widgets/hotkey_handler.dart';
 import 'settings_event.dart';
@@ -60,6 +61,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
     // Smart transcription events
     on<ToggleSmartTranscription>(_onToggleSmartTranscription);
+
+    // Sound events
+    on<ToggleSound>(_onToggleSound);
   }
 
   Future<void> _onLoadSettings(
@@ -128,6 +132,13 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
             'Loading smart transcription setting: $smartTranscriptionEnabled');
       }
 
+      // Load sound setting
+      final soundEnabled =
+          _box.get('sound_enabled', defaultValue: true) as bool;
+
+      // Sync with platform-specific sound setting
+      await SoundService.setSoundEnabled(soundEnabled);
+
       emit(state.copyWith(
         apiKey: apiKey,
         transcriptionModel: transcriptionModel,
@@ -137,6 +148,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         pushToTalkEnabled: pushToTalkEnabled,
         selectedLanguages: selectedLanguages,
         smartTranscriptionEnabled: smartTranscriptionEnabled,
+        soundEnabled: soundEnabled,
       ));
     } catch (e) {
       emit(state.copyWith(error: e.toString()));
@@ -675,6 +687,39 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     } catch (e) {
       if (kDebugMode) {
         print('Error toggling smart transcription: $e');
+      }
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  // Sound toggle handler
+  Future<void> _onToggleSound(
+      ToggleSound event, Emitter<SettingsState> emit) async {
+    try {
+      final newValue = !state.soundEnabled;
+
+      if (kDebugMode) {
+        print('Toggling sound from ${state.soundEnabled} to $newValue');
+      }
+
+      // Save the setting to Hive
+      final settingsBox = Hive.box('settings');
+      await settingsBox.put('sound_enabled', newValue);
+
+      if (kDebugMode) {
+        print('Saved sound setting to Hive: $newValue');
+      }
+
+      emit(state.copyWith(
+        soundEnabled: newValue,
+        error: null,
+      ));
+
+      // Update the platform-specific sound setting
+      await SoundService.setSoundEnabled(newValue);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error toggling sound: $e');
       }
       emit(state.copyWith(error: e.toString()));
     }

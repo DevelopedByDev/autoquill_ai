@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:autoquill_ai/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:autoquill_ai/features/settings/presentation/bloc/settings_state.dart';
+import 'package:autoquill_ai/features/settings/presentation/bloc/settings_event.dart';
 import 'package:autoquill_ai/features/settings/presentation/widgets/api_key_section.dart';
 import 'package:autoquill_ai/features/settings/presentation/widgets/theme_settings_section.dart';
 import 'package:autoquill_ai/core/services/auto_update_service.dart';
@@ -38,6 +39,11 @@ class GeneralSettingsPage extends StatelessWidget {
 
               const SizedBox(height: 32),
 
+              // Sound Settings Section
+              _buildSoundSettingsSection(context),
+
+              const SizedBox(height: 32),
+
               // Data Location Section
               _buildDataLocationSection(context),
 
@@ -47,6 +53,112 @@ class GeneralSettingsPage extends StatelessWidget {
               _buildAppUpdatesSection(context),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSoundSettingsSection(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return BlocBuilder<SettingsBloc, SettingsState>(
+      builder: (context, state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(DesignTokens.spaceXS),
+                  decoration: BoxDecoration(
+                    gradient: DesignTokens.greenGradient,
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusSM),
+                  ),
+                  child: Icon(
+                    Icons.volume_up_rounded,
+                    color: DesignTokens.trueWhite,
+                    size: DesignTokens.iconSizeSM,
+                  ),
+                ),
+                const SizedBox(width: DesignTokens.spaceSM),
+                Text(
+                  'Sound Settings',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: DesignTokens.fontWeightSemiBold,
+                        color: isDarkMode
+                            ? DesignTokens.trueWhite
+                            : DesignTokens.pureBlack,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: DesignTokens.spaceSM),
+            Text(
+              'Control sound effects and audio notifications throughout the app.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: isDarkMode
+                        ? DesignTokens.trueWhite.withValues(alpha: 0.7)
+                        : DesignTokens.pureBlack.withValues(alpha: 0.6),
+                  ),
+            ),
+            const SizedBox(height: DesignTokens.spaceMD),
+            Container(
+              padding: const EdgeInsets.all(DesignTokens.spaceMD),
+              decoration: BoxDecoration(
+                color: isDarkMode
+                    ? DesignTokens.trueWhite.withValues(alpha: 0.05)
+                    : DesignTokens.pureBlack.withValues(alpha: 0.03),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusMD),
+                border: Border.all(
+                  color: isDarkMode
+                      ? DesignTokens.trueWhite.withValues(alpha: 0.1)
+                      : DesignTokens.pureBlack.withValues(alpha: 0.08),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Enable Sound Effects',
+                          style:
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    fontWeight: DesignTokens.fontWeightMedium,
+                                    color: isDarkMode
+                                        ? DesignTokens.trueWhite
+                                        : DesignTokens.pureBlack,
+                                  ),
+                        ),
+                        const SizedBox(height: DesignTokens.spaceXS),
+                        Text(
+                          'Play audio feedback for recording, typing, and error notifications.',
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: isDarkMode
+                                        ? DesignTokens.trueWhite
+                                            .withValues(alpha: 0.7)
+                                        : DesignTokens.pureBlack
+                                            .withValues(alpha: 0.6),
+                                  ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: DesignTokens.spaceMD),
+                  Switch(
+                    value: state.soundEnabled,
+                    onChanged: (value) {
+                      context.read<SettingsBloc>().add(ToggleSound());
+                    },
+                    activeColor: DesignTokens.vibrantCoral,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ],
+              ),
+            ),
+          ],
         );
       },
     );
