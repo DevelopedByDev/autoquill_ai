@@ -64,6 +64,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
     // Sound events
     on<ToggleSound>(_onToggleSound);
+
+    // Local transcription events
+    on<ToggleLocalTranscription>(_onToggleLocalTranscription);
+    on<SelectLocalModel>(_onSelectLocalModel);
   }
 
   Future<void> _onLoadSettings(
@@ -139,6 +143,12 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       // Sync with platform-specific sound setting
       await SoundService.setSoundEnabled(soundEnabled);
 
+      // Load local transcription settings
+      final localTranscriptionEnabled =
+          _box.get('local_transcription_enabled', defaultValue: false) as bool;
+      final selectedLocalModel =
+          _box.get('selected_local_model', defaultValue: 'base') as String;
+
       emit(state.copyWith(
         apiKey: apiKey,
         transcriptionModel: transcriptionModel,
@@ -149,6 +159,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         selectedLanguages: selectedLanguages,
         smartTranscriptionEnabled: smartTranscriptionEnabled,
         soundEnabled: soundEnabled,
+        localTranscriptionEnabled: localTranscriptionEnabled,
+        selectedLocalModel: selectedLocalModel,
       ));
     } catch (e) {
       emit(state.copyWith(error: e.toString()));
@@ -720,6 +732,65 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     } catch (e) {
       if (kDebugMode) {
         print('Error toggling sound: $e');
+      }
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  // Local transcription toggle handler
+  Future<void> _onToggleLocalTranscription(
+      ToggleLocalTranscription event, Emitter<SettingsState> emit) async {
+    try {
+      final newValue = !state.localTranscriptionEnabled;
+
+      if (kDebugMode) {
+        print(
+            'Toggling local transcription from ${state.localTranscriptionEnabled} to $newValue');
+      }
+
+      // Save the setting to Hive
+      final settingsBox = Hive.box('settings');
+      await settingsBox.put('local_transcription_enabled', newValue);
+
+      if (kDebugMode) {
+        print('Saved local transcription setting to Hive: $newValue');
+      }
+
+      emit(state.copyWith(
+        localTranscriptionEnabled: newValue,
+        error: null,
+      ));
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error toggling local transcription: $e');
+      }
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  // Local model selection handler
+  Future<void> _onSelectLocalModel(
+      SelectLocalModel event, Emitter<SettingsState> emit) async {
+    try {
+      if (kDebugMode) {
+        print('Selecting local model: ${event.model}');
+      }
+
+      // Save the setting to Hive
+      final settingsBox = Hive.box('settings');
+      await settingsBox.put('selected_local_model', event.model);
+
+      if (kDebugMode) {
+        print('Saved selected local model to Hive: ${event.model}');
+      }
+
+      emit(state.copyWith(
+        selectedLocalModel: event.model,
+        error: null,
+      ));
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error selecting local model: $e');
       }
       emit(state.copyWith(error: e.toString()));
     }

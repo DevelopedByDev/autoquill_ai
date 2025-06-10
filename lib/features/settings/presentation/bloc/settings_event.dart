@@ -157,3 +157,13 @@ class DeletePushToTalkHotkey extends SettingsEvent {}
 class ToggleSmartTranscription extends SettingsEvent {}
 
 class ToggleSound extends SettingsEvent {}
+
+class ToggleLocalTranscription extends SettingsEvent {}
+
+class SelectLocalModel extends SettingsEvent {
+  final String model;
+  const SelectLocalModel(this.model);
+
+  @override
+  List<Object?> get props => [model];
+}

@@ -46,6 +46,10 @@ class SettingsState extends Equatable {
   // Sound settings
   final bool soundEnabled;
 
+  // Local transcription settings
+  final bool localTranscriptionEnabled;
+  final String selectedLocalModel;
+
   const SettingsState({
     this.apiKey,
     this.isApiKeyVisible = false,
@@ -66,6 +70,8 @@ class SettingsState extends Equatable {
     this.pushToTalkEnabled = true,
     this.smartTranscriptionEnabled = false,
     this.soundEnabled = true,
+    this.localTranscriptionEnabled = false,
+    this.selectedLocalModel = 'base',
   });
 
   // Computed property to get the appropriate transcription model based on selected languages
@@ -104,6 +110,8 @@ class SettingsState extends Equatable {
     bool? pushToTalkEnabled,
     bool? smartTranscriptionEnabled,
     bool? soundEnabled,
+    bool? localTranscriptionEnabled,
+    String? selectedLocalModel,
   }) {
     return SettingsState(
       apiKey: apiKey ?? this.apiKey,
@@ -126,6 +134,9 @@ class SettingsState extends Equatable {
       smartTranscriptionEnabled:
           smartTranscriptionEnabled ?? this.smartTranscriptionEnabled,
       soundEnabled: soundEnabled ?? this.soundEnabled,
+      localTranscriptionEnabled:
+          localTranscriptionEnabled ?? this.localTranscriptionEnabled,
+      selectedLocalModel: selectedLocalModel ?? this.selectedLocalModel,
     );
   }
 
@@ -148,5 +159,7 @@ class SettingsState extends Equatable {
         selectedLanguages,
         smartTranscriptionEnabled,
         soundEnabled,
+        localTranscriptionEnabled,
+        selectedLocalModel,
       ];
 }
