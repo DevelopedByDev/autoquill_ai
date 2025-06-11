@@ -220,6 +220,15 @@ class WhisperKitService: NSObject {
         }
         
         let modelFolderPath = documentsPath.appendingPathComponent(modelStorage).appendingPathComponent(modelVariant)
+        
+        // Verify the model folder exists
+        guard FileManager.default.fileExists(atPath: modelFolderPath.path) else {
+            throw NSError(domain: "WhisperKitService", code: 5, userInfo: [
+                NSLocalizedDescriptionKey: "Model folder not found at path: \(modelFolderPath.path)"
+            ])
+        }
+        
+        print("Setting model folder to: \(modelFolderPath.path)")
         whisperKit!.modelFolder = modelFolderPath
         
         // Load the models

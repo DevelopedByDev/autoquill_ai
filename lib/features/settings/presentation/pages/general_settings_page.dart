@@ -292,6 +292,24 @@ class GeneralSettingsPage extends StatelessWidget {
     );
   }
 
+  /// Maps display names to actual model names
+  String _getDisplayName(String modelName) {
+    switch (modelName) {
+      case 'base':
+        return 'BASE';
+      case 'small':
+        return 'SMALL';
+      case 'medium':
+        return 'MEDIUM';
+      case 'large-v3_947MB':
+        return 'LARGE';
+      case 'large-v3-v20240930_turbo_632MB':
+        return 'TURBO';
+      default:
+        return modelName.toUpperCase();
+    }
+  }
+
   Widget _buildModelSelectionSection(
       BuildContext context, SettingsState state, bool isDarkMode) {
     final models = [
@@ -311,11 +329,15 @@ class GeneralSettingsPage extends StatelessWidget {
         'description': 'Balanced performance'
       },
       {
-        'name': 'large',
-        'size': '~3.1 GB',
-        'description': 'High quality, slower'
+        'name': 'large-v3_947MB',
+        'size': '~947 MB',
+        'description': 'High quality, optimized'
       },
-      {'name': 'turbo', 'size': '~800 MB', 'description': 'Fast and accurate'},
+      {
+        'name': 'large-v3-v20240930_turbo_632MB',
+        'size': '~632 MB',
+        'description': 'Fast and accurate'
+      },
     ];
 
     return Column(
@@ -369,7 +391,7 @@ class GeneralSettingsPage extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              model['name']!.toUpperCase(),
+                              _getDisplayName(model['name']!),
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyMedium
@@ -404,11 +426,15 @@ class GeneralSettingsPage extends StatelessWidget {
                   ),
                   value: model['name']!,
                   groupValue: state.selectedLocalModel,
-                  onChanged: (value) {
-                    if (value != null) {
-                      context.read<SettingsBloc>().add(SelectLocalModel(value));
-                    }
-                  },
+                  onChanged: state.downloadedModels.contains(model['name']!)
+                      ? (value) {
+                          if (value != null) {
+                            context
+                                .read<SettingsBloc>()
+                                .add(SelectLocalModel(value));
+                          }
+                        }
+                      : null, // Disable radio button if model not downloaded
                   activeColor: DesignTokens.vibrantCoral,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),

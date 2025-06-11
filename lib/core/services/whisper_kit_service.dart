@@ -19,8 +19,16 @@ class WhisperKitService {
       'size': '~1.5 GB',
       'description': 'Balanced performance'
     },
-    {'name': 'large', 'size': '~3.1 GB', 'description': 'High quality, slower'},
-    {'name': 'turbo', 'size': '~800 MB', 'description': 'Fast and accurate'},
+    {
+      'name': 'large-v3_947MB',
+      'size': '~947 MB',
+      'description': 'High quality, optimized'
+    },
+    {
+      'name': 'large-v3-v20240930_turbo_632MB',
+      'size': '~632 MB',
+      'description': 'Fast and accurate'
+    },
   ];
 
   /// Downloads a WhisperKit model
