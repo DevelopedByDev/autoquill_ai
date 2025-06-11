@@ -222,6 +222,8 @@ class AppDelegate: FlutterAppDelegate, FlutterStreamHandler {
       handleOpenModelsDirectory(call: call, result: result)
     case "transcribeAudio":
       handleTranscribeAudio(call: call, result: result)
+    case "preloadModel":
+      handlePreloadModel(call: call, result: result)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -335,6 +337,27 @@ class AppDelegate: FlutterAppDelegate, FlutterStreamHandler {
       } catch {
         DispatchQueue.main.async {
           result(FlutterError(code: "TRANSCRIPTION_ERROR", message: "Failed to transcribe audio: \(error)", details: nil))
+        }
+      }
+    }
+  }
+  
+  private func handlePreloadModel(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard let args = call.arguments as? [String: Any],
+          let modelName = args["modelName"] as? String else {
+      result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid modelName", details: nil))
+      return
+    }
+    
+    Task {
+      do {
+        try await whisperKitService.preloadModel(modelName)
+        DispatchQueue.main.async {
+          result(nil)
+        }
+      } catch {
+        DispatchQueue.main.async {
+          result(FlutterError(code: "PRELOAD_ERROR", message: "Failed to preload model: \(error)", details: nil))
         }
       }
     }

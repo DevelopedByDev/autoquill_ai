@@ -8,6 +8,8 @@ class WhisperKitService: NSObject {
     private let modelStorage = "huggingface/models/argmaxinc/whisperkit-coreml"
     private let repoName = "argmaxinc/whisperkit-coreml"
     private var downloadProgressStreams: [String: (Double) -> Void] = [:]
+    private var loadedModelName: String?
+    private var isInitialized = false
     
     override init() {
         super.init()
@@ -181,15 +183,21 @@ class WhisperKitService: NSObject {
         return true
     }
     
-    /// Transcribes audio using a local WhisperKit model
-    func transcribeAudio(audioPath: String, modelName: String) async throws -> String {
-        print("Starting local transcription with model: \(modelName)")
+    /// Preloads a WhisperKit model for faster subsequent transcriptions
+    func preloadModel(_ modelName: String) async throws {
+        print("Preloading WhisperKit model: \(modelName)")
         
         // Check if the model exists
         if !isModelDownloaded(modelName) {
             throw NSError(domain: "WhisperKitService", code: 1, userInfo: [
                 NSLocalizedDescriptionKey: "Model \(modelName) is not downloaded"
             ])
+        }
+        
+        // If this model is already loaded, no need to reload
+        if loadedModelName == modelName && isInitialized {
+            print("Model \(modelName) is already preloaded")
+            return
         }
         
         // Initialize WhisperKit
@@ -218,7 +226,28 @@ class WhisperKitService: NSObject {
         try await whisperKit!.prewarmModels()
         try await whisperKit!.loadModels()
         
-        print("WhisperKit initialized and loaded model: \(modelVariant)")
+        loadedModelName = modelName
+        isInitialized = true
+        
+        print("WhisperKit model preloaded successfully: \(modelVariant)")
+    }
+    
+    /// Transcribes audio using a local WhisperKit model
+    func transcribeAudio(audioPath: String, modelName: String) async throws -> String {
+        print("Starting local transcription with model: \(modelName)")
+        
+        // Check if the model exists
+        if !isModelDownloaded(modelName) {
+            throw NSError(domain: "WhisperKitService", code: 1, userInfo: [
+                NSLocalizedDescriptionKey: "Model \(modelName) is not downloaded"
+            ])
+        }
+        
+        // Check if we need to load a different model
+        if loadedModelName != modelName || !isInitialized {
+            print("Loading model \(modelName) (currently loaded: \(loadedModelName ?? "none"))")
+            try await preloadModel(modelName)
+        }
         
         // Transcribe the audio file
         guard FileManager.default.fileExists(atPath: audioPath) else {
@@ -227,7 +256,13 @@ class WhisperKitService: NSObject {
             ])
         }
         
-        let results = try await whisperKit!.transcribe(audioPath: audioPath)
+        guard let whisperKit = whisperKit else {
+            throw NSError(domain: "WhisperKitService", code: 4, userInfo: [
+                NSLocalizedDescriptionKey: "WhisperKit not initialized"
+            ])
+        }
+        
+        let results = try await whisperKit.transcribe(audioPath: audioPath)
         
         // Extract the transcribed text from the results array
         let transcribedText = results.map { $0.text }.joined(separator: " ")

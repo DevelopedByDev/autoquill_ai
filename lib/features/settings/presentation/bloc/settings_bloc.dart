@@ -182,6 +182,29 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
       // Load current downloaded models from WhisperKit
       add(LoadDownloadedModels());
+
+      // If local transcription is enabled, preload the selected model
+      if (localTranscriptionEnabled) {
+        try {
+          // Check if the selected model is downloaded
+          final isDownloaded =
+              await WhisperKitService.isModelDownloaded(selectedLocalModel);
+          if (isDownloaded) {
+            if (kDebugMode) {
+              print('Preloading model on app startup: $selectedLocalModel');
+            }
+            await WhisperKitService.preloadModel(selectedLocalModel);
+            if (kDebugMode) {
+              print('Model preloaded on startup: $selectedLocalModel');
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error preloading model on startup: $e');
+          }
+          // Don't fail app loading if preloading fails
+        }
+      }
     } catch (e) {
       emit(state.copyWith(error: e.toString()));
     }
@@ -776,6 +799,30 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         print('Saved local transcription setting to Hive: $newValue');
       }
 
+      // If enabling local transcription, preload the selected model
+      if (newValue) {
+        try {
+          // Check if the selected model is downloaded
+          final isDownloaded = await WhisperKitService.isModelDownloaded(
+              state.selectedLocalModel);
+          if (isDownloaded) {
+            if (kDebugMode) {
+              print('Preloading model: ${state.selectedLocalModel}');
+            }
+            await WhisperKitService.preloadModel(state.selectedLocalModel);
+            if (kDebugMode) {
+              print(
+                  'Model preloaded successfully: ${state.selectedLocalModel}');
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error preloading model: $e');
+          }
+          // Don't fail the toggle if preloading fails
+        }
+      }
+
       emit(state.copyWith(
         localTranscriptionEnabled: newValue,
         error: null,
@@ -808,6 +855,29 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         selectedLocalModel: event.model,
         error: null,
       ));
+
+      // If local transcription is enabled, preload the new model
+      if (state.localTranscriptionEnabled) {
+        try {
+          // Check if the selected model is downloaded
+          final isDownloaded =
+              await WhisperKitService.isModelDownloaded(event.model);
+          if (isDownloaded) {
+            if (kDebugMode) {
+              print('Preloading new selected model: ${event.model}');
+            }
+            await WhisperKitService.preloadModel(event.model);
+            if (kDebugMode) {
+              print('New model preloaded successfully: ${event.model}');
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error preloading new model: $e');
+          }
+          // Don't fail the selection if preloading fails
+        }
+      }
     } catch (e) {
       if (kDebugMode) {
         print('Error selecting local model: $e');

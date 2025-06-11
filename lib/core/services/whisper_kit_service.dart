@@ -136,6 +136,23 @@ class WhisperKitService {
     }
   }
 
+  /// Preloads a WhisperKit model for faster transcriptions
+  static Future<void> preloadModel(String modelName) async {
+    try {
+      await _channel.invokeMethod('preloadModel', {
+        'modelName': modelName,
+      });
+      if (kDebugMode) {
+        print('Successfully preloaded model: $modelName');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error preloading model $modelName: $e');
+      }
+      throw Exception('Failed to preload model: $e');
+    }
+  }
+
   /// Transcribes audio using a local WhisperKit model
   static Future<String> transcribeAudio(
       String audioPath, String modelName) async {
