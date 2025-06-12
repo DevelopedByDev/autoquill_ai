@@ -53,6 +53,9 @@ class SettingsState extends Equatable {
       modelDownloadProgress; // modelName -> progress (0.0 to 1.0)
   final List<String> downloadedModels;
   final Map<String, String> modelDownloadErrors; // modelName -> error message
+  final Map<String, bool>
+      modelInitializationStatus; // modelName -> isInitialized
+  final bool isInitializingModel; // true when initializing any model
 
   const SettingsState({
     this.apiKey,
@@ -79,6 +82,8 @@ class SettingsState extends Equatable {
     this.modelDownloadProgress = const {},
     this.downloadedModels = const [],
     this.modelDownloadErrors = const {},
+    this.modelInitializationStatus = const {},
+    this.isInitializingModel = false,
   });
 
   // Computed property to get the appropriate transcription model based on selected languages
@@ -122,6 +127,8 @@ class SettingsState extends Equatable {
     Map<String, double>? modelDownloadProgress,
     List<String>? downloadedModels,
     Map<String, String>? modelDownloadErrors,
+    Map<String, bool>? modelInitializationStatus,
+    bool? isInitializingModel,
   }) {
     return SettingsState(
       apiKey: apiKey ?? this.apiKey,
@@ -151,6 +158,9 @@ class SettingsState extends Equatable {
           modelDownloadProgress ?? this.modelDownloadProgress,
       downloadedModels: downloadedModels ?? this.downloadedModels,
       modelDownloadErrors: modelDownloadErrors ?? this.modelDownloadErrors,
+      modelInitializationStatus:
+          modelInitializationStatus ?? this.modelInitializationStatus,
+      isInitializingModel: isInitializingModel ?? this.isInitializingModel,
     );
   }
 
@@ -178,5 +188,7 @@ class SettingsState extends Equatable {
         modelDownloadProgress,
         downloadedModels,
         modelDownloadErrors,
+        modelInitializationStatus,
+        isInitializingModel,
       ];
 }

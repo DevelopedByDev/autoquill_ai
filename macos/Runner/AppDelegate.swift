@@ -224,6 +224,10 @@ class AppDelegate: FlutterAppDelegate, FlutterStreamHandler {
       handleTranscribeAudio(call: call, result: result)
     case "preloadModel":
       handlePreloadModel(call: call, result: result)
+    case "initializeWithTestAudio":
+      handleInitializeWithTestAudio(call: call, result: result)
+    case "isModelInitialized":
+      handleIsModelInitialized(call: call, result: result)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -361,6 +365,38 @@ class AppDelegate: FlutterAppDelegate, FlutterStreamHandler {
         }
       }
     }
+  }
+  
+  private func handleInitializeWithTestAudio(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard let args = call.arguments as? [String: Any],
+          let modelName = args["modelName"] as? String else {
+      result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid modelName", details: nil))
+      return
+    }
+    
+    Task {
+      do {
+        let success = try await whisperKitService.initializeWithTestAudio(modelName)
+        DispatchQueue.main.async {
+          result(success)
+        }
+      } catch {
+        DispatchQueue.main.async {
+          result(FlutterError(code: "INITIALIZATION_ERROR", message: "Failed to initialize model with test audio: \(error)", details: nil))
+        }
+      }
+    }
+  }
+  
+  private func handleIsModelInitialized(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard let args = call.arguments as? [String: Any],
+          let modelName = args["modelName"] as? String else {
+      result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid modelName", details: nil))
+      return
+    }
+    
+    let isInitialized = whisperKitService.isModelInitialized(modelName)
+    result(isInitialized)
   }
   
   // MARK: - FlutterStreamHandler

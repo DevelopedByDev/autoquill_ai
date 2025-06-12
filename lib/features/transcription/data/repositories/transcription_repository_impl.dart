@@ -59,8 +59,29 @@ class TranscriptionRepositoryImpl implements TranscriptionRepository {
         .get('local_transcription_enabled', defaultValue: false) as bool;
 
     if (localTranscriptionEnabled) {
-      // Use local WhisperKit transcription
-      return await _transcribeAudioLocally(audioPath, settingsBox, stopwatch);
+      // Check if the selected model is initialized
+      final selectedLocalModel = settingsBox.get('selected_local_model',
+          defaultValue: 'base') as String;
+
+      final isModelInitialized =
+          await WhisperKitService.isModelInitialized(selectedLocalModel);
+
+      if (isModelInitialized) {
+        // Use local WhisperKit transcription
+        if (kDebugMode) {
+          print(
+              'Using local transcription - model $selectedLocalModel is initialized');
+        }
+        return await _transcribeAudioLocally(audioPath, settingsBox, stopwatch);
+      } else {
+        // Model not initialized yet, fall back to cloud if API key is available
+        if (kDebugMode) {
+          print(
+              'Model $selectedLocalModel not initialized yet, falling back to cloud transcription');
+        }
+        return await _transcribeAudioRemotely(
+            audioPath, apiKey, settingsBox, stopwatch);
+      }
     } else {
       // Use remote API transcription
       return await _transcribeAudioRemotely(

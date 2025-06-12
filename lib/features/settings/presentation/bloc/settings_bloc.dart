@@ -75,6 +75,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<ModelDownloadFailed>(_onModelDownloadFailed);
     on<LoadDownloadedModels>(_onLoadDownloadedModels);
     on<DeleteLocalModel>(_onDeleteLocalModel);
+    on<InitializeModel>(_onInitializeModel);
+    on<ModelInitializationCompleted>(_onModelInitializationCompleted);
+    on<AutoInitializeSelectedModel>(_onAutoInitializeSelectedModel);
   }
 
   Future<void> _onLoadSettings(
@@ -183,28 +186,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       // Load current downloaded models from WhisperKit
       add(LoadDownloadedModels());
 
-      // If local transcription is enabled, preload the selected model
-      if (localTranscriptionEnabled) {
-        try {
-          // Check if the selected model is downloaded
-          final isDownloaded =
-              await WhisperKitService.isModelDownloaded(selectedLocalModel);
-          if (isDownloaded) {
-            if (kDebugMode) {
-              print('Preloading model on app startup: $selectedLocalModel');
-            }
-            await WhisperKitService.preloadModel(selectedLocalModel);
-            if (kDebugMode) {
-              print('Model preloaded on startup: $selectedLocalModel');
-            }
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            print('Error preloading model on startup: $e');
-          }
-          // Don't fail app loading if preloading fails
-        }
-      }
+      // Trigger auto-initialization after a short delay to allow LoadDownloadedModels to complete
+      Future.delayed(const Duration(milliseconds: 500), () {
+        add(AutoInitializeSelectedModel());
+      });
     } catch (e) {
       emit(state.copyWith(error: e.toString()));
     }
@@ -799,34 +784,15 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         print('Saved local transcription setting to Hive: $newValue');
       }
 
-      // If enabling local transcription, preload the selected model
-      if (newValue) {
-        try {
-          // Check if the selected model is downloaded
-          final isDownloaded = await WhisperKitService.isModelDownloaded(
-              state.selectedLocalModel);
-          if (isDownloaded) {
-            if (kDebugMode) {
-              print('Preloading model: ${state.selectedLocalModel}');
-            }
-            await WhisperKitService.preloadModel(state.selectedLocalModel);
-            if (kDebugMode) {
-              print(
-                  'Model preloaded successfully: ${state.selectedLocalModel}');
-            }
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            print('Error preloading model: $e');
-          }
-          // Don't fail the toggle if preloading fails
-        }
-      }
-
       emit(state.copyWith(
         localTranscriptionEnabled: newValue,
         error: null,
       ));
+
+      // If enabling local transcription, trigger auto-initialization for the selected model
+      if (newValue) {
+        add(AutoInitializeSelectedModel());
+      }
     } catch (e) {
       if (kDebugMode) {
         print('Error toggling local transcription: $e');
@@ -856,27 +822,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         error: null,
       ));
 
-      // If local transcription is enabled, preload the new model
+      // If local transcription is enabled, trigger auto-initialization for the new model
       if (state.localTranscriptionEnabled) {
-        try {
-          // Check if the selected model is downloaded
-          final isDownloaded =
-              await WhisperKitService.isModelDownloaded(event.model);
-          if (isDownloaded) {
-            if (kDebugMode) {
-              print('Preloading new selected model: ${event.model}');
-            }
-            await WhisperKitService.preloadModel(event.model);
-            if (kDebugMode) {
-              print('New model preloaded successfully: ${event.model}');
-            }
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            print('Error preloading new model: $e');
-          }
-          // Don't fail the selection if preloading fails
-        }
+        add(AutoInitializeSelectedModel());
       }
     } catch (e) {
       if (kDebugMode) {
@@ -891,21 +839,37 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       DownloadModel event, Emitter<SettingsState> emit) async {
     try {
       if (kDebugMode) {
-        print('Starting download for model: ${event.modelName}');
+        print('SettingsBloc: Starting download for model: ${event.modelName}');
       }
 
       // Clear any previous errors for this model
       final updatedErrors = Map<String, String>.from(state.modelDownloadErrors);
       updatedErrors.remove(event.modelName);
 
+      // Initialize progress to show download started immediately
+      final updatedProgress =
+          Map<String, double>.from(state.modelDownloadProgress);
+      updatedProgress[event.modelName] = 0.0;
+
       emit(state.copyWith(
         modelDownloadErrors: updatedErrors,
+        modelDownloadProgress: updatedProgress,
         error: null,
       ));
+
+      if (kDebugMode) {
+        print(
+            'SettingsBloc: Emitted initial state with progress 0.0 for ${event.modelName}');
+        print('SettingsBloc: Button should now show progress indicator');
+      }
 
       // Start the download and listen to progress
       await for (final progress
           in WhisperKitService.downloadModel(event.modelName)) {
+        if (kDebugMode) {
+          print(
+              'SettingsBloc: Received progress update: $progress for ${event.modelName}');
+        }
         add(UpdateModelDownloadProgress(event.modelName, progress));
 
         if (progress >= 1.0) {
@@ -915,7 +879,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Error downloading model ${event.modelName}: $e');
+        print('SettingsBloc: Error downloading model ${event.modelName}: $e');
       }
       add(ModelDownloadFailed(event.modelName, e.toString()));
     }
@@ -930,13 +894,19 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
     if (kDebugMode) {
       print(
-          'Download progress for ${event.modelName}: ${(event.progress * 100).toStringAsFixed(1)}%');
+          'SettingsBloc: Download progress for ${event.modelName}: ${(event.progress * 100).toStringAsFixed(1)}%');
+      print('SettingsBloc: Current progress map: $updatedProgress');
+      print('SettingsBloc: About to emit state with updated progress');
     }
 
     emit(state.copyWith(
       modelDownloadProgress: updatedProgress,
       error: null,
     ));
+
+    if (kDebugMode) {
+      print('SettingsBloc: State emitted, UI should update now');
+    }
   }
 
   // Model download completed handler
@@ -1082,6 +1052,99 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         print('Error deleting model ${event.modelName}: $e');
       }
       emit(state.copyWith(error: 'Failed to delete ${event.modelName}: $e'));
+    }
+  }
+
+  // Model initialization handler
+  Future<void> _onInitializeModel(
+      InitializeModel event, Emitter<SettingsState> emit) async {
+    try {
+      if (kDebugMode) {
+        print(
+            'SettingsBloc: Starting initialization for model: ${event.modelName}');
+      }
+
+      // Set initialization state
+      emit(state.copyWith(
+        isInitializingModel: true,
+        error: null,
+      ));
+
+      // Initialize model with test audio
+      final success =
+          await WhisperKitService.initializeModelWithTestAudio(event.modelName);
+
+      // Handle completion
+      add(ModelInitializationCompleted(event.modelName, success));
+    } catch (e) {
+      if (kDebugMode) {
+        print('SettingsBloc: Error initializing model ${event.modelName}: $e');
+      }
+      add(ModelInitializationCompleted(event.modelName, false));
+    }
+  }
+
+  // Model initialization completed handler
+  void _onModelInitializationCompleted(
+      ModelInitializationCompleted event, Emitter<SettingsState> emit) {
+    if (kDebugMode) {
+      print(
+          'SettingsBloc: Model initialization completed for ${event.modelName}: ${event.success}');
+    }
+
+    final updatedInitStatus =
+        Map<String, bool>.from(state.modelInitializationStatus);
+    updatedInitStatus[event.modelName] = event.success;
+
+    emit(state.copyWith(
+      modelInitializationStatus: updatedInitStatus,
+      isInitializingModel: false,
+      error: event.success ? null : 'Failed to initialize ${event.modelName}',
+    ));
+  }
+
+  // Auto-initialize selected model handler
+  Future<void> _onAutoInitializeSelectedModel(
+      AutoInitializeSelectedModel event, Emitter<SettingsState> emit) async {
+    try {
+      if (kDebugMode) {
+        print(
+            'SettingsBloc: Auto-initializing selected model: ${state.selectedLocalModel}');
+      }
+
+      // Only initialize if local transcription is enabled and model is downloaded
+      if (!state.localTranscriptionEnabled) {
+        if (kDebugMode) {
+          print(
+              'SettingsBloc: Local transcription disabled, skipping auto-initialization');
+        }
+        return;
+      }
+
+      if (!state.downloadedModels.contains(state.selectedLocalModel)) {
+        if (kDebugMode) {
+          print(
+              'SettingsBloc: Selected model ${state.selectedLocalModel} not downloaded, skipping auto-initialization');
+        }
+        return;
+      }
+
+      // Check if already initialized
+      if (state.modelInitializationStatus[state.selectedLocalModel] == true) {
+        if (kDebugMode) {
+          print(
+              'SettingsBloc: Model ${state.selectedLocalModel} already initialized');
+        }
+        return;
+      }
+
+      // Start initialization asynchronously
+      add(InitializeModel(state.selectedLocalModel));
+    } catch (e) {
+      if (kDebugMode) {
+        print('SettingsBloc: Error in auto-initialization: $e');
+      }
+      emit(state.copyWith(error: 'Auto-initialization failed: $e'));
     }
   }
 }

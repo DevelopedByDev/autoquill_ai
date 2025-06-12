@@ -211,3 +211,22 @@ class DeleteLocalModel extends SettingsEvent {
   @override
   List<Object?> get props => [modelName];
 }
+
+class InitializeModel extends SettingsEvent {
+  final String modelName;
+  const InitializeModel(this.modelName);
+
+  @override
+  List<Object?> get props => [modelName];
+}
+
+class ModelInitializationCompleted extends SettingsEvent {
+  final String modelName;
+  final bool success;
+  const ModelInitializationCompleted(this.modelName, this.success);
+
+  @override
+  List<Object?> get props => [modelName, success];
+}
+
+class AutoInitializeSelectedModel extends SettingsEvent {}

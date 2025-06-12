@@ -36,28 +36,62 @@ class WhisperKitService {
   static Stream<double> downloadModel(String modelName) async* {
     try {
       if (kDebugMode) {
-        print('Starting download for model: $modelName');
+        print('WhisperKitService: Starting download for model: $modelName');
       }
 
-      // Start the download
-      await _channel.invokeMethod('downloadModel', {'modelName': modelName});
+      // Yield initial progress to show download has started
+      yield 0.1;
 
-      // Listen for progress updates
-      const progressChannel = EventChannel('com.autoquill.whisperkit.progress');
-      await for (final progress in progressChannel.receiveBroadcastStream()) {
-        if (progress is Map && progress['modelName'] == modelName) {
-          final progressValue =
-              (progress['progress'] as num?)?.toDouble() ?? 0.0;
-          yield progressValue;
+      // Start the download (this will run asynchronously)
+      _channel.invokeMethod('downloadModel', {'modelName': modelName});
 
-          if (progressValue >= 1.0) {
+      if (kDebugMode) {
+        print('WhisperKitService: Download initiated, simulating progress...');
+      }
+
+      // Simulate download progress and poll for completion
+      double progress = 0.1;
+      const maxPollingTime = Duration(minutes: 10); // Maximum wait time
+      const pollInterval = Duration(seconds: 2);
+      final startTime = DateTime.now();
+
+      while (progress < 1.0) {
+        await Future.delayed(pollInterval);
+
+        // Check if download is complete
+        try {
+          final isDownloaded = await isModelDownloaded(modelName);
+          if (isDownloaded) {
+            progress = 1.0;
+            yield 1.0;
+            if (kDebugMode) {
+              print('WhisperKitService: Download completed for $modelName');
+            }
             break;
           }
+        } catch (e) {
+          if (kDebugMode) {
+            print('WhisperKitService: Error checking download status: $e');
+          }
+        }
+
+        // Check timeout
+        if (DateTime.now().difference(startTime) > maxPollingTime) {
+          throw Exception('Download timeout for model $modelName');
+        }
+
+        // Increment progress simulation (this gives visual feedback)
+        progress = (progress + 0.1).clamp(0.0, 0.9);
+        yield progress;
+
+        if (kDebugMode) {
+          print(
+              'WhisperKitService: Simulated progress $progress for $modelName');
         }
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Error downloading model $modelName: $e');
+        print('WhisperKitService: Error downloading model $modelName: $e');
       }
       throw Exception('Failed to download model: $e');
     }
@@ -189,6 +223,70 @@ class WhisperKitService {
       if (kDebugMode) {
         print('Error initializing WhisperKit: $e');
       }
+    }
+  }
+
+  /// Initializes a model by running test inference on the sample audio file
+  /// This ensures the model is fully loaded and ready for use
+  static Future<bool> initializeModelWithTestAudio(String modelName) async {
+    try {
+      if (kDebugMode) {
+        print(
+            'WhisperKitService: Initializing model $modelName with test audio...');
+      }
+
+      // First check if model is downloaded
+      final isDownloaded = await isModelDownloaded(modelName);
+      if (!isDownloaded) {
+        if (kDebugMode) {
+          print('WhisperKitService: Model $modelName is not downloaded');
+        }
+        return false;
+      }
+
+      // Preload the model first
+      await preloadModel(modelName);
+
+      // Run test inference with the sample audio
+      final result = await _channel.invokeMethod('initializeWithTestAudio', {
+        'modelName': modelName,
+      });
+
+      final success = result as bool? ?? false;
+
+      if (kDebugMode) {
+        if (success) {
+          print(
+              'WhisperKitService: Model $modelName successfully initialized with test audio');
+        } else {
+          print(
+              'WhisperKitService: Failed to initialize model $modelName with test audio');
+        }
+      }
+
+      return success;
+    } catch (e) {
+      if (kDebugMode) {
+        print(
+            'WhisperKitService: Error initializing model $modelName with test audio: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Checks if a model is currently initialized and ready for use
+  static Future<bool> isModelInitialized(String modelName) async {
+    try {
+      final result = await _channel.invokeMethod('isModelInitialized', {
+        'modelName': modelName,
+      });
+      return result as bool? ?? false;
+    } catch (e) {
+      if (kDebugMode) {
+        print(
+            'WhisperKitService: Error checking if model $modelName is initialized: $e');
+      }
+      return false;
     }
   }
 }

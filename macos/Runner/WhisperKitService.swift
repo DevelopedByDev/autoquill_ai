@@ -41,15 +41,21 @@ class WhisperKitService: NSObject {
     /// Downloads a WhisperKit model
     func downloadModel(_ modelName: String, progressCallback: @escaping (Double) -> Void) async throws {
         print("Starting download for model: \(modelName)")
+        print("Model variant will be: openai_whisper-\(modelName)")
+        print("Repository: \(repoName)")
         
         // Store progress callback
         downloadProgressStreams[modelName] = progressCallback
+        
+        // Send initial progress update
+        progressCallback(0.0)
         
         do {
             let modelFolder = try await WhisperKit.download(
                 variant: "openai_whisper-\(modelName)",
                 from: repoName,
                 progressCallback: { progress in
+                    print("Download progress for \(modelName): \(progress.fractionCompleted)")
                     DispatchQueue.main.async {
                         progressCallback(progress.fractionCompleted)
                     }
@@ -66,6 +72,7 @@ class WhisperKitService: NSObject {
             
         } catch {
             print("Error downloading model \(modelName): \(error)")
+            print("Error type: \(type(of: error))")
             downloadProgressStreams.removeValue(forKey: modelName)
             throw error
         }
@@ -296,5 +303,50 @@ class WhisperKitService: NSObject {
         
         whisperKit = try await WhisperKit(config)
         print("WhisperKit service initialized successfully")
+    }
+    
+    /// Initializes a model by running test inference on the sample audio file
+    func initializeWithTestAudio(_ modelName: String) async throws -> Bool {
+        print("Initializing model \(modelName) with test audio...")
+        
+        // First preload the model
+        try await preloadModel(modelName)
+        
+        // Get the path to the test audio file in the Flutter assets
+        guard let mainBundle = Bundle.main.path(forResource: "test", ofType: "wav", inDirectory: "Frameworks/App.framework/flutter_assets/assets/sample_recording") else {
+            print("Could not find test.wav in app bundle")
+            // Try alternative path
+            if let altPath = Bundle.main.path(forResource: "test", ofType: "wav") {
+                print("Found test.wav at alternative path: \(altPath)")
+                return try await runTestInference(audioPath: altPath, modelName: modelName)
+            }
+            return false
+        }
+        
+        print("Found test.wav at: \(mainBundle)")
+        return try await runTestInference(audioPath: mainBundle, modelName: modelName)
+    }
+    
+    /// Runs test inference on the provided audio path
+    private func runTestInference(audioPath: String, modelName: String) async throws -> Bool {
+        do {
+            let result = try await transcribeAudio(audioPath: audioPath, modelName: modelName)
+            print("Test inference completed successfully for \(modelName): \(result)")
+            
+            // Mark this model as initialized if transcription succeeds
+            if loadedModelName == modelName {
+                isInitialized = true
+            }
+            
+            return true
+        } catch {
+            print("Test inference failed for \(modelName): \(error)")
+            return false
+        }
+    }
+    
+    /// Checks if a model is currently initialized and ready for use
+    func isModelInitialized(_ modelName: String) -> Bool {
+        return loadedModelName == modelName && isInitialized
     }
 } 
