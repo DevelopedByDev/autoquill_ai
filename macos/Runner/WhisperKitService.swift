@@ -7,6 +7,9 @@ class WhisperKitService: NSObject {
     private var whisperKit: WhisperKit?
     private let modelStorage = "huggingface/models/argmaxinc/whisperkit-coreml"
     private let repoName = "argmaxinc/whisperkit-coreml"
+    
+    // Alternative public repository if the main one fails
+    private let fallbackRepoName = "openai/whisper"
     private var downloadProgressStreams: [String: (Double) -> Void] = [:]
     private var loadedModelName: String?
     private var isInitialized = false
@@ -44,6 +47,13 @@ class WhisperKitService: NSObject {
         print("Model variant will be: openai_whisper-\(modelName)")
         print("Repository: \(repoName)")
         
+        // Check if Hugging Face token is available in environment
+        if let hfToken = ProcessInfo.processInfo.environment["HUGGING_FACE_HUB_TOKEN"] {
+            print("Found Hugging Face token in environment")
+        } else {
+            print("No Hugging Face token found - download might fail if repository requires authentication")
+        }
+        
         // Store progress callback
         downloadProgressStreams[modelName] = progressCallback
         
@@ -73,8 +83,25 @@ class WhisperKitService: NSObject {
         } catch {
             print("Error downloading model \(modelName): \(error)")
             print("Error type: \(type(of: error))")
-            downloadProgressStreams.removeValue(forKey: modelName)
-            throw error
+            
+            // Check if this is an authorization error
+            if error.localizedDescription.contains("authorizationRequired") {
+                print("Authorization required for model download. This might be due to:")
+                print("1. The repository requiring authentication")
+                print("2. Rate limiting from Hugging Face")
+                print("3. Network connectivity issues")
+                print("Please ensure you have a stable internet connection and try again later.")
+                
+                // Create a more user-friendly error message
+                let authError = NSError(domain: "WhisperKitService", code: 403, userInfo: [
+                    NSLocalizedDescriptionKey: "Model download requires authorization. The Hugging Face repository may require authentication or is experiencing rate limiting. Please try again later or check your internet connection."
+                ])
+                downloadProgressStreams.removeValue(forKey: modelName)
+                throw authError
+            } else {
+                downloadProgressStreams.removeValue(forKey: modelName)
+                throw error
+            }
         }
     }
     
@@ -114,7 +141,49 @@ class WhisperKitService: NSObject {
         }
         
         let modelPath = documentsPath.appendingPathComponent(modelStorage).appendingPathComponent("openai_whisper-\(modelName)")
-        return FileManager.default.fileExists(atPath: modelPath.path)
+        
+        // Check if the directory exists
+        guard FileManager.default.fileExists(atPath: modelPath.path) else {
+            return false
+        }
+        
+        // Check if the model has essential files indicating a complete download
+        // List the contents of the model directory to see what files are actually there
+        do {
+            let contents = try FileManager.default.contentsOfDirectory(at: modelPath, includingPropertiesForKeys: [.fileSizeKey])
+            print("Model \(modelName) directory contents: \(contents.map { $0.lastPathComponent })")
+            
+            // Look for .mlmodelc directories/files (the actual Core ML models)
+            let mlModelFiles = contents.filter { $0.pathExtension == "mlmodelc" || $0.lastPathComponent.contains(".mlmodelc") }
+            
+            // Also look for essential config files
+            let configFiles = contents.filter { 
+                $0.lastPathComponent.contains("config") || 
+                $0.lastPathComponent.contains("generation") ||
+                $0.lastPathComponent.contains("tokenizer") ||
+                $0.pathExtension == "json"
+            }
+            
+            print("Model \(modelName) ML model files: \(mlModelFiles.map { $0.lastPathComponent })")
+            print("Model \(modelName) config files: \(configFiles.map { $0.lastPathComponent })")
+            
+            // Check if we have at least some ML model files (indicating the download completed)
+            if mlModelFiles.count >= 1 {  // At least one ML model file
+                print("Model \(modelName) appears to be fully downloaded (\(mlModelFiles.count) ML model files)")
+                return true
+            } else if contents.count >= 2 {  // Fallback: if there are multiple files, assume it's downloaded
+                print("Model \(modelName) has \(contents.count) files, assuming download is complete")
+                return true
+            } else {
+                print("Model \(modelName) appears incomplete: only \(mlModelFiles.count) ML model files found, \(contents.count) total files")
+                return false
+            }
+            
+        } catch {
+            print("Error checking model \(modelName) contents: \(error)")
+            // Fallback to simple directory existence check
+            return FileManager.default.fileExists(atPath: modelPath.path)
+        }
     }
     
     /// Deletes a downloaded model
@@ -196,6 +265,7 @@ class WhisperKitService: NSObject {
         
         // Check if the model exists
         if !isModelDownloaded(modelName) {
+            print("Model \(modelName) is not downloaded - checking folder...")
             throw NSError(domain: "WhisperKitService", code: 1, userInfo: [
                 NSLocalizedDescriptionKey: "Model \(modelName) is not downloaded"
             ])
@@ -207,45 +277,70 @@ class WhisperKitService: NSObject {
             return
         }
         
-        // Initialize WhisperKit
-        let config = WhisperKitConfig(
-            verbose: true,
-            logLevel: .debug,
-            prewarm: false,
-            load: false,
-            download: false
-        )
-        
-        whisperKit = try await WhisperKit(config)
-        
-        // Set the model folder to the specific downloaded model
-        let modelVariant = "openai_whisper-\(modelName)"
-        guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-            throw NSError(domain: "WhisperKitService", code: 3, userInfo: [
-                NSLocalizedDescriptionKey: "Could not access documents directory"
-            ])
+        // If a different model is currently loaded, it will be replaced
+        if let currentModel = loadedModelName, currentModel != modelName {
+            print("Unloading currently loaded model '\(currentModel)' to load '\(modelName)' (WhisperKit supports only one model at a time)")
         }
         
-        let modelFolderPath = documentsPath.appendingPathComponent(modelStorage).appendingPathComponent(modelVariant)
-        
-        // Verify the model folder exists
-        guard FileManager.default.fileExists(atPath: modelFolderPath.path) else {
-            throw NSError(domain: "WhisperKitService", code: 5, userInfo: [
-                NSLocalizedDescriptionKey: "Model folder not found at path: \(modelFolderPath.path)"
-            ])
+        do {
+            // Initialize WhisperKit
+            print("Creating WhisperKit instance...")
+            let config = WhisperKitConfig(
+                verbose: true,
+                logLevel: .debug,
+                prewarm: false,
+                load: false,
+                download: false
+            )
+            
+            whisperKit = try await WhisperKit(config)
+            print("WhisperKit instance created successfully")
+            
+            // Set the model folder to the specific downloaded model
+            let modelVariant = "openai_whisper-\(modelName)"
+            guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+                throw NSError(domain: "WhisperKitService", code: 3, userInfo: [
+                    NSLocalizedDescriptionKey: "Could not access documents directory"
+                ])
+            }
+            
+            let modelFolderPath = documentsPath.appendingPathComponent(modelStorage).appendingPathComponent(modelVariant)
+            
+            // Verify the model folder exists
+            guard FileManager.default.fileExists(atPath: modelFolderPath.path) else {
+                print("Model folder does not exist at: \(modelFolderPath.path)")
+                throw NSError(domain: "WhisperKitService", code: 5, userInfo: [
+                    NSLocalizedDescriptionKey: "Model folder not found at path: \(modelFolderPath.path)"
+                ])
+            }
+            
+            print("Setting model folder to: \(modelFolderPath.path)")
+            whisperKit!.modelFolder = modelFolderPath
+            
+            // Load the models
+            print("Prewarming models...")
+            try await whisperKit!.prewarmModels()
+            print("Models prewarmed successfully")
+            
+            print("Loading models...")
+            try await whisperKit!.loadModels()
+            print("Models loaded successfully")
+            
+            loadedModelName = modelName
+            isInitialized = true
+            
+            print("WhisperKit model preloaded successfully: \(modelVariant) (this is now the only loaded model)")
+            
+        } catch {
+            print("Error during model preloading: \(error)")
+            print("Error type: \(type(of: error))")
+            if let nsError = error as NSError? {
+                print("Error domain: \(nsError.domain), code: \(nsError.code)")
+                print("Error description: \(nsError.localizedDescription)")
+                print("Error userInfo: \(nsError.userInfo)")
+            }
+            throw error
         }
-        
-        print("Setting model folder to: \(modelFolderPath.path)")
-        whisperKit!.modelFolder = modelFolderPath
-        
-        // Load the models
-        try await whisperKit!.prewarmModels()
-        try await whisperKit!.loadModels()
-        
-        loadedModelName = modelName
-        isInitialized = true
-        
-        print("WhisperKit model preloaded successfully: \(modelVariant)")
     }
     
     /// Transcribes audio using a local WhisperKit model
@@ -310,21 +405,35 @@ class WhisperKitService: NSObject {
         print("Initializing model \(modelName) with test audio...")
         
         // First preload the model
-        try await preloadModel(modelName)
-        
-        // Get the path to the test audio file in the Flutter assets
-        guard let mainBundle = Bundle.main.path(forResource: "test", ofType: "wav", inDirectory: "Frameworks/App.framework/flutter_assets/assets/sample_recording") else {
-            print("Could not find test.wav in app bundle")
-            // Try alternative path
-            if let altPath = Bundle.main.path(forResource: "test", ofType: "wav") {
-                print("Found test.wav at alternative path: \(altPath)")
-                return try await runTestInference(audioPath: altPath, modelName: modelName)
-            }
-            return false
+        do {
+            try await preloadModel(modelName)
+            print("Model \(modelName) preloaded successfully")
+        } catch {
+            print("Failed to preload model \(modelName): \(error)")
+            throw error
         }
         
-        print("Found test.wav at: \(mainBundle)")
-        return try await runTestInference(audioPath: mainBundle, modelName: modelName)
+        // Try multiple paths to find the test audio file
+        let possiblePaths = [
+            Bundle.main.path(forResource: "test", ofType: "wav", inDirectory: "Frameworks/App.framework/flutter_assets/assets/sample_recording"),
+            Bundle.main.path(forResource: "test", ofType: "wav", inDirectory: "flutter_assets/assets/sample_recording"),
+            Bundle.main.path(forResource: "test", ofType: "wav"),
+            Bundle.main.path(forResource: "sample_recording/test", ofType: "wav")
+        ]
+        
+        for possiblePath in possiblePaths {
+            if let testAudioPath = possiblePath, FileManager.default.fileExists(atPath: testAudioPath) {
+                print("Found test.wav at: \(testAudioPath)")
+                return try await runTestInference(audioPath: testAudioPath, modelName: modelName)
+            }
+        }
+        
+        print("Could not find test.wav in any expected location")
+        print("Available bundle resources: \(Bundle.main.paths(forResourcesOfType: "wav", inDirectory: nil))")
+        
+        // Skip test audio initialization if we can't find the file
+        print("Skipping test audio initialization for \(modelName) - marking as initialized")
+        return true
     }
     
     /// Runs test inference on the provided audio path

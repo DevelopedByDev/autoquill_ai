@@ -444,6 +444,35 @@ flutter pub get
 flutter build macos
 ```
 
+### **Model Download Issues**
+
+If you encounter "authorizationRequired" errors when downloading WhisperKit models, this is due to Hugging Face repository access requirements. Here are solutions:
+
+#### **Option 1: Use Hugging Face Token (Recommended)**
+1. Create a free account at [Hugging Face](https://huggingface.co/)
+2. Generate an access token at [Hugging Face Tokens](https://huggingface.co/settings/tokens)
+3. Set the environment variable:
+   ```bash
+   export HUGGING_FACE_HUB_TOKEN="your_token_here"
+   ```
+4. Restart the app
+
+#### **Option 2: Manual Model Download**
+1. Visit [WhisperKit Models Repository](https://huggingface.co/argmaxinc/whisperkit-coreml)
+2. Download the model files manually
+3. Place them in the correct directory (use "Open Models Folder" in settings)
+
+#### **Option 3: Use Cloud Transcription Only**
+- Ensure you have a valid OpenAI API key
+- Disable local transcription in settings
+- Use cloud-based transcription instead
+
+### **Common Issues**
+
+- **"Failed to initialize [model]"**: Usually indicates incomplete model download or missing files
+- **"Resource temporarily unavailable"**: Close other instances of the app before starting
+- **Missing modules**: Ensure you're using the correct Flutter version and dependencies
+
 ## 📝 License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.

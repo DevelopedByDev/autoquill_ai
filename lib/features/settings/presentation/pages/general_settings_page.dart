@@ -444,6 +444,8 @@ class GeneralSettingsPage extends StatelessWidget {
         ),
         const SizedBox(height: DesignTokens.spaceMD),
         _buildOpenModelsDirectoryButton(context, isDarkMode),
+        const SizedBox(height: DesignTokens.spaceXS),
+        _buildHelpSection(context, state, isDarkMode),
       ],
     );
   }
@@ -605,6 +607,136 @@ class GeneralSettingsPage extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildHelpSection(
+      BuildContext context, SettingsState state, bool isDarkMode) {
+    // Check if there are any download errors
+    final hasDownloadErrors = state.modelDownloadErrors.isNotEmpty;
+    final hasAuthErrors = state.modelDownloadErrors.values.any((error) =>
+        error.toLowerCase().contains('authorization') ||
+        error.toLowerCase().contains('authorizationrequired'));
+
+    if (!hasDownloadErrors) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(DesignTokens.spaceSM),
+      decoration: BoxDecoration(
+        color: hasAuthErrors
+            ? Colors.orange.withValues(alpha: 0.1)
+            : Colors.blue.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusSM),
+        border: Border.all(
+          color: hasAuthErrors
+              ? Colors.orange.withValues(alpha: 0.3)
+              : Colors.blue.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                hasAuthErrors
+                    ? Icons.warning_rounded
+                    : Icons.help_outline_rounded,
+                color: hasAuthErrors ? Colors.orange : Colors.blue,
+                size: DesignTokens.iconSizeSM,
+              ),
+              const SizedBox(width: DesignTokens.spaceXS),
+              Text(
+                hasAuthErrors ? 'Authorization Required' : 'Download Help',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: DesignTokens.fontWeightSemiBold,
+                      color: hasAuthErrors ? Colors.orange : Colors.blue,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: DesignTokens.spaceXS),
+          Text(
+            hasAuthErrors
+                ? 'Model downloads require a Hugging Face token. Run the setup script or manually configure authentication.'
+                : 'Having trouble downloading models? Check the README for troubleshooting steps.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: isDarkMode
+                      ? DesignTokens.trueWhite.withValues(alpha: 0.8)
+                      : DesignTokens.pureBlack.withValues(alpha: 0.7),
+                ),
+          ),
+          const SizedBox(height: DesignTokens.spaceSM),
+          Row(
+            children: [
+              if (hasAuthErrors) ...[
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showTokenSetupInstructions(context),
+                    icon: Icon(
+                      Icons.key_rounded,
+                      size: DesignTokens.iconSizeXS,
+                    ),
+                    label: Text(
+                      'Setup Token',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: DesignTokens.fontWeightMedium,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: DesignTokens.spaceXS,
+                        horizontal: DesignTokens.spaceSM,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(DesignTokens.radiusXS),
+                      ),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: DesignTokens.spaceXS),
+              ],
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _showTroubleshootingInfo(context),
+                  icon: Icon(
+                    Icons.info_outline_rounded,
+                    size: DesignTokens.iconSizeXS,
+                  ),
+                  label: Text(
+                    'More Help',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: DesignTokens.fontWeightMedium,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor:
+                        hasAuthErrors ? Colors.orange : Colors.blue,
+                    side: BorderSide(
+                      color: hasAuthErrors ? Colors.orange : Colors.blue,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: DesignTokens.spaceXS,
+                      horizontal: DesignTokens.spaceSM,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(DesignTokens.radiusXS),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -883,5 +1015,155 @@ class GeneralSettingsPage extends StatelessWidget {
         duration: const Duration(seconds: 3),
       );
     }
+  }
+
+  void _showTokenSetupInstructions(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.key_rounded, color: Colors.orange),
+            const SizedBox(width: 8),
+            Text('Setup Hugging Face Token'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'To download WhisperKit models, you need a Hugging Face access token:',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '1. Go to https://huggingface.co/',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            Text(
+              '2. Create a free account',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            Text(
+              '3. Visit Settings → Access Tokens',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            Text(
+              '4. Create a token with "Read" permissions',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Run in Terminal:',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    './setup_hf_token.sh',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontFamily: 'monospace',
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Got it'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTroubleshootingInfo(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.help_outline_rounded, color: Colors.blue),
+            const SizedBox(width: 8),
+            Text('Download Troubleshooting'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Common solutions for model download issues:',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            _buildTroubleshootingItem(
+              context,
+              'Authorization Required',
+              'Set up a Hugging Face token using the setup script',
+            ),
+            _buildTroubleshootingItem(
+              context,
+              'Network Issues',
+              'Check your internet connection and try again',
+            ),
+            _buildTroubleshootingItem(
+              context,
+              'Manual Download',
+              'Download models manually from huggingface.co/argmaxinc/whisperkit-coreml',
+            ),
+            _buildTroubleshootingItem(
+              context,
+              'Use Cloud Only',
+              'Disable local transcription and use OpenAI API instead',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTroubleshootingItem(
+      BuildContext context, String title, String description) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '• $title',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          Text(
+            '  $description',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
   }
 }

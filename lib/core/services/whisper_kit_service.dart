@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 class WhisperKitService {
   static const MethodChannel _channel =
       MethodChannel('com.autoquill.whisperkit');
+  static const EventChannel _progressChannel =
+      EventChannel('com.autoquill.whisperkit.progress');
 
   /// Available model variants
   static const List<Map<String, String>> availableModels = [
@@ -39,55 +41,71 @@ class WhisperKitService {
         print('WhisperKitService: Starting download for model: $modelName');
       }
 
-      // Yield initial progress to show download has started
-      yield 0.1;
+      // Start listening to progress events
+      final progressStream =
+          _progressChannel.receiveBroadcastStream().where((event) {
+        if (event is Map) {
+          return event['modelName'] == modelName;
+        }
+        return false;
+      }).map((event) => (event as Map)['progress'] as double);
 
       // Start the download (this will run asynchronously)
       _channel.invokeMethod('downloadModel', {'modelName': modelName});
 
       if (kDebugMode) {
-        print('WhisperKitService: Download initiated, simulating progress...');
+        print(
+            'WhisperKitService: Download initiated, listening for progress...');
       }
 
-      // Simulate download progress and poll for completion
-      double progress = 0.1;
-      const maxPollingTime = Duration(minutes: 10); // Maximum wait time
-      const pollInterval = Duration(seconds: 2);
+      // Check if model is already downloaded (edge case handling)
+      final isAlreadyDownloaded = await isModelDownloaded(modelName);
+      if (isAlreadyDownloaded) {
+        if (kDebugMode) {
+          print('WhisperKitService: Model $modelName is already downloaded');
+        }
+        yield 1.0;
+        return;
+      }
+
+      // Yield initial progress to show download has started
+      yield 0.0;
+
+      // Set up timeout
+      const maxPollingTime = Duration(minutes: 10);
       final startTime = DateTime.now();
 
-      while (progress < 1.0) {
-        await Future.delayed(pollInterval);
-
-        // Check if download is complete
-        try {
-          final isDownloaded = await isModelDownloaded(modelName);
-          if (isDownloaded) {
-            progress = 1.0;
-            yield 1.0;
-            if (kDebugMode) {
-              print('WhisperKitService: Download completed for $modelName');
-            }
-            break;
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            print('WhisperKitService: Error checking download status: $e');
-          }
-        }
-
-        // Check timeout
-        if (DateTime.now().difference(startTime) > maxPollingTime) {
-          throw Exception('Download timeout for model $modelName');
-        }
-
-        // Increment progress simulation (this gives visual feedback)
-        progress = (progress + 0.1).clamp(0.0, 0.9);
-        yield progress;
-
+      await for (final progress
+          in progressStream.timeout(maxPollingTime, onTimeout: (controller) {
+        controller.addError(Exception('Download timeout for model $modelName'));
+      })) {
         if (kDebugMode) {
           print(
-              'WhisperKitService: Simulated progress $progress for $modelName');
+              'WhisperKitService: Received progress $progress for $modelName');
         }
+
+        yield progress;
+
+        // Check if download is complete
+        if (progress >= 1.0) {
+          if (kDebugMode) {
+            print('WhisperKitService: Download completed for $modelName');
+          }
+          break;
+        }
+      }
+
+      // Final check to ensure model is actually downloaded
+      final finalCheck = await isModelDownloaded(modelName);
+      if (finalCheck) {
+        yield 1.0;
+        if (kDebugMode) {
+          print(
+              'WhisperKitService: Final verification - model $modelName is downloaded');
+        }
+      } else {
+        throw Exception(
+            'Download completed but model verification failed for $modelName');
       }
     } catch (e) {
       if (kDebugMode) {

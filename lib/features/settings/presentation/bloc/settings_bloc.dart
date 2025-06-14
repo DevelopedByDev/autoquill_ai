@@ -957,14 +957,29 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         Map<String, double>.from(state.modelDownloadProgress);
     updatedProgress.remove(event.modelName);
 
-    // Add error
+    // Add error with helpful message
     final updatedErrors = Map<String, String>.from(state.modelDownloadErrors);
-    updatedErrors[event.modelName] = event.error;
+    String errorMessage = event.error;
+
+    // Provide more helpful error messages for common issues
+    if (errorMessage.toLowerCase().contains('authorization') ||
+        errorMessage.toLowerCase().contains('authorizationrequired')) {
+      errorMessage =
+          'Authorization required. Please set up a Hugging Face token. See README for instructions.';
+    } else if (errorMessage.toLowerCase().contains('timeout')) {
+      errorMessage =
+          'Download timeout. Please check your internet connection and try again.';
+    } else if (errorMessage.toLowerCase().contains('network') ||
+        errorMessage.toLowerCase().contains('connection')) {
+      errorMessage = 'Network error. Please check your internet connection.';
+    }
+
+    updatedErrors[event.modelName] = errorMessage;
 
     emit(state.copyWith(
       modelDownloadProgress: updatedProgress,
       modelDownloadErrors: updatedErrors,
-      error: 'Failed to download ${event.modelName}: ${event.error}',
+      error: 'Failed to download ${event.modelName}: $errorMessage',
     ));
   }
 
@@ -1094,7 +1109,21 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
     final updatedInitStatus =
         Map<String, bool>.from(state.modelInitializationStatus);
-    updatedInitStatus[event.modelName] = event.success;
+
+    if (event.success) {
+      // WhisperKit can only have one model initialized at a time
+      // Clear all other models' initialization status
+      updatedInitStatus.clear();
+      updatedInitStatus[event.modelName] = true;
+
+      if (kDebugMode) {
+        print(
+            'SettingsBloc: Model ${event.modelName} initialized successfully. All other models marked as uninitialized.');
+      }
+    } else {
+      // Mark this specific model as failed
+      updatedInitStatus[event.modelName] = false;
+    }
 
     emit(state.copyWith(
       modelInitializationStatus: updatedInitStatus,
@@ -1129,16 +1158,15 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         return;
       }
 
-      // Check if already initialized
-      if (state.modelInitializationStatus[state.selectedLocalModel] == true) {
-        if (kDebugMode) {
-          print(
-              'SettingsBloc: Model ${state.selectedLocalModel} already initialized');
-        }
-        return;
+      // Since WhisperKit can only have one model loaded at a time,
+      // we need to initialize the selected model even if it was previously initialized
+      // but another model has been loaded since then
+      if (kDebugMode) {
+        print(
+            'SettingsBloc: Initializing model ${state.selectedLocalModel} (WhisperKit can only load one model at a time)');
       }
 
-      // Start initialization asynchronously
+      // Start initialization
       add(InitializeModel(state.selectedLocalModel));
     } catch (e) {
       if (kDebugMode) {
