@@ -296,15 +296,15 @@ class GeneralSettingsPage extends StatelessWidget {
   String _getDisplayName(String modelName) {
     switch (modelName) {
       case 'base':
-        return 'BASE';
-      case 'small':
-        return 'SMALL';
+        return 'base';
+      case 'small_216MB':
+        return 'small';
       case 'medium':
-        return 'MEDIUM';
+        return 'medium';
       case 'large-v3_947MB':
-        return 'LARGE';
+        return 'large';
       case 'large-v3-v20240930_turbo_632MB':
-        return 'TURBO';
+        return 'turbo';
       default:
         return modelName.toUpperCase();
     }
@@ -316,27 +316,27 @@ class GeneralSettingsPage extends StatelessWidget {
       {
         'name': 'base',
         'size': '~150 MB',
-        'description': 'Fastest, good quality'
+        'description': 'Lowest accuracy, fastest speed'
       },
       {
-        'name': 'small',
-        'size': '~450 MB',
-        'description': 'Good speed and quality'
+        'name': 'small_216MB',
+        'size': '~216 MB',
+        'description': 'Low accuracy, fast speed'
       },
       {
         'name': 'medium',
         'size': '~1.5 GB',
-        'description': 'Balanced performance'
+        'description': 'Medium accuracy, medium speed'
       },
       {
         'name': 'large-v3_947MB',
         'size': '~947 MB',
-        'description': 'High quality, optimized'
+        'description': 'Highest accuracy, slowest speed'
       },
       {
         'name': 'large-v3-v20240930_turbo_632MB',
         'size': '~632 MB',
-        'description': 'Fast and accurate'
+        'description': 'Very high accuracy, high speed'
       },
     ];
 
