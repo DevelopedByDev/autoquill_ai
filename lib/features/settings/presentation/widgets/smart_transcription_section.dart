@@ -11,18 +11,46 @@ class SmartTranscriptionSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return BlocBuilder<SettingsBloc, SettingsState>(builder: (context, state) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Smart Transcription',
-            style: Theme.of(context).textTheme.displaySmall,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(DesignTokens.spaceXS),
+                decoration: BoxDecoration(
+                  gradient: DesignTokens.greenGradient,
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusSM),
+                ),
+                child: Icon(
+                  Icons.menu_open_rounded,
+                  color: DesignTokens.trueWhite,
+                  size: DesignTokens.iconSizeSM,
+                ),
+              ),
+              const SizedBox(width: DesignTokens.spaceSM),
+              Text(
+                'Smart Transcription',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: DesignTokens.fontWeightSemiBold,
+                      color: isDarkMode
+                          ? DesignTokens.trueWhite
+                          : DesignTokens.pureBlack,
+                    ),
+              ),
+            ],
           ),
           const SizedBox(height: DesignTokens.spaceSM),
           Text(
-            'Enhance transcriptions with intelligent formatting and emoji conversion.',
-            style: Theme.of(context).textTheme.bodyMedium,
+            'Use local models for transcription without internet connectivity.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: isDarkMode
+                      ? DesignTokens.trueWhite.withValues(alpha: 0.7)
+                      : DesignTokens.pureBlack.withValues(alpha: 0.6),
+                ),
           ),
           const SizedBox(height: DesignTokens.spaceMD),
           _buildSmartTranscriptionToggle(context, state),
@@ -59,8 +87,10 @@ class SmartTranscriptionSection extends StatelessWidget {
           Text(
             'When enabled, transcriptions are enhanced with intelligent formatting including emoji conversion, proper casing, numbered lists, and email formatting.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.7),
                 ),
           ),
           if (state.smartTranscriptionEnabled) ...[
@@ -68,10 +98,16 @@ class SmartTranscriptionSection extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(DesignTokens.spaceSM),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(DesignTokens.radiusSM),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),

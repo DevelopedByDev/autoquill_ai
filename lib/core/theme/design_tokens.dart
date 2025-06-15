@@ -53,6 +53,37 @@ class DesignTokens {
     colors: [Color(0xFF10B981), Color(0xFF34D399)],
   );
 
+  
+  static const yellowGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFFF59E0B), Color(0xFFFBBF24)],
+  );
+
+  static const orangeGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFFEA580C), Color(0xFFFB923C)],
+  );
+
+  static const tealGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF14B8A6), Color(0xFF2DD4BF)],
+  );
+
+  static const indigoGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+  );
+
+  static const roseGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFFE11D48), Color(0xFFF43F5E)],
+  );
+
   static const purpleGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
